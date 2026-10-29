@@ -27,4 +27,7 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
       - name: Build and run unit tests
-        run: xcodebuild test -project SavingsZakat.xcodeproj -scheme SavingsZakat -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
+        run: |
+          PROJECT="$(find . -maxdepth 1 -name '*.xcodeproj' -print -quit)"
+          test -n "$PROJECT"
+          xcodebuild test -project "$PROJECT" -scheme SavingsZakat -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
