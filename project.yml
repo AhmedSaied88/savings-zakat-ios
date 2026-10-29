@@ -30,3 +30,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmedsaied88.savingszakat.tests
         SWIFT_VERSION: '5.9'
         GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  SavingsZakat:
+    build:
+      targets:
+        SavingsZakat: all
+        SavingsZakatTests: [test]
+    test:
+      targets:
+        - SavingsZakatTests
