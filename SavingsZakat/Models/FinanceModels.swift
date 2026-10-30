@@ -49,8 +49,10 @@ struct FinanceCard: Identifiable, Codable, Equatable {
     var currency: String?
     /// Starting amount owed before this app begins tracking card activity.
     var openingOutstandingBalance: Decimal?
+    /// Current-state reconciliation adjustment; no monthly statement or change-history records are retained.
+    var balanceAdjustment: Decimal?
 
-    init(id: UUID = UUID(), name: String, issuer: String? = nil, kind: FinanceCardKind, lastFour: String? = nil, linkedAccountID: UUID? = nil, creditLimit: Decimal? = nil, statementDate: Date? = nil, paymentDueDate: Date? = nil, minimumDue: Decimal? = nil, currency: String? = nil, openingOutstandingBalance: Decimal? = nil) {
+    init(id: UUID = UUID(), name: String, issuer: String? = nil, kind: FinanceCardKind, lastFour: String? = nil, linkedAccountID: UUID? = nil, creditLimit: Decimal? = nil, statementDate: Date? = nil, paymentDueDate: Date? = nil, minimumDue: Decimal? = nil, currency: String? = nil, openingOutstandingBalance: Decimal? = nil, balanceAdjustment: Decimal? = nil) {
         self.id = id
         self.name = name
         self.issuer = issuer
@@ -64,6 +66,7 @@ struct FinanceCard: Identifiable, Codable, Equatable {
         self.minimumDue = minimumDue
         self.currency = currency?.uppercased()
         self.openingOutstandingBalance = openingOutstandingBalance
+        self.balanceAdjustment = balanceAdjustment
     }
 }
 
