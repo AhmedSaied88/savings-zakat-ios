@@ -4,14 +4,16 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 ## Current status
 
-**Working prototype foundation — not release-ready or verified on a physical iPhone.** The isolated feature branch now includes a versioned local store and validated ledger; five primary tabs (Wallet, Accounts, Activity, Debts and Zakat); Shortcuts-assisted bank-message import with redaction, custom parser rules and explicit transaction confirmation; an editable cash/gold/silver/investment register; a Hawl calendar with local reminders; combined Zakat calculations with per-asset breakdown; encrypted local backup/restore; persisted valuation/parser preferences; and monthly income/expense insights. Egyptian calendar currently bundles five Dar Al-Ifta month starts from 1448 AH (June–October 2026); dates outside that narrow coverage use an explicitly estimated Islamic-civil fallback, not an Egypt-specific astronomical calculation. The latest SwiftUI repair branch has passed the generic iOS Simulator `build-for-testing` compile gate on macOS 15 / Xcode 16.4. The updated workflow now separately runs XCTest and UI tests on an available iPhone simulator; the latest run is still executing, so no test-pass claim is made yet. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
+**Working prototype foundation — not release-ready or verified on a physical iPhone.** This isolated SwiftUI application includes a versioned local store and validated ledger; five primary tabs (Wallet, Accounts, Activity, Debts and Zakat); Shortcuts-assisted bank-message import with redaction, custom parser rules and explicit transaction confirmation; an editable cash/gold/silver/investment register; a Hawl calendar with local reminders; combined Zakat calculations with per-asset breakdown; encrypted local backup/restore; persisted valuation/parser preferences; and monthly income/expense insights.
 
-Latest confirmed full Xcode test run for the ledger work:
+The latest full GitHub Actions simulator run passed on macOS 15 / Xcode 16.4:
 - Branch: `chore/task-1-baseline-architecture`
-- Commit: `f91e86e287da0da6a0f7acbd4ab7f7abb02872cc`
-- Workflow run: [Native iOS build and tests #41020025055](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41020025055)
-- Result: **33 XCTest tests passed, 0 failures** on macOS 15 / Xcode 16.4 / iPhone 16 simulator.
-- Subsequent UI, SMS import, assets, Egyptian date seed, Hawl/Zakat, reminders, backup, preferences and insights changes have now passed the generic iOS Simulator compile gate on the repair branch (GitHub Actions run #214, commit `2e2a465efa01014117c152acb940670ee6ece47c`). Simulator XCTest/UI execution is a separate step and remains in progress; inspect the Actions run for the current result. An earlier parser/redactor baseline passed 15 targeted checks in a local Swift 6.2.1 harness; subsequent custom-rule and alphanumeric-secret redaction changes have not been re-run locally.
+- Commit: `ecb9aa71359e89158c35e6b387db47771d2e6afe`
+- Workflow run: [Native iOS build and tests #234](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41067228705)
+- Result: **116 unit tests and 10 UI tests passed; 0 failures.**
+- Simulator: iPhone simulator selected by the workflow. This is CI evidence, not physical-device validation.
+
+Egyptian calendar data currently bundles five Dar Al-Ifta month starts from 1448 AH (June–October 2026). Dates outside the bounded official coverage use an explicitly estimated Islamic-civil fallback, not an Egypt-specific astronomical calculation. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
 
 ## Repository layout
 
