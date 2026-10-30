@@ -5,6 +5,8 @@ struct ContentView: View {
     @State private var showCash = false
     @State private var showGold = false
     @State private var showAccount = false
+    @State private var showCard = false
+    @State private var showLiability = false
     @State private var showTransaction = false
     @State private var rates: [String: Double] = ["EGP": 1]
     @State private var goldPrices: [String: Double] = [:]
@@ -92,6 +94,20 @@ struct ContentView: View {
                             Image(systemName: card.kind == .credit ? "creditcard" : "creditcard.and.123")
                         }
                     }.onDelete { offsets in snapshot.cards.remove(atOffsets: offsets); save() }
+                    Button { showCard = true } label: { Label("Add card", systemImage: "plus.circle.fill") }
+                }
+                Section("Loans & debts") {
+                    if snapshot.liabilities.isEmpty {
+                        Text("Track loans, instalments and card balances here.").foregroundStyle(.secondary)
+                    }
+                    ForEach(snapshot.liabilities) { item in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(item.name).font(.headline)
+                            Text(item.kind.rawValue.capitalized + " · " + item.currency).font(.caption).foregroundStyle(.secondary)
+                            Text("\(item.outstandingAmount, format: .number.precision(.fractionLength(2))) \(item.currency)")
+                        }
+                    }.onDelete { offsets in snapshot.liabilities.remove(atOffsets: offsets); save() }
+                    Button { showLiability = true } label: { Label("Add loan / debt", systemImage: "plus.circle.fill") }
                 }
                 Section("Savings & Zakat assets") {
                     Button("Add cash / currency") { showCash = true }
@@ -158,6 +174,12 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showTransaction) {
                 TransactionSheet(accounts: snapshot.accounts) { snapshot.transactions.append($0); save() }
+            }
+            .sheet(isPresented: $showCard) {
+                CardEntrySheet(accounts: snapshot.accounts) { snapshot.cards.append($0); save() }
+            }
+            .sheet(isPresented: $showLiability) {
+                LiabilityEntrySheet { snapshot.liabilities.append($0); save() }
             }
             .sheet(isPresented: $showCash) {
                 CashSheet { snapshot.holdings.append($0); save() }
