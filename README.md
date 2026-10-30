@@ -4,20 +4,22 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 ## Current status
 
-**Working prototype foundation — not yet release-ready or verified on a physical iPhone.** The current feature branch contains the wallet/account/transaction model, local JSON snapshot persistence, cash/gold/silver entry, combined Zakat calculation, Egyptian Hijri conversion framework, bank-message parsing/redaction, and XCTest coverage. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
+**Working prototype foundation — not release-ready or verified on a physical iPhone.** The isolated feature branch now includes the versioned local store, validated finance ledger, tab-based Wallet / Accounts / Activity / Debts / Zakat screens, account editing, transaction categories, masked cards, and credit-card statement/payment fields. Egyptian calendar, Zakat, and SMS parsing features remain subject to their documented verification limits. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
 
-Latest verified GitHub Actions run at the baseline commit:
-- Branch: `feature/iphone-personal-finance-native`
-- Commit: `6c1b08ef59063892cb1103d07b40b9d10c8a9213`
-- Workflow run: [Native iOS build and tests #25](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41017441370)
-- Result: **16 tests passed, 0 failures** on the iPhone 16 simulator using Xcode 16.4.
+Latest confirmed full Xcode test run for the ledger work:
+- Branch: `chore/task-1-baseline-architecture`
+- Commit: `f91e86e287da0da6a0f7acbd4ab7f7abb02872cc`
+- Workflow run: [Native iOS build and tests #41020025055](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41020025055)
+- Result: **33 XCTest tests passed, 0 failures** on macOS 15 / Xcode 16.4 / iPhone 16 simulator.
+- The subsequent tab UI and UI-test-target changes are not yet Xcode-verified: recent GitHub Actions jobs failed before a runner was assigned (runner ID 0, no steps executed).
 
 ## Repository layout
 
 - `SavingsZakat/Models/` — holding, account, card, transaction, liability and finance snapshot models.
-- `SavingsZakat/Services/` — local finance store, Egyptian Hijri calendar, Hawl/Zakat calculations and bank message parser.
-- `SavingsZakat/Views/` — SwiftUI wallet and finance-entry screens.
-- `SavingsZakatTests/` — calculation, calendar, persistence and bank-message parser tests.
+- `SavingsZakat/Services/` — local finance store, finance ledger, Egyptian Hijri calendar, Hawl/Zakat calculations and bank message parser.
+- `SavingsZakat/Views/` — tab-based SwiftUI Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat screens.
+- `SavingsZakatTests/` — calculation, calendar, persistence, ledger and bank-message parser tests.
+- `SavingsZakatUITests/` — iPhone simulator UI automation for navigation, account/transaction entry and card masking/payment details.
 - `Documentation/Architecture.md` — architecture, data safety and migration contract.
 - `docs/superpowers/specs/` — approved product/design requirements.
 - `docs/superpowers/plans/` — phased implementation plan.
@@ -49,6 +51,8 @@ Physical-device installation requires an Apple signing team/profile. The simulat
 - This native iOS repository, its local data and its test deployment are separate from the PWA; do not replace, modify or migrate the PWA.
 - Egyptian official month-start records must be verified and bundled before dates can be labelled officially confirmed. Uncovered dates must remain estimated.
 - Hawl calculations, Zakat assumptions and all valuation inputs require further verification and transparent presentation.
-- Edit/delete flows, complete ledger accounting, duplicate-import protection, SMS Shortcut handoff, reminders, encrypted backup/restore, UI tests, physical iPhone validation and release packaging remain incomplete.
+- UI automation has been added but still needs a successful Xcode run; accessibility, Dynamic Type, Dark Mode and physical-device validation remain outstanding.
+- The ledger currently validates income, expense, transfers, duplicate posting and liabilities; recurring transactions, full credit-card payment reconciliation and broader import deduplication remain future work.
+- SMS Shortcut handoff, reminders, encrypted backup/restore and release packaging remain incomplete.
 - Prices and exchange rates are manual; missing values must be shown as provisional.
 - Use fictional test data until physical-device validation and explicit approval for any production-use step.
