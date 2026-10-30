@@ -434,9 +434,9 @@ struct AssetsZakatTab: View {
 
     private func label(_ holding: Holding) -> String {
         switch holding.kind {
-        case .cash: "Cash · \(holding.currency ?? "EGP") · \(holding.amount)"
-        case .gold: "Gold · \(holding.carat ?? 24)K · \(holding.grams ?? holding.amount) g"
-        case .silver: "Silver · \(holding.grams ?? holding.amount) g"
+        case .cash: return "Cash · \(holding.currency ?? "EGP") · \(holding.amount)"
+        case .gold: return "Gold · \(holding.carat ?? 24)K · \(holding.grams ?? holding.amount) g"
+        case .silver: return "Silver · \(holding.grams ?? holding.amount) g"
         }
     }
 
