@@ -70,9 +70,10 @@ struct BackupSettingsView: View {
 
                 Section("What is included") {
                     Label("Accounts, cards, transactions, liabilities and assets", systemImage: "checkmark.circle")
+                    Label("Exchange rates, metal prices, Nisab and parser rules", systemImage: "checkmark.circle")
                     Label("Encrypted with PBKDF2-HMAC-SHA256 and AES-256-GCM", systemImage: "lock.fill")
                     Label("No automatic upload or cloud account", systemImage: "iphone")
-                    Text("Pending bank-message review items, manual exchange rates, metal prices, Nisab settings and notification schedules are not included in this first backup version.")
+                    Text("Pending bank-message review items and notification schedules are not included in this first backup version.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
 
