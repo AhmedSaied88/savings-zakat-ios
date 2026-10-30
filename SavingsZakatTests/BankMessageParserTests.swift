@@ -71,6 +71,13 @@ final class BankMessageParserTests: XCTestCase {
         XCTAssertEqual(result.category, "Cash withdrawal")
     }
 
+    func testParsesArabicPoundLabelAndDecimalSeparator() throws {
+        let result = try XCTUnwrap(BankMessageParser.parse("تم سحب ١٢٥٫٥٠ جنيه"))
+        XCTAssertEqual(result.amount, Decimal(string: "125.50"))
+        XCTAssertEqual(result.currency, "EGP")
+        XCTAssertEqual(result.direction, .expense)
+    }
+
     func testRedactsCardAndOtpLikeNumbersFromRetainedText() {
         let text = "Card 1234567890123456 purchase EGP 90.00 OTP 123456"
         let safe = BankMessageParser.redactedText(text)
