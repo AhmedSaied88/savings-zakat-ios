@@ -193,7 +193,8 @@ final class FinanceStoreTests: XCTestCase {
             currency: "EGP",
             direction: .expense,
             date: Date(),
-            accountID: account.id
+            accountID: account.id,
+            importedMessageID: UUID()
         )
         let encoded = try JSONEncoder().encode(FinanceSnapshot(accounts: [account], transactions: [transaction]))
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
