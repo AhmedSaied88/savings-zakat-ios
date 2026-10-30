@@ -47,7 +47,6 @@ struct HawlCalendarView: View {
                         Label("Schedule / refresh reminders", systemImage: "bell.badge")
                     }
                 }
-                .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Schedule / refresh reminders")
                 .accessibilityIdentifier("schedule-hawl-reminders")
                 .disabled(isUpdatingReminders || holdings.isEmpty)
