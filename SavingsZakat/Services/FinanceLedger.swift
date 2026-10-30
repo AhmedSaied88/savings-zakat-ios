@@ -190,6 +190,7 @@ struct FinanceLedger {
         }
         guard snapshot.liabilities[liabilityIndex].kind == .creditCard,
               snapshot.liabilities[liabilityIndex].currency == cardCurrency(for: card),
+              (card.openingOutstandingBalance ?? 0) == 0,
               snapshot.liabilities[liabilityIndex].linkedCardID == nil || snapshot.liabilities[liabilityIndex].linkedCardID == cardID else {
             throw LedgerError.invalidCardTransaction
         }
@@ -312,6 +313,7 @@ struct FinanceLedger {
             guard liability.kind == .creditCard,
                   let card = snapshot.cards.first(where: { $0.id == cardID }),
                   card.kind == .credit,
+                  (card.openingOutstandingBalance ?? 0) == 0,
                   cardCurrency(for: card) == liability.currency,
                   !snapshot.liabilities.contains(where: { $0.linkedCardID == cardID }) else {
                 throw LedgerError.duplicateCardLiability(cardID)
