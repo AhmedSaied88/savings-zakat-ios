@@ -39,7 +39,8 @@ struct MessageImportCoordinator {
     func importMessage(
         text: String,
         senderIdentifier: String,
-        receivedAt: Date = Date()
+        receivedAt: Date = Date(),
+        customRules: [BankMessageRule] = []
     ) throws -> ImportOutcome {
         Self.queueLock.lock()
         defer { Self.queueLock.unlock() }
@@ -58,7 +59,7 @@ struct MessageImportCoordinator {
         }
         let safeSender = senderIsSafe ? String(sender.prefix(64)) : "Unknown"
         let redactedText = SensitiveTextRedactor.redact(text)
-        let parsed = BankMessageParser.parse(text)
+        let parsed = BankMessageParser.parse(text, customRules: customRules)
         let fingerprint = parsed?.fingerprint ?? Self.fingerprint(for: redactedText)
 
         var messages = try loadMessagesUnlocked()
