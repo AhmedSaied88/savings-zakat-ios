@@ -201,6 +201,91 @@ final class FinanceLedgerTests: XCTestCase {
         XCTAssertThrowsError(try ledger.addRecurringRule(mismatch))
     }
 
+
+    func testCreditCardPurchaseIncreasesCardDebtWithoutChangingBankBalance() throws {
+        let bank = FinanceAccount(name: "Bank", kind: .bank, currency: "EGP", openingBalance: 5_000)
+        let card = FinanceCard(name: "Credit", kind: .credit, linkedAccountID: bank.id, currency: "EGP")
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [bank], cards: [card]))
+        let purchase = FinanceTransaction(title: "Groceries", amount: 450, currency: "EGP", direction: .expense,
+                                          date: today, cardID: card.id, category: "Card purchase")
+        try ledger.post(purchase)
+
+        XCTAssertEqual(try ledger.balance(for: bank.id), 5_000)
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 450)
+        let summary = ledger.netWorth(in: "EGP", rates: [:])
+        XCTAssertEqual(summary.totalAssets, 5_000)
+        XCTAssertEqual(summary.totalLiabilities, 450)
+        XCTAssertEqual(summary.netWorth, 4_550)
+    }
+
+    func testCreditCardRepaymentReducesBankAndCardDebtWithoutAddingExpense() throws {
+        let bank = FinanceAccount(name: "Bank", kind: .bank, currency: "EGP", openingBalance: 5_000)
+        let card = FinanceCard(name: "Credit", kind: .credit, linkedAccountID: bank.id, currency: "EGP",
+                               openingOutstandingBalance: 1_000)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [bank], cards: [card]))
+        let payment = FinanceTransaction(title: "Card payment", amount: 400, currency: "EGP", direction: .transfer,
+                                         date: today, accountID: bank.id, destinationCardID: card.id,
+                                         category: "Card repayment")
+        try ledger.post(payment)
+
+        XCTAssertEqual(try ledger.balance(for: bank.id), 4_600)
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 600)
+        let summary = ledger.netWorth(in: "EGP", rates: [:])
+        XCTAssertEqual(summary.totalAssets, 4_600)
+        XCTAssertEqual(summary.totalLiabilities, 600)
+        XCTAssertEqual(summary.netWorth, 4_000)
+        XCTAssertEqual(ledger.snapshot.transactions.filter { $0.direction == .expense }.count, 0)
+    }
+
+    func testLinkedOpeningCardLiabilityIsNotCountedTwice() throws {
+        let bank = FinanceAccount(name: "Bank", kind: .bank, currency: "EGP", openingBalance: 2_000)
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP")
+        let opening = FinanceLiability(name: "Old card statement", kind: .creditCard, outstandingAmount: 700,
+                                       currency: "EGP", linkedCardID: card.id)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [bank], cards: [card]))
+        try ledger.addLiability(opening)
+        try ledger.post(FinanceTransaction(title: "Purchase", amount: 100, currency: "EGP", direction: .expense,
+                                           date: today, cardID: card.id))
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 800)
+        XCTAssertEqual(ledger.netWorth(in: "EGP", rates: [:]).totalLiabilities, 800)
+    }
+
+    func testCreditCardPaymentCannotExceedOutstandingBalance() throws {
+        let bank = FinanceAccount(name: "Bank", kind: .bank, currency: "EGP", openingBalance: 1_000)
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP", openingOutstandingBalance: 200)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [bank], cards: [card]))
+        let payment = FinanceTransaction(title: "Overpayment", amount: 250, currency: "EGP", direction: .transfer,
+                                         date: today, accountID: bank.id, destinationCardID: card.id)
+        XCTAssertThrowsError(try ledger.post(payment)) { error in
+            XCTAssertEqual(error as? FinanceLedger.LedgerError, .repaymentExceedsOutstanding)
+        }
+        XCTAssertEqual(try ledger.balance(for: bank.id), 1_000)
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 200)
+    }
+
+    func testCreditCardTransactionRejectsCurrencyMismatchAndDebitCard() throws {
+        let egp = FinanceAccount(name: "EGP", kind: .bank, currency: "EGP")
+        let usdCard = FinanceCard(name: "USD credit", kind: .credit, currency: "USD")
+        let debit = FinanceCard(name: "Debit", kind: .debit, currency: "EGP")
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [egp], cards: [usdCard, debit]))
+        let mismatch = FinanceTransaction(title: "Purchase", amount: 10, currency: "EGP", direction: .expense,
+                                          date: today, cardID: usdCard.id)
+        let debitPurchase = FinanceTransaction(title: "Purchase", amount: 10, currency: "EGP", direction: .expense,
+                                               date: today, cardID: debit.id)
+        XCTAssertThrowsError(try ledger.post(mismatch))
+        XCTAssertThrowsError(try ledger.post(debitPurchase))
+    }
+
+    func testCardWithTransactionsCannotBeDeleted() throws {
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP")
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(cards: [card]))
+        try ledger.post(FinanceTransaction(title: "Purchase", amount: 20, currency: "EGP", direction: .expense,
+                                           date: today, cardID: card.id))
+        XCTAssertThrowsError(try ledger.removeCard(id: card.id)) { error in
+            XCTAssertEqual(error as? FinanceLedger.LedgerError, .cardHasActivity(card.id))
+        }
+    }
+
     private func transaction(_ title: String, _ amount: Decimal, _ direction: TransactionDirection, account: UUID) -> FinanceTransaction {
         FinanceTransaction(title: title, amount: amount, currency: "EGP", direction: direction,
                            date: today, accountID: account)
