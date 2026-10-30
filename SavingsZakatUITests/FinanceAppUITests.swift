@@ -145,10 +145,11 @@ final class FinanceAppUITests: XCTestCase {
         category.typeText("Online shopping")
 
         app.buttons["Save"].tap()
-        let savedKeyword = app.staticTexts["marketplace"]
-        let savedCategory = app.staticTexts["Online shopping"]
-        XCTAssertTrue(savedKeyword.waitForExistence(timeout: 5), "Saved parser rule should expose its keyword")
-        XCTAssertTrue(savedCategory.exists, "Saved parser rule should expose its category")
+        let savedRule = app.buttons.matching(identifier: "custom-bank-rule-row").firstMatch
+        XCTAssertTrue(scrollTo(savedRule, in: app), "Saved parser rule should be reachable")
+        XCTAssertTrue(savedRule.waitForExistence(timeout: 5), "Saved parser rule should be discoverable")
+        XCTAssertTrue(savedRule.label.contains("marketplace"), "Saved parser rule should expose its keyword")
+        XCTAssertTrue(savedRule.label.contains("Online shopping"), "Saved parser rule should expose its category")
     }
 
     func testBackupScreenRequiresPassphraseConfirmation() throws {
@@ -203,7 +204,8 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(scrollTo(hawlCalendar, in: app), "Hawl calendar link should be reachable by scrolling the Zakat list")
         hawlCalendar.tap()
         XCTAssertTrue(app.staticTexts["No Hawl dates"].waitForExistence(timeout: 5))
-        let scheduleButton = app.descendants(matching: .any)["schedule-hawl-reminders"]
+        let scheduleButton = app.buttons["schedule-hawl-reminders"]
+        XCTAssertTrue(scrollTo(scheduleButton, in: app), "Reminder scheduling control should be reachable")
         XCTAssertTrue(scheduleButton.waitForExistence(timeout: 3), "Reminder scheduling control should remain discoverable when disabled")
         XCTAssertFalse(scheduleButton.isEnabled, "Reminder scheduling should be disabled until an asset has a Hawl date")
         XCTAssertFalse(app.staticTexts["Notifications are not permitted."].exists)
