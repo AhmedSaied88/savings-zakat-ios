@@ -29,6 +29,7 @@ struct BackupService {
     private static let minimumAllowedIterations = 300_000
     private static let maximumAllowedIterations = 1_000_000
     private static let maximumCiphertextBytes = 50 * 1024 * 1024
+    private static let maximumArchiveBytes = 70 * 1024 * 1024
     private static let authenticatedContext = Data("SavingsZakat.EncryptedBackup.v1".utf8)
 
     func exportBackup(snapshot: FinanceSnapshot, passphrase: String) throws -> Data {
@@ -57,7 +58,7 @@ struct BackupService {
 
     func importBackup(data: Data, passphrase: String) throws -> FinanceSnapshot {
         try validatePassphrase(passphrase)
-        guard data.count <= Self.maximumCiphertextBytes + 16_384 else {
+        guard data.count <= Self.maximumArchiveBytes else {
             throw BackupError.invalidArchive
         }
 
