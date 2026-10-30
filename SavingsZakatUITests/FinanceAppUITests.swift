@@ -110,8 +110,11 @@ final class FinanceAppUITests: XCTestCase {
         let creditCardRow = app.buttons["card-row-UI Test Credit"]
         XCTAssertTrue(scrollTo(creditCardRow, in: app),
                       "The saved credit card row should be accessible")
-        XCTAssertTrue(creditCardRow.label.contains("Payment due"),
-                      "The saved credit card row should expose its payment due date")
+        let paymentDueLabel = app.descendants(matching: .any)["card-payment-due-UI Test Credit"]
+        XCTAssertTrue(paymentDueLabel.waitForExistence(timeout: 5),
+                      "The saved credit card should expose a separately accessible payment due label")
+        XCTAssertTrue(paymentDueLabel.label.contains("Payment due"),
+                      "The payment due label should include its due-date description")
     }
 
 
