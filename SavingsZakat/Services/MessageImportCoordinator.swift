@@ -89,6 +89,7 @@ struct MessageImportCoordinator {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(messages)
         try data.write(to: queueURL, options: .atomic)
+        NotificationCenter.default.post(name: .bankMessageImportDidChange, object: nil)
     }
 
     private static func fingerprint(for redactedText: String) -> String {
@@ -100,4 +101,8 @@ struct MessageImportCoordinator {
             .map { String(format: "%02x", $0) }
             .joined()
     }
+}
+
+extension Notification.Name {
+    static let bankMessageImportDidChange = Notification.Name("SavingsZakat.BankMessageImportDidChange")
 }
