@@ -130,6 +130,16 @@ final class AssetLedgerTests: XCTestCase {
         XCTAssertEqual(result.totalValuedWealthEGP, 1_000, accuracy: 0.01)
     }
 
+
+    func testRejectsMalformedCurrencyCode() throws {
+        var item = cash()
+        item.currency = "E1P"
+        var ledger = AssetLedger()
+        XCTAssertThrowsError(try ledger.add(item, asOf: today)) {
+            XCTAssertEqual($0 as? AssetLedger.AssetError, .invalidCurrency)
+        }
+    }
+
     private func cash() -> Holding {
         Holding(id: UUID(), kind: .cash, amount: 1_000, currency: "EGP", grams: nil, carat: nil,
                 acquiredDate: acquired, hawlStartDate: acquired, purpose: .investment)
