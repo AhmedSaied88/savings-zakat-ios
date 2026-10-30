@@ -24,74 +24,66 @@ struct HawlCalendarView: View {
 
     var body: some View {
         List {
-            upcomingSection
-            remindersSection
-            reminderFooterSection
+            Section("Upcoming Hawl dates") {
+                if upcoming.isEmpty {
+                    ContentUnavailableView("No Hawl dates", systemImage: "calendar",
+                                           description: Text("Add an asset with a Gregorian Hawl start date to see its anniversary here."))
+                } else {
+                    ForEach(upcoming) { item in
+                        upcomingRow(item)
+                    }
+                }
+            }
+
+            Section("Local reminders") {
+                Text("Four reminders are planned for 30, 7 and 1 day before Hawl, and on the due date. They are scheduled for 9:00 AM local time on the corresponding Cairo civil date. Refresh reminders after adding an asset or correcting its dates; deleting an asset cancels its pending reminders.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Button {
+                    Task { await scheduleReminders() }
+                } label: {
+                    if isUpdatingReminders {
+                        HStack { ProgressView(); Text("Updating reminders…") }
+                    } else {
+                        Label("Schedule / refresh reminders", systemImage: "bell.badge")
+                    }
+                }
+                .disabled(isUpdatingReminders || holdings.isEmpty)
+                Button(role: .destructive) {
+                    Task {
+                        await scheduler.cancelAll()
+                        reminderStatus = "All pending Hawl reminders were cancelled."
+                    }
+                } label: {
+                    Label("Cancel all Hawl reminders", systemImage: "bell.slash")
+                }
+                if let reminderStatus {
+                    Text(reminderStatus).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+
+            Section {
+                Text("Reminder delivery depends on iOS notification permission, device settings and the phone being available. Dates based on incomplete Egyptian official coverage remain Estimated.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
         }
         .navigationTitle("Hawl calendar")
         .navigationBarTitleDisplayMode(.inline)
     }
 
-
-    private var upcomingSection: some View {
-        Section("Upcoming Hawl dates") {
-            if upcoming.isEmpty {
-                ContentUnavailableView("No Hawl dates", systemImage: "calendar",
-                                       description: Text("Add an asset with a Gregorian Hawl start date to see its anniversary here."))
-            }
-            ForEach(upcoming) { item in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(assetName(item.holding)).font(.headline)
-                    Text("Hawl start: \(item.holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.caption).foregroundStyle(.secondary)
-                    Text("Due: \(item.due.date.formatted(date: .long, time: .omitted))")
-                        .font(.subheadline.weight(.semibold))
-                    Text(hijriLabel(for: item.due.date, status: item.due.status))
-                        .font(.caption)
-                        .foregroundStyle(item.due.status == .officiallyConfirmed ? .secondary : .orange)
-                    Text(countdown(to: item.due.date))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                .padding(.vertical, 5)
-            }
+    private func upcomingRow(_ item: HawlCalendarEntry) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(assetName(item.holding)).font(.headline)
+            Text("Hawl start: \(item.holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
+                .font(.caption).foregroundStyle(.secondary)
+            Text("Due: \(item.due.date.formatted(date: .long, time: .omitted))")
+                .font(.subheadline.weight(.semibold))
+            Text(hijriLabel(for: item.due.date, status: item.due.status))
+                .font(.caption)
+                .foregroundStyle(item.due.status == .officiallyConfirmed ? .secondary : .orange)
+            Text(countdown(to: item.due.date))
+                .font(.caption).foregroundStyle(.secondary)
         }
-    }
-
-
-    private var remindersSection: some View {
-        Section("Local reminders") {
-            Text("Four reminders are planned for 30, 7 and 1 day before Hawl, and on the due date. They are scheduled for 9:00 AM local time on the corresponding Cairo civil date. Refresh reminders after adding an asset or correcting its dates; deleting an asset cancels its pending reminders.")
-                .font(.footnote).foregroundStyle(.secondary)
-            Button {
-                Task { await scheduleReminders() }
-            } label: {
-                if isUpdatingReminders {
-                    HStack { ProgressView(); Text("Updating reminders…") }
-                } else {
-                    Label("Schedule / refresh reminders", systemImage: "bell.badge")
-                }
-            }
-            .disabled(isUpdatingReminders || holdings.isEmpty)
-            Button(role: .destructive) {
-                Task {
-                    await scheduler.cancelAll()
-                    reminderStatus = "All pending Hawl reminders were cancelled."
-                }
-            } label: {
-                Label("Cancel all Hawl reminders", systemImage: "bell.slash")
-            }
-            if let reminderStatus {
-                Text(reminderStatus).font(.footnote).foregroundStyle(.secondary)
-            }
-        }
-    }
-
-
-    private var reminderFooterSection: some View {
-        Section {
-            Text("Reminder delivery depends on iOS notification permission, device settings and the phone being available. Dates based on incomplete Egyptian official coverage remain Estimated.")
-                .font(.footnote).foregroundStyle(.secondary)
-        }
+        .padding(.vertical, 5)
     }
 
     private func scheduleReminders() async {
