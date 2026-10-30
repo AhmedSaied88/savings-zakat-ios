@@ -41,8 +41,12 @@ struct FinanceCard: Identifiable, Codable, Equatable {
     /// Store only the final four digits. Never store a full PAN, CVV, PIN, or OTP.
     var lastFour: String?
     var linkedAccountID: UUID?
+    var creditLimit: Decimal?
+    var statementDate: Date?
+    var paymentDueDate: Date?
+    var minimumDue: Decimal?
 
-    init(id: UUID = UUID(), name: String, issuer: String? = nil, kind: FinanceCardKind, lastFour: String? = nil, linkedAccountID: UUID? = nil) {
+    init(id: UUID = UUID(), name: String, issuer: String? = nil, kind: FinanceCardKind, lastFour: String? = nil, linkedAccountID: UUID? = nil, creditLimit: Decimal? = nil, statementDate: Date? = nil, paymentDueDate: Date? = nil, minimumDue: Decimal? = nil) {
         self.id = id
         self.name = name
         self.issuer = issuer
@@ -50,6 +54,10 @@ struct FinanceCard: Identifiable, Codable, Equatable {
         let digits = lastFour.map { String($0.filter(\.isNumber).suffix(4)) }
         self.lastFour = digits?.isEmpty == false ? digits : nil
         self.linkedAccountID = linkedAccountID
+        self.creditLimit = creditLimit
+        self.statementDate = statementDate
+        self.paymentDueDate = paymentDueDate
+        self.minimumDue = minimumDue
     }
 }
 
