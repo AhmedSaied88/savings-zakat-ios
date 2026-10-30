@@ -29,8 +29,12 @@ jobs:
         run: brew install xcodegen
       - name: Generate Xcode project
         run: xcodegen generate
+      - name: Install iOS Simulator runtime
+        run: |
+          xcodebuild -downloadPlatform iOS
+          xcrun simctl list devices available
       - name: Build and run unit tests
         run: |
           PROJECT="$(find . -maxdepth 1 -name '*.xcodeproj' -print -quit)"
           test -n "$PROJECT"
-          xcodebuild test -project "$PROJECT" -scheme SavingsZakat -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
+          xcodebuild test -project "$PROJECT" -scheme SavingsZakat -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' CODE_SIGNING_ALLOWED=NO
