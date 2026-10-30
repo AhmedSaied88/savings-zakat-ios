@@ -113,7 +113,7 @@ struct AccountsCardsTab: View {
                         Text("Store card labels and masked digits only.").foregroundStyle(.secondary)
                     }
                     ForEach(snapshot.cards) { card in
-                        let cardCurrency = snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
+                        let cardCurrency = card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
                         VStack(alignment: .leading, spacing: 5) {
                             HStack {
                                 Label(card.name, systemImage: card.kind == .credit ? "creditcard.fill" : "creditcard")
@@ -125,6 +125,7 @@ struct AccountsCardsTab: View {
                                 .font(.caption).foregroundStyle(.secondary)
                             if card.kind == .credit {
                                 HStack(spacing: 12) {
+                                    Text("Outstanding: \((try? ledger.creditCardOutstanding(for: card.id)) ?? card.openingOutstandingBalance ?? 0, format: .currency(code: cardCurrency))")
                                     if let limit = card.creditLimit {
                                         Text("Limit: \(limit, format: .currency(code: cardCurrency))")
                                     }
@@ -140,7 +141,18 @@ struct AccountsCardsTab: View {
                         }
                         .padding(.vertical, 4)
                     }
-                    .onDelete { offsets in snapshot.cards.remove(atOffsets: offsets); onSave() }
+                    .onDelete { offsets in
+                        let selectedCards = offsets.map { snapshot.cards[$0] }
+                        var updatedLedger = FinanceLedger(snapshot: snapshot)
+                        do {
+                            for card in selectedCards { try updatedLedger.removeCard(id: card.id) }
+                            snapshot = updatedLedger.snapshot
+                            errorMessage = nil
+                            onSave()
+                        } catch {
+                            errorMessage = "A card with linked purchases, repayments or an opening liability cannot be deleted."
+                        }
+                    }
                     Button { showNewCard = true } label: {
                         Label("Add card", systemImage: "plus.circle.fill").frame(minHeight: 44)
                     }
@@ -363,7 +375,7 @@ struct TransactionsTab: View {
                 }
             }
             .sheet(isPresented: $showAdd) {
-                TransactionEditorSheet(accounts: snapshot.accounts) { transaction in
+                TransactionEditorSheet(accounts: snapshot.accounts, cards: snapshot.cards) { transaction in
                     var ledger = FinanceLedger(snapshot: snapshot)
                     do {
                         try ledger.post(transaction)
@@ -614,11 +626,39 @@ struct DebtsTab: View {
     let onSave: () -> Void
     @State private var showAdd = false
 
+    private var ledger: FinanceLedger { FinanceLedger(snapshot: snapshot) }
+
     var body: some View {
         NavigationStack {
             List {
-                Section("Recorded debt by currency") {
-                    let groups = Dictionary(grouping: snapshot.liabilities, by: \.currency)
+                Section("Credit cards · calculated balances") {
+                    let creditCards = snapshot.cards.filter { $0.kind == .credit }
+                    if creditCards.isEmpty {
+                        Text("Add a credit card in Accounts to track purchases and repayments.")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(creditCards) { card in
+                        let currency = card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(card.name).font(.headline)
+                            HStack {
+                                Text("Outstanding")
+                                Spacer()
+                                Text((try? ledger.creditCardOutstanding(for: card.id)) ?? 0,
+                                     format: .currency(code: currency))
+                                    .font(.subheadline.bold()).monospacedDigit()
+                            }
+                            if let due = card.paymentDueDate {
+                                Label("Due \(due.formatted(date: .abbreviated, time: .omitted))",
+                                      systemImage: "calendar").font(.caption).foregroundStyle(.orange)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                Section("Other recorded debt by currency") {
+                    let standalone = snapshot.liabilities.filter { $0.linkedCardID == nil }
+                    let groups = Dictionary(grouping: standalone, by: \.currency)
                     ForEach(groups.keys.sorted(), id: \.self) { currency in
                         let total = groups[currency, default: []].reduce(Decimal.zero) { $0 + $1.outstandingAmount }
                         HStack {
@@ -627,15 +667,16 @@ struct DebtsTab: View {
                             Text(total, format: .currency(code: currency)).font(.headline).monospacedDigit()
                         }
                     }
-                    Text("Different currencies are kept separate; exchange rates are not assumed here.")
+                    Text("A linked opening card balance is included in its card total above, not counted again here.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Loans, instalments and card balances") {
-                    if snapshot.liabilities.isEmpty {
-                        ContentUnavailableView("No debts recorded", systemImage: "checkmark.circle",
-                                               description: Text("Add a loan, instalment or credit-card balance."))
+                Section("Loans, instalments and standalone debts") {
+                    let standalone = snapshot.liabilities.filter { $0.linkedCardID == nil }
+                    if standalone.isEmpty {
+                        ContentUnavailableView("No other debts recorded", systemImage: "checkmark.circle",
+                                               description: Text("Add a loan, instalment or standalone debt."))
                     }
-                    ForEach(snapshot.liabilities) { item in
+                    ForEach(standalone) { item in
                         VStack(alignment: .leading, spacing: 5) {
                             Text(item.name).font(.headline)
                             HStack {
@@ -650,7 +691,11 @@ struct DebtsTab: View {
                             }
                         }.padding(.vertical, 4)
                     }
-                    .onDelete { offsets in snapshot.liabilities.remove(atOffsets: offsets); onSave() }
+                    .onDelete { offsets in
+                        let items = standalone
+                        for index in offsets { snapshot.liabilities.removeAll { $0.id == items[index].id } }
+                        onSave()
+                    }
                     Button { showAdd = true } label: {
                         Label("Add loan / debt", systemImage: "plus.circle.fill").frame(minHeight: 44)
                     }
@@ -658,7 +703,7 @@ struct DebtsTab: View {
             }
             .navigationTitle("Debts")
             .sheet(isPresented: $showAdd) {
-                LiabilityEntrySheet { liability in
+                LiabilityEntrySheet(cards: snapshot.cards) { liability in
                     var ledger = FinanceLedger(snapshot: snapshot)
                     do {
                         try ledger.addLiability(liability)
@@ -1180,64 +1225,124 @@ private struct AccountEditorSheet: View {
 }
 
 private struct TransactionEditorSheet: View {
+    private enum EntryKind: String, CaseIterable {
+        case account = "Account transaction"
+        case cardPurchase = "Credit-card purchase"
+        case cardRepayment = "Credit-card repayment"
+    }
+
     let accounts: [FinanceAccount]
+    let cards: [FinanceCard]
     let onSave: (FinanceTransaction) -> Void
     @Environment(\.dismiss) private var dismiss
+    @State private var entryKind = EntryKind.account
     @State private var title = ""
     @State private var amount = ""
     @State private var direction = TransactionDirection.expense
     @State private var date = Date()
     @State private var accountID: UUID?
     @State private var destinationAccountID: UUID?
+    @State private var cardID: UUID?
     @State private var category = "Shopping"
 
     private let categories = ["Food", "Transport", "Shopping", "Bills", "Housing", "Health", "Education", "Salary", "Other"]
+    private var creditCards: [FinanceCard] { cards.filter { $0.kind == .credit } }
+    private var selectedAccount: FinanceAccount? { accounts.first(where: { $0.id == accountID }) }
+    private var selectedCard: FinanceCard? { creditCards.first(where: { $0.id == cardID }) }
+    private var cardCurrency: String? {
+        guard let selectedCard else { return nil }
+        return selectedCard.currency
+            ?? accounts.first(where: { $0.id == selectedCard.linkedAccountID })?.currency
+            ?? "EGP"
+    }
+    private var eligiblePaymentCards: [FinanceCard] {
+        guard let selectedAccount else { return [] }
+        return creditCards.filter {
+            ($0.currency ?? accounts.first(where: { $0.id == $0.linkedAccountID })?.currency ?? "EGP") == selectedAccount.currency
+        }
+    }
 
-    init(accounts: [FinanceAccount], onSave: @escaping (FinanceTransaction) -> Void) {
+    init(accounts: [FinanceAccount], cards: [FinanceCard], onSave: @escaping (FinanceTransaction) -> Void) {
         self.accounts = accounts
+        self.cards = cards
         self.onSave = onSave
         let firstAccount = accounts.first
         _accountID = State(initialValue: firstAccount?.id)
         _destinationAccountID = State(initialValue: accounts.first(where: {
             $0.id != firstAccount?.id && $0.currency == firstAccount?.currency
         })?.id)
-    }
-
-    private var selectedAccount: FinanceAccount? {
-        accounts.first(where: { $0.id == accountID })
+        _cardID = State(initialValue: cards.first(where: { $0.kind == .credit })?.id)
     }
 
     var body: some View {
         NavigationStack {
             Form {
+                Picker("Entry type", selection: $entryKind) {
+                    ForEach(EntryKind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
                 TextField("Description", text: $title)
                 TextField("Amount", text: $amount).keyboardType(.decimalPad)
-                Picker("Type", selection: $direction) {
-                    Text("Expense").tag(TransactionDirection.expense)
-                    Text("Income").tag(TransactionDirection.income)
-                    Text("Transfer").tag(TransactionDirection.transfer)
-                }
-                if !accounts.isEmpty {
-                    Picker("From account", selection: $accountID) {
-                        ForEach(accounts) { Text($0.name).tag(Optional($0.id)) }
+
+                if entryKind == .account {
+                    Picker("Type", selection: $direction) {
+                        Text("Expense").tag(TransactionDirection.expense)
+                        Text("Income").tag(TransactionDirection.income)
+                        Text("Transfer").tag(TransactionDirection.transfer)
                     }
-                    if direction == .transfer {
-                        Picker("To account", selection: $destinationAccountID) {
-                            ForEach(accounts.filter { $0.id != accountID && $0.currency == selectedAccount?.currency }) {
-                            Text($0.name).tag(Optional($0.id))
+                    if !accounts.isEmpty {
+                        Picker("From account", selection: $accountID) {
+                            ForEach(accounts) { Text($0.name).tag(Optional($0.id)) }
                         }
+                        if direction == .transfer {
+                            Picker("To account", selection: $destinationAccountID) {
+                                ForEach(accounts.filter { $0.id != accountID && $0.currency == selectedAccount?.currency }) {
+                                    Text($0.name).tag(Optional($0.id))
+                                }
+                            }
+                        } else {
+                            Picker("Category", selection: $category) {
+                                ForEach(categories, id: \.self) { Text($0).tag($0) }
+                            }
+                        }
+                        if let selectedAccount {
+                            LabeledContent("Currency", value: selectedAccount.currency)
                         }
                     } else {
+                        ContentUnavailableView("Add an account first", systemImage: "building.columns",
+                                               description: Text("Account transactions require an account."))
+                    }
+                } else if entryKind == .cardPurchase {
+                    if creditCards.isEmpty {
+                        ContentUnavailableView("No credit cards", systemImage: "creditcard",
+                                               description: Text("Add a credit card in Accounts first."))
+                    } else {
+                        Picker("Credit card", selection: $cardID) {
+                            ForEach(creditCards) { Text($0.name).tag(Optional($0.id)) }
+                        }
                         Picker("Category", selection: $category) {
                             ForEach(categories, id: \.self) { Text($0).tag($0) }
                         }
-                    }
-                    if let selectedAccount {
-                        LabeledContent("Currency", value: selectedAccount.currency)
+                        if let cardCurrency { LabeledContent("Currency", value: cardCurrency) }
+                        Text("The purchase increases card debt. It does not reduce your bank balance.")
+                            .font(.footnote).foregroundStyle(.secondary)
                     }
                 } else {
-                    ContentUnavailableView("Add an account first", systemImage: "building.columns",
-                                           description: Text("Transactions must be linked to an account."))
+                    if !accounts.isEmpty {
+                        Picker("Pay from account", selection: $accountID) {
+                            ForEach(accounts) { Text($0.name).tag(Optional($0.id)) }
+                        }
+                    }
+                    if eligiblePaymentCards.isEmpty {
+                        ContentUnavailableView("No matching credit card", systemImage: "creditcard",
+                                               description: Text("Add a credit card in the same currency as the paying account."))
+                    } else {
+                        Picker("Credit card", selection: $cardID) {
+                            ForEach(eligiblePaymentCards) { Text($0.name).tag(Optional($0.id)) }
+                        }
+                        Text("A repayment reduces both the bank balance and card debt. It is not an expense.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if let selectedAccount { LabeledContent("Currency", value: selectedAccount.currency) }
                 }
                 DatePicker("Date", selection: $date, displayedComponents: .date)
             }
@@ -1246,21 +1351,43 @@ private struct TransactionEditorSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        guard let accountID, let selectedAccount,
-                              let value = Decimal(string: amount), value > 0 else { return }
-                        if direction == .transfer && (destinationAccountID == nil || destinationAccountID == accountID) { return }
-                        let item = FinanceTransaction(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                        guard let value = Decimal(string: amount), value > 0 else { return }
+                        let item: FinanceTransaction
+                        switch entryKind {
+                        case .account:
+                            guard let accountID, let selectedAccount else { return }
+                            if direction == .transfer && (destinationAccountID == nil || destinationAccountID == accountID) { return }
+                            item = FinanceTransaction(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                                                       amount: value, currency: selectedAccount.currency,
                                                       direction: direction, date: date, accountID: accountID,
                                                       destinationAccountID: direction == .transfer ? destinationAccountID : nil,
                                                       category: direction == .transfer ? "Transfer" : category)
+                        case .cardPurchase:
+                            guard let selectedCard, let cardCurrency else { return }
+                            item = FinanceTransaction(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                                                      amount: value, currency: cardCurrency, direction: .expense,
+                                                      date: date, cardID: selectedCard.id,
+                                                      category: "Card purchase · \(selectedCard.name) · \(category)")
+                        case .cardRepayment:
+                            guard let accountID, let selectedAccount, let selectedCard,
+                                  selectedAccount.currency == (selectedCard.currency
+                                    ?? accounts.first(where: { $0.id == selectedCard.linkedAccountID })?.currency
+                                    ?? "EGP") else { return }
+                            item = FinanceTransaction(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                                                      amount: value, currency: selectedAccount.currency,
+                                                      direction: .transfer, date: date, accountID: accountID,
+                                                      destinationCardID: selectedCard.id,
+                                                      category: "Card repayment · \(selectedCard.name)")
+                        }
                         onSave(item)
                         dismiss()
                     }
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                               !(Decimal(string: amount).map { $0 > 0 } ?? false) ||
-                              accounts.isEmpty || accountID == nil ||
-                              (direction == .transfer && (destinationAccountID == nil || destinationAccountID == accountID)))
+                              (entryKind == .account && (accounts.isEmpty || accountID == nil ||
+                                (direction == .transfer && (destinationAccountID == nil || destinationAccountID == accountID)))) ||
+                              (entryKind == .cardPurchase && selectedCard == nil) ||
+                              (entryKind == .cardRepayment && (selectedAccount == nil || !eligiblePaymentCards.contains(where: { $0.id == cardID }))))
                 }
             }
             .onChange(of: accountID) { _, newValue in
@@ -1270,6 +1397,9 @@ private struct TransactionEditorSheet: View {
                     destinationAccountID = accounts.first(where: {
                         $0.id != newValue && $0.currency == newCurrency
                     })?.id
+                }
+                if entryKind == .cardRepayment, !eligiblePaymentCards.contains(where: { $0.id == cardID }) {
+                    cardID = eligiblePaymentCards.first?.id
                 }
             }
         }
