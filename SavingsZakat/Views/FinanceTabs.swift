@@ -223,8 +223,12 @@ struct AccountsCardsTab: View {
 
 struct TransactionsTab: View {
     @Binding var snapshot: FinanceSnapshot
+    @Binding var importedMessages: [ImportedMessage]
     let onSave: () -> Void
+    let onSaveImports: () -> Void
+    let onRefreshImports: () -> Void
     @State private var showAdd = false
+    @State private var selectedMessage: ImportedMessage?
     @State private var errorMessage: String?
 
     var body: some View {
@@ -236,6 +240,52 @@ struct TransactionsTab: View {
                         Spacer()
                         Text("\(snapshot.transactions.filter { $0.reviewStatus == .confirmed }.count)")
                             .font(.headline).monospacedDigit()
+                    }
+                }
+                Section("Imported bank messages · review required") {
+                    let pending = importedMessages.filter { $0.state == .needsReview }
+                    if pending.isEmpty {
+                        Text("Bank messages imported through Shortcuts will appear here. They never change balances until you confirm them.")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(pending) { item in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(item.category ?? "Unrecognized bank message")
+                                    .font(.headline)
+                                Spacer()
+                                Text(item.confidence?.rawValue.capitalized ?? "Manual review")
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                            Text(item.redactedText)
+                                .font(.subheadline).foregroundStyle(.secondary).lineLimit(4)
+                            HStack {
+                                Text(item.senderIdentifier)
+                                Spacer()
+                                Text(item.receivedAt.formatted(date: .abbreviated, time: .shortened))
+                            }
+                            .font(.caption).foregroundStyle(.secondary)
+                            if let amount = item.amount, let currency = item.currency {
+                                Text(amount, format: .currency(code: currency))
+                                    .font(.subheadline.weight(.semibold)).monospacedDigit()
+                            } else {
+                                Label("Could not safely identify the transaction. Add it manually if valid.",
+                                      systemImage: "exclamationmark.triangle")
+                                    .font(.caption).foregroundStyle(.orange)
+                            }
+                            HStack {
+                                if item.amount != nil && item.direction != nil {
+                                    Button("Review & confirm") { selectedMessage = item }
+                                        .buttonStyle(.borderedProminent)
+                                }
+                                Spacer()
+                                Button("Ignore", role: .destructive) {
+                                    updateImportedMessage(item.id, state: .ignored, transactionID: nil)
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                        }
+                        .padding(.vertical, 5)
                     }
                 }
                 Section("Activity") {
@@ -259,6 +309,7 @@ struct TransactionsTab: View {
                     }
                 }
             }
+            .refreshable { onRefreshImports() }
             .navigationTitle("Transactions")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -279,12 +330,149 @@ struct TransactionsTab: View {
                     }
                 }
             }
+            .sheet(item: $selectedMessage) { message in
+                ImportedMessageConfirmationSheet(message: message, accounts: snapshot.accounts) { transaction in
+                    var ledger = FinanceLedger(snapshot: snapshot)
+                    do {
+                        try ledger.post(transaction)
+                        snapshot = ledger.snapshot
+                        updateImportedMessage(message.id, state: .confirmed, transactionID: transaction.id)
+                        errorMessage = nil
+                        onSave()
+                    } catch {
+                        errorMessage = "The imported transaction could not be confirmed: \(error.localizedDescription)"
+                    }
+                }
+            }
         }
+    }
+
+    private func updateImportedMessage(_ id: UUID, state: ImportedMessageState, transactionID: UUID?) {
+        guard let index = importedMessages.firstIndex(where: { $0.id == id }) else { return }
+        importedMessages[index].state = state
+        importedMessages[index].linkedTransactionID = transactionID
+        onSaveImports()
     }
 
     private func accountName(_ id: UUID?) -> String? {
         guard let id else { return nil }
         return snapshot.accounts.first(where: { $0.id == id })?.name
+    }
+}
+
+private struct ImportedMessageConfirmationSheet: View {
+    let message: ImportedMessage
+    let accounts: [FinanceAccount]
+    let onConfirm: (FinanceTransaction) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var accountID: UUID?
+    @State private var destinationAccountID: UUID?
+    @State private var direction: TransactionDirection
+
+    init(message: ImportedMessage, accounts: [FinanceAccount], onConfirm: @escaping (FinanceTransaction) -> Void) {
+        self.message = message
+        self.accounts = accounts
+        self.onConfirm = onConfirm
+        let initialAccount = accounts.first(where: { $0.currency == message.currency })
+        _accountID = State(initialValue: initialAccount?.id)
+        _destinationAccountID = State(initialValue: accounts.first(where: {
+            $0.id != initialAccount?.id && $0.currency == message.currency
+        })?.id)
+        _direction = State(initialValue: message.direction ?? .expense)
+    }
+
+    private var selectedAccount: FinanceAccount? {
+        accounts.first(where: { $0.id == accountID })
+    }
+
+    private var eligibleAccounts: [FinanceAccount] {
+        accounts.filter { $0.currency == message.currency }
+    }
+
+    private var eligibleDestinations: [FinanceAccount] {
+        eligibleAccounts.filter { $0.id != accountID }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Imported message") {
+                    Text(message.redactedText).font(.subheadline)
+                    if let amount = message.amount, let currency = message.currency {
+                        LabeledContent("Amount", value: amount.formatted(.currency(code: currency)))
+                    }
+                    LabeledContent("Sender", value: message.senderIdentifier)
+                    LabeledContent("Parser confidence", value: message.confidence?.rawValue.capitalized ?? "Unparsed")
+                }
+                Section("Verify transaction details") {
+                    Picker("Transaction type", selection: $direction) {
+                        Text("Income").tag(TransactionDirection.income)
+                        Text("Expense").tag(TransactionDirection.expense)
+                        Text("Transfer between my accounts").tag(TransactionDirection.transfer)
+                    }
+                    Picker("Account", selection: $accountID) {
+                        ForEach(eligibleAccounts) { account in
+                            Text(account.name).tag(Optional(account.id))
+                        }
+                    }
+                    if direction == .transfer {
+                        Picker("Destination account", selection: $destinationAccountID) {
+                            ForEach(eligibleDestinations) { account in
+                                Text(account.name).tag(Optional(account.id))
+                            }
+                        }
+                        Text("Transfers are only for moving money between your own accounts. Choose Income or Expense for an external transfer.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if eligibleAccounts.isEmpty {
+                        Text("Add an account in \(message.currency ?? "the message currency") before confirming this item.")
+                            .font(.footnote).foregroundStyle(.orange)
+                    }
+                }
+                Section {
+                    Button("Confirm and add to ledger") {
+                        guard let amount = message.amount,
+                              let currency = message.currency,
+                              let accountID,
+                              let selectedAccount,
+                              selectedAccount.currency == currency else { return }
+                        let transaction = FinanceTransaction(
+                            title: message.category ?? "Bank transaction",
+                            amount: amount,
+                            currency: currency,
+                            direction: direction,
+                            date: message.receivedAt,
+                            accountID: accountID,
+                            destinationAccountID: direction == .transfer ? destinationAccountID : nil,
+                            source: .shortcut,
+                            reviewStatus: .confirmed,
+                            category: message.category ?? "Other"
+                        )
+                        onConfirm(transaction)
+                        dismiss()
+                    }
+                    .disabled(
+                        message.amount == nil ||
+                        message.currency == nil ||
+                        selectedAccount == nil ||
+                        (direction == .transfer && (destinationAccountID == nil || destinationAccountID == accountID))
+                    )
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .navigationTitle("Confirm bank message")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+            .onChange(of: accountID) { _, newValue in
+                if destinationAccountID == newValue || !eligibleDestinations.contains(where: { $0.id == destinationAccountID }) {
+                    destinationAccountID = eligibleAccounts.first(where: { $0.id != newValue })?.id
+                }
+            }
+        }
     }
 }
 
