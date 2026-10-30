@@ -48,7 +48,10 @@ struct MessageImportCoordinator {
 
         let sender = senderIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sender.isEmpty else { throw ImportError.invalidSender }
-        let safeSender = String(sender.prefix(64))
+        let senderIsSafe = sender.allSatisfy {
+            $0.isLetter || $0.isNumber || "+._-".contains($0)
+        }
+        let safeSender = senderIsSafe ? String(sender.prefix(64)) : "Unknown"
         let redactedText = SensitiveTextRedactor.redact(text)
         let parsed = BankMessageParser.parse(text)
         let fingerprint = parsed?.fingerprint ?? Self.fingerprint(for: redactedText)
