@@ -79,7 +79,7 @@ struct HawlCalendarView: View {
                 .font(.subheadline.weight(.semibold))
             Text(hijriLabel(for: item.due.date, status: item.due.status))
                 .font(.caption)
-                .foregroundStyle(item.due.status == .officiallyConfirmed ? .secondary : .orange)
+                .foregroundStyle(item.due.status == .officiallyConfirmed ? Color.secondary : Color.orange)
             Text(countdown(to: item.due.date))
                 .font(.caption).foregroundStyle(.secondary)
         }
