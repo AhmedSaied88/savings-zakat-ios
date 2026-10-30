@@ -41,8 +41,6 @@ struct ContentView: View {
                 .tabItem { Label("Debts", systemImage: "doc.text") }
             AssetsZakatTab(snapshot: $snapshot, preferences: $preferences, onSave: save)
                 .tabItem { Label("Zakat", systemImage: "sparkles") }
-            SettingsHomeView(snapshot: $snapshot, preferences: $preferences, onSave: save, onRestore: restoreSnapshot)
-                .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .tint(Color(red: 0.12, green: 0.34, blue: 0.78))
         .task { load() }
