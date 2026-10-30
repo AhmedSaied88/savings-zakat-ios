@@ -22,6 +22,7 @@ struct CardEntrySheet: View {
                 Picker("Type", selection: $kind) {
                     ForEach(FinanceCardKind.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                 }
+                .accessibilityIdentifier("card-kind-picker")
                 TextField("Last four digits only", text: $lastFour)
                     .keyboardType(.numberPad)
                     .onChange(of: lastFour) { _, value in lastFour = String(value.filter(\.isNumber).suffix(4)) }
