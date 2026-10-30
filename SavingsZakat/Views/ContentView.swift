@@ -42,7 +42,7 @@ struct ContentView: View {
             AssetsZakatTab(snapshot: $snapshot, onSave: save, preferences: $preferences)
                 .tabItem { Label("Zakat", systemImage: "sparkles") }
         }
-        .tint(Color(red: 0.12, green: 0.34, blue: 0.78))
+        .tint(FinancePalette.royalBlue)
         .task { load() }
         .onReceive(NotificationCenter.default.publisher(for: .bankMessageImportDidChange)) { _ in
             loadImportedMessages()
