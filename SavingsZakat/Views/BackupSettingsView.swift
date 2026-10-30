@@ -161,7 +161,6 @@ struct BackupSettingsView: View {
     private func restorePendingBackup() {
         guard let pendingRestore else { return }
         if onRestore(pendingRestore) {
-            snapshot = pendingRestore
             statusMessage = "Backup restored to local storage."
             errorMessage = nil
         } else {
