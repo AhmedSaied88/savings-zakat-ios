@@ -328,6 +328,20 @@ final class FinanceLedgerTests: XCTestCase {
         XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 75)
     }
 
+
+    func testLinkedLiabilityReplacesCardOpeningBalanceInsteadOfAddingIt() throws {
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP", openingOutstandingBalance: 300)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(cards: [card]))
+        let liability = FinanceLiability(name: "Statement opening balance", kind: .creditCard,
+                                         outstandingAmount: 700, currency: "EGP", linkedCardID: card.id)
+
+        try ledger.addLiability(liability)
+
+        XCTAssertNil(ledger.snapshot.cards.first?.openingOutstandingBalance)
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 700)
+        XCTAssertEqual(ledger.netWorth(in: "EGP", rates: [:]).totalLiabilities, 700)
+    }
+
     private func transaction(_ title: String, _ amount: Decimal, _ direction: TransactionDirection, account: UUID) -> FinanceTransaction {
         FinanceTransaction(title: title, amount: amount, currency: "EGP", direction: direction,
                            date: today, accountID: account)
