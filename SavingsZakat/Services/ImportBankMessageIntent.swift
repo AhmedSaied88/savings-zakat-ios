@@ -15,7 +15,8 @@ struct ImportBankMessageIntent: AppIntent {
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let coordinator = MessageImportCoordinator()
-        let customRules = (try? FinanceStore().load().preferences?.enabledBankMessageRules) ?? []
+        let storedSnapshot = try? FinanceStore().load()
+        let customRules = storedSnapshot?.preferences?.enabledBankMessageRules ?? []
         switch try coordinator.importMessage(
             text: messageText,
             senderIdentifier: senderIdentifier,
