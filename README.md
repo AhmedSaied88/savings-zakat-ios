@@ -1,33 +1,52 @@
 # Savings & Zakat — Native iOS
 
-An isolated native SwiftUI iPhone app workstream for tracking cash, currencies, and gold and testing combined zakat calculations. This repository is separate from the existing PWA: https://github.com/AhmedSaied88/savings-zakat-pwa
+A separate, native SwiftUI iPhone application for personal-finance tracking and Egyptian-calendar Savings & Zakat calculations. This repository is isolated from the existing PWA: https://github.com/AhmedSaied88/savings-zakat-pwa
 
-## Status
+## Current status
 
-**Prototype source scaffold — not yet verified as a buildable or installable app.** Use fictional test data only. Do not use its outputs as authoritative religious or financial advice.
+**Working prototype foundation — not yet release-ready or verified on a physical iPhone.** The current feature branch contains the wallet/account/transaction model, local JSON snapshot persistence, cash/gold/silver entry, combined Zakat calculation, Egyptian Hijri conversion framework, bank-message parsing/redaction, and XCTest coverage. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
+
+Latest verified GitHub Actions run at the baseline commit:
+- Branch: `feature/iphone-personal-finance-native`
+- Commit: `6c1b08ef59063892cb1103d07b40b9d10c8a9213`
+- Workflow run: [Native iOS build and tests #25](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41017441370)
+- Result: **16 tests passed, 0 failures** on the iPhone 16 simulator using Xcode 16.4.
 
 ## Repository layout
 
-- `SavingsZakat/` — SwiftUI app, holding model, and date/calculation services.
-- `SavingsZakatTests/` — XCTest coverage for lunar-year dates and combined calculation behavior.
-- `Documentation/` — design specification and implementation plan.
+- `SavingsZakat/Models/` — holding, account, card, transaction, liability and finance snapshot models.
+- `SavingsZakat/Services/` — local finance store, Egyptian Hijri calendar, Hawl/Zakat calculations and bank message parser.
+- `SavingsZakat/Views/` — SwiftUI wallet and finance-entry screens.
+- `SavingsZakatTests/` — calculation, calendar, persistence and bank-message parser tests.
+- `Documentation/Architecture.md` — architecture, data safety and migration contract.
+- `docs/superpowers/specs/` — approved product/design requirements.
+- `docs/superpowers/plans/` — phased implementation plan.
 - `project.yml` — XcodeGen project definition.
 - `.github/workflows/ios-test.yml` — macOS GitHub Actions build/test workflow.
 
-## Build
+## Build and test
 
 Requires macOS with Xcode and the iOS Simulator. Install XcodeGen, then run:
 
 ```sh
 xcodegen generate
-xcodebuild test -project SavingsZakat.xcodeproj -scheme SavingsZakat -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
+xcodebuild test -project "Savings Zakat.xcodeproj" -scheme SavingsZakat -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
 ```
 
-Physical-device installation requires an Apple signing team/profile. The unit-test workflow does not produce a signed IPA.
+Physical-device installation requires an Apple signing team/profile. The simulator unit-test workflow does not produce a signed IPA.
+
+## Persistence and data migration
+
+- Current local storage is a versioned Codable JSON snapshot at Application Support/`SavingsZakat/finance-data.json`.
+- Schema version 1 is supported. Unsupported schema versions are rejected; a sequential migration pipeline is not yet implemented.
+- The earlier `@AppStorage("testHoldingsJSON")` prototype format has not been automatically migrated. Do not assume older test records are imported.
+- The current persistence tests cover save/load, empty first launch and card last-four handling. Corrupt-file recovery and migration tests remain outstanding.
 
 ## Boundaries and outstanding work
 
-- Unique app bundle identifier and local-only test records; no synchronization with or changes to the PWA.
+- This native iOS repository, its local data and its test deployment are separate from the PWA; do not replace, modify or migrate the PWA.
+- Egyptian official month-start records must be verified and bundled before dates can be labelled officially confirmed. Uncovered dates must remain estimated.
+- Hawl calculations, Zakat assumptions and all valuation inputs require further verification and transparent presentation.
+- Edit/delete flows, complete ledger accounting, duplicate-import protection, SMS Shortcut handoff, reminders, encrypted backup/restore, UI tests, physical iPhone validation and release packaging remain incomplete.
 - Prices and exchange rates are manual; missing values must be shown as provisional.
-- Durable storage, edit flow, silver-entry UI, reminder scheduling, encrypted backup/restore, UI tests, physical iPhone validation, and a verified build remain outstanding.
-- Do not replace the PWA or use real financial data until tests pass and the user explicitly approves the next release step.
+- Use fictional test data until physical-device validation and explicit approval for any production-use step.
