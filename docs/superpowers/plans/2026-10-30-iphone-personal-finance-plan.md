@@ -122,9 +122,11 @@
 
 ### Task 10: Hawl calendar and reminders
 **Files:** Create `HawlNotificationScheduler.swift`, `HawlCalendarView.swift` and scheduler tests.
-- [ ] Test 30/7/1-day and due-date schedules, denied permission, rescheduling, cancellation, time-zone changes and date corrections.
-- [ ] Implement local notifications with stable IDs and no remote service.
-- [ ] Show upcoming Hawl in Gregorian and Hijri dates with confidence status.
+- [x] Add tests for 30/7/1-day and due-date schedules, denied permission, rescheduling, cancellation, time-zone changes and date corrections (Xcode execution pending).
+- [x] Implement local notifications with stable IDs, permission handling and no remote service.
+- [x] Show upcoming Hawl in Gregorian and Hijri dates with confidence status.
+
+**Task 10 implementation note (2026-10-30):** Added a pure reminder planner and an injected local-notification adapter. It creates stable per-asset reminders at 30, 7 and 1 day before, plus on the due date, at 9:00 AM local time for the Cairo civil date. Permission is requested only after the user taps Schedule/refresh; denied permission leaves the existing schedule intact. Refresh replaces this app's pending Hawl reminders, editing/deleting an asset cancels its old reminders, and cancellation is scoped to the `hawl.` identifier prefix. The Hawl calendar view displays Gregorian/Hijri dates and confidence, and provides schedule/refresh/cancel controls. Eight scheduler tests are authored; Xcode execution is pending due runner allocation failures.
 
 ## Workstream D — Backup, Settings and Release
 
