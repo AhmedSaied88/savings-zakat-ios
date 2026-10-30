@@ -735,6 +735,18 @@ struct AssetsZakatTab: View {
         }
     }
 
+    private func hijriLabel(for date: Date, status: HijriDateStatus) -> String {
+        guard let hijri = EgyptianCalendarRepository.makeCalendar().convert(date) else {
+            return "Hijri equivalent unavailable"
+        }
+        let monthNames = ["", "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+                          "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+                          "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
+        let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \\(hijri.hijriMonth)"
+        let confidence = status == .officiallyConfirmed && hijri.status == .officiallyConfirmed ? "Confirmed" : "Estimated"
+        return "Hijri \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) (\\(confidence))"
+    }
+
     private func valueRow(_ title: String, _ value: Double) -> some View {
         HStack {
             Text(title)
@@ -811,6 +823,18 @@ private struct HoldingEditorSheet: View {
         _hawlStartDate = State(initialValue: holding?.hawlStartDate ?? Date())
     }
 
+    private func hijriDescription(for date: Date) -> String {
+        guard let hijri = EgyptianCalendarRepository.makeCalendar().convert(date) else {
+            return "Hijri equivalent unavailable"
+        }
+        let monthNames = ["", "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+                          "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+                          "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
+        let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \\(hijri.hijriMonth)"
+        let confidence = hijri.status == .officiallyConfirmed ? "Confirmed" : "Estimated"
+        return "Egyptian Hijri equivalent: \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) · \\(confidence)"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -846,9 +870,13 @@ private struct HoldingEditorSheet: View {
                     }
                 }
                 DatePicker("Acquisition date (Gregorian)", selection: $acquiredDate, in: ...Date(), displayedComponents: .date)
+                Text(hijriDescription(for: acquiredDate))
+                    .font(.footnote).foregroundStyle(.secondary)
                 DatePicker("Hawl start (Gregorian)", selection: $hawlStartDate,
                            in: acquiredDate...Date(), displayedComponents: .date)
-                Text("The Gregorian dates are stored. Egyptian Hijri conversion and confidence status are shown separately.")
+                Text(hijriDescription(for: hawlStartDate))
+                    .font(.footnote).foregroundStyle(.secondary)
+                Text("Gregorian civil dates are used (Africa/Cairo). Hijri equivalents are Confirmed only when covered by Egyptian Dar Al-Ifta announcements; otherwise they are Estimated.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             .navigationTitle(holding == nil ? "Add asset" : "Edit asset")
