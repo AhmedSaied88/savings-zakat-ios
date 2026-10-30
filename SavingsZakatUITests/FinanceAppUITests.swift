@@ -52,7 +52,9 @@ final class FinanceAppUITests: XCTestCase {
     func testCardEntryMasksDigitsToLastFour() throws {
         let app = launchCleanApp()
         app.tabBars.buttons["Accounts"].tap()
-        app.buttons["Add card"].tap()
+        let addCard = app.buttons["Add card"]
+        XCTAssertTrue(scrollTo(addCard, in: app), "Add card should be reachable by scrolling the Accounts list")
+        addCard.tap()
 
         let cardName = app.textFields["Card label"]
         XCTAssertTrue(cardName.waitForExistence(timeout: 3))
@@ -103,11 +105,15 @@ final class FinanceAppUITests: XCTestCase {
     func testWalletInsightsAndSettingsNavigation() throws {
         let app = launchCleanApp()
 
-        app.buttons["Monthly income & expenses"].tap()
+        let insights = app.buttons["Monthly income & expenses"]
+        XCTAssertTrue(scrollTo(insights, in: app), "Monthly insights link should be reachable from Wallet")
+        insights.tap()
         XCTAssertTrue(app.navigationBars["Monthly insights"].waitForExistence(timeout: 5))
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
-        app.buttons["Settings & backup"].tap()
+        let settings = app.buttons["Settings & backup"]
+        XCTAssertTrue(scrollTo(settings, in: app), "Settings link should be reachable from Wallet")
+        settings.tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
         app.buttons["Valuation, parser & calendar"].tap()
         XCTAssertTrue(app.navigationBars["Finance preferences"].waitForExistence(timeout: 5))
@@ -115,9 +121,15 @@ final class FinanceAppUITests: XCTestCase {
 
     func testCanCreateCustomBankParserRule() throws {
         let app = launchCleanApp()
-        app.buttons["Settings & backup"].tap()
-        app.buttons["Valuation, parser & calendar"].tap()
-        app.buttons["Add custom keyword rule"].tap()
+        let settings = app.buttons["Settings & backup"]
+        XCTAssertTrue(scrollTo(settings, in: app))
+        settings.tap()
+        let preferences = app.buttons["Valuation, parser & calendar"]
+        XCTAssertTrue(scrollTo(preferences, in: app))
+        preferences.tap()
+        let addRule = app.buttons["Add custom keyword rule"]
+        XCTAssertTrue(scrollTo(addRule, in: app))
+        addRule.tap()
 
         let keyword = app.textFields["Keyword or phrase"]
         XCTAssertTrue(keyword.waitForExistence(timeout: 3))
@@ -135,8 +147,12 @@ final class FinanceAppUITests: XCTestCase {
 
     func testBackupScreenRequiresPassphraseConfirmation() throws {
         let app = launchCleanApp()
-        app.buttons["Settings & backup"].tap()
-        app.buttons["Backup & Restore"].tap()
+        let settings = app.buttons["Settings & backup"]
+        XCTAssertTrue(scrollTo(settings, in: app))
+        settings.tap()
+        let backup = app.buttons["Backup & Restore"]
+        XCTAssertTrue(scrollTo(backup, in: app))
+        backup.tap()
 
         let passphrase = app.secureTextFields["Backup passphrase"]
         XCTAssertTrue(passphrase.waitForExistence(timeout: 3))
@@ -164,7 +180,8 @@ final class FinanceAppUITests: XCTestCase {
         for tab in ["Wallet", "Accounts", "Activity", "Debts", "Zakat"] {
             XCTAssertTrue(app.tabBars.buttons[tab].waitForExistence(timeout: 5), "Missing tab at large text size: \(tab)")
         }
-        XCTAssertTrue(app.buttons["Settings & backup"].exists)
+        let settings = app.buttons["Settings & backup"]
+        XCTAssertTrue(scrollTo(settings, in: app), "Settings should remain reachable at accessibility text sizes")
     }
 
 
@@ -176,7 +193,9 @@ final class FinanceAppUITests: XCTestCase {
     func testHawlCalendarDisplaysEmptyStateWithoutRequestingReminders() throws {
         let app = launchCleanApp()
         app.tabBars.buttons["Zakat"].tap()
-        app.buttons["View Hawl calendar and reminders"].tap()
+        let hawlCalendar = app.buttons["View Hawl calendar and reminders"]
+        XCTAssertTrue(scrollTo(hawlCalendar, in: app), "Hawl calendar link should be reachable by scrolling the Zakat list")
+        hawlCalendar.tap()
         XCTAssertTrue(app.staticTexts["No Hawl dates"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Schedule / refresh reminders"].exists)
         XCTAssertFalse(app.staticTexts["Notifications are not permitted."].exists)
@@ -185,12 +204,23 @@ final class FinanceAppUITests: XCTestCase {
     func testZakatCalculationControlsRemainVisible() throws {
         let app = launchCleanApp()
         app.tabBars.buttons["Zakat"].tap()
-        XCTAssertTrue(app.staticTexts["Combined Zakat calculation"].waitForExistence(timeout: 5))
+        let calculateButton = app.buttons["Calculate Zakat"]
+        XCTAssertTrue(scrollTo(calculateButton, in: app), "Zakat calculation should be reachable by scrolling the Zakat list")
+        XCTAssertTrue(app.staticTexts["Combined Zakat calculation"].exists)
         XCTAssertTrue(app.staticTexts["Nisab (EGP)"].exists)
         XCTAssertTrue(app.switches["Include personal-use gold"].exists)
         XCTAssertTrue(app.buttons["Calculate Zakat"].exists)
         app.buttons["Calculate Zakat"].tap()
         XCTAssertTrue(app.staticTexts["Total valued assets"].waitForExistence(timeout: 5))
+    }
+
+    @discardableResult
+    private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable { return true }
+            app.swipeUp()
+        }
+        return element.exists && element.isHittable
     }
 
     private func launchCleanApp() -> XCUIApplication {
