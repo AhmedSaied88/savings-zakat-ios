@@ -310,6 +310,24 @@ final class FinanceLedgerTests: XCTestCase {
         }
     }
 
+
+    func testImportedCreditCardPurchaseUsesMessageDuplicateProtection() throws {
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP")
+        let importedMessageID = UUID()
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(cards: [card]))
+        let first = FinanceTransaction(title: "Card purchase", amount: 75, currency: "EGP",
+                                       direction: .expense, date: today, source: .shortcut,
+                                       importedMessageID: importedMessageID, cardID: card.id)
+        let duplicate = FinanceTransaction(title: "Card purchase duplicate", amount: 75, currency: "EGP",
+                                           direction: .expense, date: today, source: .shortcut,
+                                           importedMessageID: importedMessageID, cardID: card.id)
+        try ledger.post(first)
+        XCTAssertThrowsError(try ledger.post(duplicate)) { error in
+            XCTAssertEqual(error as? FinanceLedger.LedgerError, .duplicateImportedMessage(importedMessageID))
+        }
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 75)
+    }
+
     private func transaction(_ title: String, _ amount: Decimal, _ direction: TransactionDirection, account: UUID) -> FinanceTransaction {
         FinanceTransaction(title: title, amount: amount, currency: "EGP", direction: direction,
                            date: today, accountID: account)
