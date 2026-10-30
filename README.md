@@ -11,12 +11,12 @@ Latest confirmed full Xcode test run for the ledger work:
 - Commit: `f91e86e287da0da6a0f7acbd4ab7f7abb02872cc`
 - Workflow run: [Native iOS build and tests #41020025055](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41020025055)
 - Result: **33 XCTest tests passed, 0 failures** on macOS 15 / Xcode 16.4 / iPhone 16 simulator.
-- The subsequent tab UI and UI-test-target changes are not yet Xcode-verified: recent GitHub Actions jobs failed before a runner was assigned (runner ID 0, no steps executed).
+- The subsequent tab UI, UI-test target and expanded SMS parser changes are not yet Xcode-verified: recent GitHub Actions jobs failed before a runner was assigned (runner ID 0, no steps executed). The parser/redactor logic separately passed 15 targeted checks in a local Swift 6.2.1 harness.
 
 ## Repository layout
 
-- `SavingsZakat/Models/` — holding, account, card, transaction, liability and finance snapshot models.
-- `SavingsZakat/Services/` — local finance store, finance ledger, Egyptian Hijri calendar, Hawl/Zakat calculations and bank message parser.
+- `SavingsZakat/Models/` — holding, account, card, transaction, liability, imported-message and finance snapshot models.
+- `SavingsZakat/Services/` — local finance store, finance ledger, Egyptian Hijri calendar, Hawl/Zakat calculations, bank message parser and sensitive-text redactor.
 - `SavingsZakat/Views/` — tab-based SwiftUI Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat screens.
 - `SavingsZakatTests/` — calculation, calendar, persistence, ledger and bank-message parser tests.
 - `SavingsZakatUITests/` — iPhone simulator UI automation for navigation, account/transaction entry and card masking/payment details.
