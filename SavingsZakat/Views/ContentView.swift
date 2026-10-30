@@ -32,6 +32,7 @@ struct ContentView: View {
                 snapshot: $snapshot,
                 importedMessages: $importedMessages,
                 onSave: save,
+                onSaveConfirmedTransaction: saveConfirmedTransaction,
                 onSaveImports: saveImportedMessages,
                 onRefreshImports: loadImportedMessages
             )
@@ -77,6 +78,17 @@ struct ContentView: View {
             importedMessages = try importCoordinator.loadMessages()
         } catch {
             storageError = "Could not read imported bank messages: \(error.localizedDescription)"
+        }
+    }
+
+    private func saveConfirmedTransaction() -> Bool {
+        do {
+            try store.save(snapshot)
+            storageError = nil
+            return true
+        } catch {
+            storageError = "Could not save confirmed transaction: \\(error.localizedDescription)"
+            return false
         }
     }
 
