@@ -99,12 +99,17 @@ final class FinanceAppUITests: XCTestCase {
         minimum.tap()
         minimum.typeText("1500")
 
+        // Dismiss the decimal keyboard before interacting with the lower form controls.
+        let creditCardSection = app.descendants(matching: .any)["Credit card details"]
+        XCTAssertTrue(creditCardSection.waitForExistence(timeout: 3))
+        creditCardSection.tap()
+
         let dueDateToggle = app.switches["Set payment due date"]
         XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 3))
-        XCTAssertTrue(scrollTo(dueDateToggle, in: app),
-                      "The due-date toggle should be reachable above the numeric keyboard")
+        XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 3) && dueDateToggle.isHittable,
+                      "The due-date toggle should be visible after dismissing the keyboard")
         if dueDateToggle.value as? String != "1" {
-            dueDateToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            dueDateToggle.tap()
         }
         XCTAssertEqual(dueDateToggle.value as? String, "1",
                        "The payment due-date option should be enabled before saving")
