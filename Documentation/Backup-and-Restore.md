@@ -32,8 +32,8 @@ Restore replaces the current finance snapshot; it does not merge records. If aut
 
 ## Scope of this first version
 
-Included: accounts, cards, transactions, liabilities and cash/gold/silver/manual-investment holdings in the finance snapshot.
+Included: accounts, cards, transactions, liabilities, cash/gold/silver/manual-investment holdings, manual exchange rates, gold/silver prices, Nisab input, personal-use gold setting and custom bank-message parser rules in the finance snapshot.
 
-Not included: pending bank-message review queue, manual exchange rates, gold/silver prices, Nisab input, notification schedules, and UI preferences. The imported-message queue is stored separately and is not overwritten by restore. Re-enter manual valuation assumptions after restoring.
+Not included: pending bank-message review queue and notification schedules. The imported-message queue is stored separately and is not overwritten by restore. Recreate local Hawl reminders after restoring or correcting asset dates.
 
 This feature has unit tests for encrypted round-trip, wrong passphrase, malformed archives, unsupported versions/schema, unsafe KDF parameters, ciphertext tampering, random salt generation and local file writing. Xcode test execution remains subject to the repository's current macOS runner availability.
