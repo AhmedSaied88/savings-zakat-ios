@@ -4,7 +4,7 @@
 This is a separate iPhone-only SwiftUI application. It does not share storage, authentication, deployment, or data with the existing Savings & Zakat PWA.
 
 ## Layers
-- **Presentation:** SwiftUI screens and forms; no financial business rules embedded in views.
+- **Presentation:** SwiftUI tab screens and entry forms. Views submit validated operations to the finance ledger and persist the returned snapshot; they do not calculate transaction balances themselves.
 - **Domain models:** Accounts, payment cards, transactions, liabilities, holdings, money values and Egyptian Hijri date records.
 - **Services:** Finance ledger, SMS parser/redactor, Egyptian calendar repository, Hawl/Zakat calculators, local notification scheduler and backup service.
 - **Persistence:** Versioned local snapshot/database. All financial records remain on device.
@@ -25,7 +25,7 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Store only card brand/label and last four digits. Never store full PAN, CVV, PIN, OTP, bank password or authentication secret.
 - Imported SMS is redacted before persistence. Parsed transactions remain pending until the user confirms them.
 - Deduplicate repeated Shortcut deliveries using a stable fingerprint of redacted message content, sender and received timestamp window.
-- Account transfers are paired ledger entries, not income/expense.
+- A transfer is one ledger transaction with a source and destination account. It decreases one account and increases the other by the same amount; it is never counted as income or expense.
 - Local backup is user-initiated and encrypted. No automatic upload or cloud dependency.
 
 ## Calendar and Zakat
@@ -42,8 +42,16 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Supporting astronomical reference: [National Research Institute of Astronomy and Geophysics (NRIAG)](https://www.nriag.sci.eg/), including its annual astronomical Hijri guides. These are estimates unless a corresponding Egyptian official announcement confirms the month start.
 - A third-party compilation may help discover announcements, but each date must be checked against an Egyptian official announcement before entering the confirmed table.
 
+## Finance ledger
+- `FinanceLedger` operates on a value-copy of `FinanceSnapshot`; successful mutations return the updated snapshot for the caller to persist through `FinanceStore`.
+- Only confirmed transactions affect account balances. Imported transactions marked `needsReview` are rejected by ledger posting until confirmed.
+- Income and expenses must reference an existing source account and match its currency. Transfers must reference two different existing accounts in the same currency; cross-currency transfers are rejected until an explicit exchange/fee model exists.
+- Duplicate transaction IDs and duplicate liability IDs are rejected. Accounts with transaction history or linked cards cannot be deleted.
+- Net-worth summaries convert account balances and liabilities to the selected currency using caller-supplied positive rates. Missing rates generate explicit provisional warnings; no missing value is silently represented as a valid zero.
+- Card records contain only last four digits plus optional credit limit, statement date, payment due date and minimum due. Transaction category is optional for older snapshots and newly entered transactions can assign a category.
+
 ## UI direction
-Use Design 4's layout/composition with Design 3's blue palette: white and pale-blue surfaces, royal-blue primary actions, restrained violet accents and gold asset accents. Prioritize a compact wallet overview, unified transaction list, clear account/card tiles and a simple Add Account flow.
+The first tab-based SwiftUI pass provides Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat. It uses system list/form surfaces, pale-blue summary surfaces, royal-blue actions, semantic orange/green status colors, native navigation and sheets. The Wallet net-worth headline currently covers account balances and recorded liabilities only; it explicitly excludes gold/silver holdings until their valuations are incorporated. UI automation has been added, but Xcode CI and accessibility/Dynamic Type/Dark Mode validation remain pending.
 
 ## Free operation
 No subscriptions, paid APIs, paid backend, paid notification provider or mandatory cloud account. Manual rates/prices and user-controlled local backup are available offline.
