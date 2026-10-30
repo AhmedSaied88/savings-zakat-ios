@@ -23,11 +23,11 @@ enum BankMessageParser {
         pattern: #"(?i)(?<![\p{L}\d])(EGP|LE|USD|SAR|AED|EUR|GBP|جنيه|ج\.م)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?!\d)|(?<!\d)([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*(EGP|LE|USD|SAR|AED|EUR|GBP|جنيه|ج\.م)(?![\p{L}])"#
     )
 
-    static func parse(_ message: String) -> ParsedBankMessage? {
+    static func parse(_ message: String, customRules: [BankMessageRule] = []) -> ParsedBankMessage? {
         let normalized = SensitiveTextRedactor.normalizeDigits(in: message)
         guard let (amount, currency) = extractAmountAndCurrency(from: normalized),
               amount > 0,
-              let classification = classify(normalized) else {
+              let classification = classify(normalized, customRules: customRules) else {
             return nil
         }
 
@@ -74,8 +74,19 @@ enum BankMessageParser {
         return (amount, ["LE", "جنيه", "ج.م"].contains(rawCurrency) ? "EGP" : rawCurrency)
     }
 
-    private static func classify(_ text: String) -> (direction: TransactionDirection, category: String, confidence: BankParseConfidence)? {
+    private static func classify(_ text: String, customRules: [BankMessageRule]) -> (direction: TransactionDirection, category: String, confidence: BankParseConfidence)? {
         let lower = text.lowercased()
+        let matches = customRules.filter {
+            $0.isEnabled &&
+            $0.keyword.count >= 3 &&
+            lower.contains($0.keyword.lowercased())
+        }
+        if matches.count == 1, let rule = matches.first {
+            return (rule.direction, rule.category, .medium)
+        }
+        if matches.count > 1 {
+            return nil
+        }
 
         let transfer = containsAny(["transfer", "transferred", "تحويل"], in: lower)
         let reversal = containsAny(["reversal", "reversed", "refund", "refunded", "عكس", "استرداد"], in: lower)
