@@ -218,6 +218,24 @@ final class FinanceLedgerTests: XCTestCase {
         XCTAssertEqual(summary.netWorth, 4_550)
     }
 
+    func testCreditCardCurrentBalanceReconciliationAdjustsCalculatedBalance() throws {
+        let account = FinanceAccount(name: "Bank", kind: .bank, currency: "EGP", openingBalance: 2_000)
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP", openingOutstandingBalance: 1_000)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [account], cards: [card]))
+        try ledger.post(FinanceTransaction(title: "Purchase", amount: 200, currency: "EGP",
+                                           direction: .expense, date: Date(), cardID: card.id))
+        try ledger.post(FinanceTransaction(title: "Repayment", amount: 100, currency: "EGP",
+                                           direction: .transfer, date: Date(), accountID: account.id,
+                                           destinationCardID: card.id))
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 1_100)
+
+        var reconciled = card
+        reconciled.balanceAdjustment = -300
+        ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [account], cards: [reconciled],
+                                                          transactions: ledger.snapshot.transactions))
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 800)
+    }
+
     func testCreditCardRepaymentReducesBankAndCardDebtWithoutAddingExpense() throws {
         let bank = FinanceAccount(name: "Bank", kind: .bank, currency: "EGP", openingBalance: 5_000)
         let card = FinanceCard(name: "Credit", kind: .credit, linkedAccountID: bank.id, currency: "EGP",
