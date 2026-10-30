@@ -41,6 +41,7 @@ struct CardEntrySheet: View {
                         Picker("Currency", selection: $currency) {
                             ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) { Text($0).tag($0) }
                         }
+                        .disabled(linkedAccountID != nil)
                         TextField("Opening outstanding balance (optional)", text: $openingOutstandingBalance).keyboardType(.decimalPad)
                         TextField("Credit limit (optional)", text: $creditLimit).keyboardType(.decimalPad)
                         TextField("Minimum payment (optional)", text: $minimumDue).keyboardType(.decimalPad)
