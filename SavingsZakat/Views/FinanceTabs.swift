@@ -296,8 +296,8 @@ struct DebtsTab: View {
         NavigationStack {
             List {
                 Section("Recorded debt by currency") {
-                    let groups = Dictionary(grouping: snapshot.liabilities, by: \\.currency)
-                    ForEach(groups.keys.sorted(), id: \\.self) { currency in
+                    let groups = Dictionary(grouping: snapshot.liabilities, by: \.currency)
+                    ForEach(groups.keys.sorted(), id: \.self) { currency in
                         let total = groups[currency, default: []].reduce(Decimal.zero) { $0 + $1.outstandingAmount }
                         HStack {
                             Text(currency)
