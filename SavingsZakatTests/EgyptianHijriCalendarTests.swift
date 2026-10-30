@@ -5,7 +5,8 @@ final class EgyptianHijriCalendarTests: XCTestCase {
     func testDateInsideOfficialMonthIsMarkedConfirmed() throws {
         let start = date("2026-10-01")
         let record = EgyptianHijriMonthStart(hijriYear: 1448, hijriMonth: 4, gregorianStart: start, sourceURL: "https://example.org/official", announcementDate: date("2026-09-30"))
-        let calendar = EgyptianHijriCalendar(officialMonthStarts: [record], timeZone: TimeZone(secondsFromGMT: 0)!)
+        let next = EgyptianHijriMonthStart(hijriYear: 1448, hijriMonth: 5, gregorianStart: date("2026-10-31"), sourceURL: "https://example.org/official-next", announcementDate: date("2026-10-30"))
+        let calendar = EgyptianHijriCalendar(officialMonthStarts: [record, next], timeZone: TimeZone(secondsFromGMT: 0)!)
         let result = try XCTUnwrap(calendar.convert(date("2026-10-12")))
         XCTAssertEqual(result.status, .officiallyConfirmed)
         XCTAssertEqual(result.hijriYear, 1448)
