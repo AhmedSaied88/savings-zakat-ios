@@ -128,6 +128,28 @@ final class HawlNotificationSchedulerTests: XCTestCase {
         XCTAssertEqual(center.notifications.count, 1)
     }
 
+
+    func testSchedulerRespectsIOSPendingNotificationLimit() async throws {
+        let center = MockHawlNotificationCenter()
+        let scheduler = HawlNotificationScheduler(notificationCenter: center)
+        let notifications = (0..<80).map { index in
+            notification(
+                holdingID: UUID(),
+                offset: index % 4,
+                fireDate: date("2026-02-01").addingTimeInterval(TimeInterval(index * 60))
+            )
+        }
+
+        let result = try await scheduler.schedule(notifications)
+
+        XCTAssertEqual(result, .limited(count: 64, omittedCount: 16))
+        XCTAssertEqual(center.notifications.count, 64)
+        XCTAssertEqual(
+            center.notifications.values.map(\.fireDate).max(),
+            notifications.sorted { $0.fireDate < $1.fireDate }[63].fireDate
+        )
+    }
+
     private func sampleHolding() -> Holding {
         let start = date("2025-01-01")
         return Holding(
