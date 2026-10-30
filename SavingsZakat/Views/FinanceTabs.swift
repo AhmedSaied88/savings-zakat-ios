@@ -80,10 +80,10 @@ struct WalletDashboardTab: View {
 
     private func icon(for kind: FinanceAccountKind) -> String {
         switch kind {
-        case .bank: "building.columns"
-        case .cash: "banknote"
-        case .savings: "safe"
-        case .wallet: "wallet.bifold"
+        case .bank: return "building.columns"
+        case .cash: return "banknote"
+        case .savings: return "safe"
+        case .wallet: return "wallet.bifold"
         }
     }
 
