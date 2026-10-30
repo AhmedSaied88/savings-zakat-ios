@@ -225,6 +225,7 @@ struct TransactionsTab: View {
     @Binding var snapshot: FinanceSnapshot
     @Binding var importedMessages: [ImportedMessage]
     let onSave: () -> Void
+    let onSaveConfirmedTransaction: () -> Bool
     let onSaveImports: () -> Void
     let onRefreshImports: () -> Void
     @State private var showAdd = false
@@ -340,10 +341,14 @@ struct TransactionsTab: View {
                     var ledger = FinanceLedger(snapshot: snapshot)
                     do {
                         try ledger.post(transaction)
+                        let previousSnapshot = snapshot
                         snapshot = ledger.snapshot
+                        guard onSaveConfirmedTransaction() else {
+                            snapshot = previousSnapshot
+                            return
+                        }
                         updateImportedMessage(message.id, state: .confirmed, transactionID: transaction.id)
                         errorMessage = nil
-                        onSave()
                     } catch {
                         errorMessage = "The imported transaction could not be confirmed: \(error.localizedDescription)"
                     }
