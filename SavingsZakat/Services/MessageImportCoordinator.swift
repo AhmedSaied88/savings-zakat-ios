@@ -109,7 +109,9 @@ struct MessageImportCoordinator {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(messages)
         try data.write(to: queueURL, options: .atomic)
-        NotificationCenter.default.post(name: .bankMessageImportDidChange, object: nil)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .bankMessageImportDidChange, object: nil)
+        }
     }
 
     private static func fingerprint(for redactedText: String) -> String {
