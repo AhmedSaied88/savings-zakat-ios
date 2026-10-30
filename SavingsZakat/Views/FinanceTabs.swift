@@ -126,7 +126,9 @@ struct AccountsCardsTab: View {
                                 .font(.caption).foregroundStyle(.secondary)
                             if card.kind == .credit {
                                 HStack(spacing: 12) {
-                                    Text("Outstanding: \((try? ledger.creditCardOutstanding(for: card.id)) ?? card.openingOutstandingBalance ?? 0, format: .currency(code: cardCurrency))")
+                                    Text("Outstanding")
+                                    Text((try? ledger.creditCardOutstanding(for: card.id)) ?? (card.openingOutstandingBalance ?? 0),
+                                         format: .currency(code: cardCurrency))
                                         .accessibilityIdentifier("card-outstanding-\(card.name)")
                                     if let limit = card.creditLimit {
                                         Text("Limit: \(limit, format: .currency(code: cardCurrency))")
@@ -701,7 +703,7 @@ struct DebtsTab: View {
                             }
                             if item.kind == .creditCard {
                                 let linkableCards = snapshot.cards.filter { card in
-                                    card.kind == .credit && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id && $0.id != item.id })
+                                    card.kind == .credit && (card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP") == item.currency && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id && $0.id != item.id })
                                 }
                                 if !linkableCards.isEmpty {
                                     Menu("Link to credit card") {
