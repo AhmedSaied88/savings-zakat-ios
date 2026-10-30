@@ -23,6 +23,11 @@ struct FinanceLedger {
         case invalidLiabilityAmount
         case invalidRecurringRule
         case duplicateRecurringRule(UUID)
+        case cardNotFound(UUID)
+        case invalidCardTransaction
+        case cardHasActivity(UUID)
+        case duplicateCardLiability(UUID)
+        case repaymentExceedsOutstanding
     }
 
     private(set) var snapshot: FinanceSnapshot
@@ -69,28 +74,103 @@ struct FinanceLedger {
             throw LedgerError.duplicateImportedMessage(importedMessageID)
         }
 
-        guard let sourceID = transaction.accountID,
-              let source = snapshot.accounts.first(where: { $0.id == sourceID }) else {
-            throw LedgerError.invalidTransactionAccounts
-        }
-        guard source.currency == transaction.currency else { throw LedgerError.currencyMismatch }
-
         switch transaction.direction {
-        case .income, .expense:
-            guard transaction.destinationAccountID == nil else {
+        case .income:
+            guard transaction.cardID == nil, transaction.destinationCardID == nil,
+                  transaction.destinationAccountID == nil,
+                  let sourceID = transaction.accountID,
+                  let source = snapshot.accounts.first(where: { $0.id == sourceID }) else {
                 throw LedgerError.invalidTransactionAccounts
             }
+            guard source.currency == transaction.currency else { throw LedgerError.currencyMismatch }
+
+        case .expense:
+            guard transaction.destinationAccountID == nil, transaction.destinationCardID == nil else {
+                throw LedgerError.invalidTransactionAccounts
+            }
+            if let cardID = transaction.cardID {
+                guard transaction.accountID == nil,
+                      let card = snapshot.cards.first(where: { $0.id == cardID }),
+                      card.kind == .credit,
+                      cardCurrency(for: card) == transaction.currency else {
+                    throw LedgerError.invalidCardTransaction
+                }
+            } else {
+                guard let sourceID = transaction.accountID,
+                      let source = snapshot.accounts.first(where: { $0.id == sourceID }) else {
+                    throw LedgerError.invalidTransactionAccounts
+                }
+                guard source.currency == transaction.currency else { throw LedgerError.currencyMismatch }
+            }
+
         case .transfer:
-            guard let destinationID = transaction.destinationAccountID,
-                  destinationID != sourceID,
-                  let destination = snapshot.accounts.first(where: { $0.id == destinationID }) else {
+            guard transaction.cardID == nil,
+                  let sourceID = transaction.accountID,
+                  let source = snapshot.accounts.first(where: { $0.id == sourceID }) else {
                 throw LedgerError.invalidTransactionAccounts
             }
-            guard destination.currency == transaction.currency else { throw LedgerError.currencyMismatch }
+            guard source.currency == transaction.currency else { throw LedgerError.currencyMismatch }
+
+            if let cardID = transaction.destinationCardID {
+                guard transaction.destinationAccountID == nil,
+                      let card = snapshot.cards.first(where: { $0.id == cardID }),
+                      card.kind == .credit,
+                      cardCurrency(for: card) == transaction.currency else {
+                    throw LedgerError.invalidCardTransaction
+                }
+                guard transaction.amount <= (try creditCardOutstanding(for: cardID)) else {
+                    throw LedgerError.repaymentExceedsOutstanding
+                }
+            } else {
+                guard let destinationID = transaction.destinationAccountID,
+                      destinationID != sourceID,
+                      let destination = snapshot.accounts.first(where: { $0.id == destinationID }) else {
+                    throw LedgerError.invalidTransactionAccounts
+                }
+                guard destination.currency == transaction.currency else { throw LedgerError.currencyMismatch }
+            }
         }
 
         snapshot.transactions.append(transaction)
     }
+
+    private func cardCurrency(for card: FinanceCard) -> String {
+        card.currency?.uppercased()
+            ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency
+            ?? "EGP"
+    }
+
+    func creditCardOutstanding(for cardID: UUID) throws -> Decimal {
+        guard let card = snapshot.cards.first(where: { $0.id == cardID }), card.kind == .credit else {
+            throw LedgerError.cardNotFound(cardID)
+        }
+        let linkedOpeningLiability = snapshot.liabilities.first(where: { $0.linkedCardID == cardID })?.outstandingAmount
+        let opening = linkedOpeningLiability ?? card.openingOutstandingBalance ?? 0
+        return snapshot.transactions
+            .filter { $0.reviewStatus == .confirmed }
+            .reduce(opening) { balance, transaction in
+                if transaction.direction == .expense && transaction.cardID == cardID {
+                    return balance + transaction.amount
+                }
+                if transaction.direction == .transfer && transaction.destinationCardID == cardID {
+                    return balance - transaction.amount
+                }
+                return balance
+            }
+    }
+
+    mutating func removeCard(id: UUID) throws {
+        guard snapshot.cards.contains(where: { $0.id == id }) else {
+            throw LedgerError.cardNotFound(id)
+        }
+        let hasTransactions = snapshot.transactions.contains {
+            $0.cardID == id || $0.destinationCardID == id
+        }
+        let hasLiability = snapshot.liabilities.contains { $0.linkedCardID == id }
+        guard !hasTransactions && !hasLiability else { throw LedgerError.cardHasActivity(id) }
+        snapshot.cards.removeAll { $0.id == id }
+    }
+
 
     mutating func transfer(amount: Decimal, from sourceID: UUID, to destinationID: UUID, date: Date, title: String = "Transfer") throws {
         guard amount > 0 else { throw LedgerError.invalidAmount }
@@ -187,6 +267,15 @@ struct FinanceLedger {
         guard !snapshot.liabilities.contains(where: { $0.id == liability.id }) else {
             throw LedgerError.duplicateLiability(liability.id)
         }
+        if let cardID = liability.linkedCardID {
+            guard liability.kind == .creditCard,
+                  let card = snapshot.cards.first(where: { $0.id == cardID }),
+                  card.kind == .credit,
+                  cardCurrency(for: card) == liability.currency,
+                  !snapshot.liabilities.contains(where: { $0.linkedCardID == cardID }) else {
+                throw LedgerError.duplicateCardLiability(cardID)
+            }
+        }
         snapshot.liabilities.append(liability)
     }
 
@@ -222,9 +311,14 @@ struct FinanceLedger {
             let value = (try? balance(for: account.id)) ?? 0
             return total + converted(value, from: account.currency, label: account.name)
         }
-        let liabilities = snapshot.liabilities.reduce(Decimal.zero) { total, liability in
+        let standaloneLiabilities = snapshot.liabilities.filter { $0.linkedCardID == nil }.reduce(Decimal.zero) { total, liability in
             total + converted(liability.outstandingAmount, from: liability.currency, label: liability.name)
         }
+        let cardLiabilities = snapshot.cards.filter { $0.kind == .credit }.reduce(Decimal.zero) { total, card in
+            let outstanding = (try? creditCardOutstanding(for: card.id)) ?? 0
+            return total + converted(outstanding, from: cardCurrency(for: card), label: card.name)
+        }
+        let liabilities = standaloneLiabilities + cardLiabilities
 
         return MoneySummary(
             currency: target,
