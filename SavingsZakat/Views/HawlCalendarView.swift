@@ -46,7 +46,7 @@ struct HawlCalendarView: View {
                 }
             }
             Section("Local reminders") {
-                Text("Four reminders are planned for 30, 7 and 1 day before Hawl, and on the due date. They are scheduled for 9:00 AM local time on the corresponding Cairo civil date.")
+                Text("Four reminders are planned for 30, 7 and 1 day before Hawl, and on the due date. They are scheduled for 9:00 AM local time on the corresponding Cairo civil date. Refresh reminders after adding an asset or correcting its dates; deleting an asset cancels its pending reminders.")
                     .font(.footnote).foregroundStyle(.secondary)
                 Button {
                     Task { await scheduleReminders() }
