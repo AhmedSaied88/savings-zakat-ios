@@ -58,7 +58,10 @@ struct CardEntrySheet: View {
                     Button("Save") {
                         onSave(FinanceCard(name: name.trimmingCharacters(in: .whitespacesAndNewlines), issuer: issuer.isEmpty ? nil : issuer, kind: kind, lastFour: lastFour, linkedAccountID: linkedAccountID, creditLimit: Decimal(string: creditLimit), statementDate: kind == .credit ? statementDate : nil, paymentDueDate: kind == .credit ? paymentDueDate : nil, minimumDue: Decimal(string: minimumDue), currency: currency, openingOutstandingBalance: kind == .credit ? (Decimal(string: openingOutstandingBalance) ?? 0) : nil))
                         dismiss()
-                    }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                              (kind == .credit && (!(Decimal(string: openingOutstandingBalance).map { $0 >= 0 } ?? true) ||
+                                !(Decimal(string: creditLimit).map { $0 >= 0 } ?? true) ||
+                                !(Decimal(string: minimumDue).map { $0 >= 0 } ?? true))))
                 }
             }
             .onChange(of: linkedAccountID) { _, newValue in
