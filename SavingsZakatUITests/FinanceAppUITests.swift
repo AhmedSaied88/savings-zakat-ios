@@ -107,11 +107,13 @@ final class FinanceAppUITests: XCTestCase {
 
         app.buttons["Save"].tap()
 
-        let paymentDue = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS %@", "Payment due")
+        let creditCardRow = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "UI Test Credit", "Payment due")
         ).firstMatch
-        XCTAssertTrue(scrollTo(paymentDue, in: app),
-                      "The saved credit card should display its payment due date")
+        XCTAssertTrue(scrollTo(creditCardRow, in: app),
+                      "The saved credit card row should display its payment due date")
+        XCTAssertTrue(creditCardRow.label.contains("Payment due"),
+                      "The credit-card row should expose its payment due date in its accessible label")
     }
 
 
