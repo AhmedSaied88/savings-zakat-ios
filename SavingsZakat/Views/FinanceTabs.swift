@@ -34,7 +34,7 @@ struct WalletDashboardTab: View {
                     .padding(.vertical, 8)
                     .listRowBackground(Color.blue.opacity(0.06))
                 }
-                Section("Accounts") {
+                Section {
                     if snapshot.accounts.isEmpty {
                         ContentUnavailableView("No accounts yet", systemImage: "building.columns",
                                                description: Text("Add a bank, cash or savings account from Accounts."))
@@ -55,6 +55,8 @@ struct WalletDashboardTab: View {
                         }
                         .padding(.vertical, 3)
                     }
+                } header: {
+                    Text("Accounts")
                 }
                 Section("Recent activity") {
                     if snapshot.transactions.isEmpty {
