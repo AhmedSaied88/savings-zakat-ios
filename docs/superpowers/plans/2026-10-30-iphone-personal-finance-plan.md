@@ -64,13 +64,13 @@
 
 ### Task 4: Wallet and account/card UI
 **Files:** Refactor `ContentView.swift`; create `SavingsZakat/Views/FinanceTabs.swift`; extend `FinanceEntrySheets.swift`.
-- [ ] Add UI tests for account CRUD, card masking, credit-card due dates and transaction categories.
+- [x] Add UI tests for account creation, card masking, credit-card due-date display and transaction categories.
 - [x] Implement the tab-based native navigation structure for Wallet, Accounts & Cards, Transactions, Debts and Savings & Zakat.
 - [x] Build account editing, masked card entry, credit-card statement/payment details, transaction categories and validated ledger-backed posting.
 - [ ] Refine Design 4 composition with Design 3 blue palette: white/pale-blue surfaces, royal-blue actions, violet accents and gold asset highlights.
 - [ ] Verify accessibility labels, Dynamic Type, Dark Mode and 44pt touch targets.
 
-**Task 4 implementation note:** The first UI pass is on the isolated feature branch. The wallet summary uses the ledger's computed balances and net-worth result; account deletion is blocked when cards or transactions are linked; transaction creation is routed through `FinanceLedger.post`, including paired-transfer validation. Credit-card records now support optional limit, statement date, payment due date and minimum due. UI automation and full Xcode verification are still pending.
+**Task 4 implementation note:** The first UI pass is on the isolated feature branch. The wallet summary uses ledger-computed account balances and liabilities, and explicitly excludes unvalued gold/silver holdings. Account deletion is blocked when cards or transactions are linked; account currency is locked once transactions exist. Transaction creation is routed through `FinanceLedger.post`, including same-currency transfer validation. Credit-card records support optional limit, statement date, payment due date and minimum due. Three UI automation tests have been added. The current GitHub Actions jobs failed before runner assignment (runner ID 0 and no executed steps), so this is an infrastructure/runner verification gap rather than a confirmed code-test result. Re-run the full workflow when a macOS runner is available; do not mark Task 4 complete until it passes.
 
 ## Workstream B — Bank SMS via Shortcuts
 
