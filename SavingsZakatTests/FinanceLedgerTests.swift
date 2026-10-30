@@ -94,9 +94,9 @@ final class FinanceLedgerTests: XCTestCase {
             XCTAssertEqual(error as? FinanceLedger.LedgerError, .accountHasActivity(account.id))
         }
 
-        ledger.snapshot.cards.removeAll()
-        try ledger.post(transaction("Lunch", 10, .expense, account: account.id))
-        XCTAssertThrowsError(try ledger.removeAccount(id: account.id))
+        var transactionLedger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [account]))
+        try transactionLedger.post(transaction("Lunch", 10, .expense, account: account.id))
+        XCTAssertThrowsError(try transactionLedger.removeAccount(id: account.id))
     }
 
     func testAccountWithoutActivityCanBeDeleted() throws {
