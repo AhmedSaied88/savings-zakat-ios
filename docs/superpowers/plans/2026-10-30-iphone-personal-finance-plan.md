@@ -153,11 +153,36 @@
 
 ### Task 13: Final verification and iPhone testing
 **Files:** Update `README.md` and `.github/workflows/ios-test.yml`; create `Documentation/Device-Test-Checklist.md`.
-- [ ] Run complete macOS/Xcode build and XCTest/UI test workflow; recent jobs fail before runner assignment (runner ID 0, no steps).
+- [ ] Run the complete macOS/Xcode build and XCTest/UI workflow on the current branch head. Previously verified run #238 passed 119 unit tests and 10 UI tests on commit c677f05; the current credit-card reconciliation changes postdate that run.
 - [x] Inspect project configuration: only Apple platform frameworks are used; no paid APIs, subscriptions, backend or package dependencies are required.
 - [x] Keep the native implementation isolated to `savings-zakat-ios`; no PWA repository, deployment or data actions were taken.
 - [ ] Test Shortcuts handoff on a physical iPhone and record iOS version/settings/limitations.
 - [ ] Test local notifications, offline calculation, backup/restore, Dark Mode and accessibility on device.
 - [x] Add `Documentation/Device-Test-Checklist.md`; do not claim App Store-ready or production-ready without evidence and explicit release approval.
 
-**Task 13 status:** Blocked on two external gates: a working macOS/Xcode GitHub Actions runner, and access to the user's physical iPhone for Shortcuts, notification permission, signing/install, Dark Mode and accessibility validation. No merge or release is authorized.
+**Task 13 status:** The macOS/Xcode runner is available and run #238 passed, but the latest branch head has not yet completed a fresh native CI run. Physical-iPhone access is still required for Shortcuts, notification permission, signing/install, Dark Mode and accessibility validation. No merge or release is authorized.
+
+
+## Workstream E — Recurring Transactions and Credit-Card Reconciliation
+
+### Task 14: Recurring income and expense templates
+**Files:** FinanceModels.swift, FinanceLedger.swift, FinanceTabs.swift, FinanceLedgerTests.swift, FinanceAppUITests.swift.
+- [x] Add daily, weekly, monthly and yearly recurrence models with configurable intervals.
+- [x] Add manual due-entry generation, pause/resume/delete controls and a 120-occurrence catch-up cap.
+- [x] Store rule ID and occurrence date on generated transactions; reject duplicate occurrence generation.
+- [x] Keep automatic/background posting disabled; due entries affect balances only after the user explicitly taps Create due entries.
+- [x] Add ledger and UI tests for schedule generation, idempotency and rule validation.
+- [ ] Re-run the complete native CI workflow on the latest branch head.
+
+### Task 15: Credit-card purchases, repayments and opening balances
+**Files:** FinanceModels.swift, FinanceLedger.swift, FinanceTabs.swift, FinanceEntrySheets.swift, FinanceLedgerTests.swift, FinanceAppUITests.swift.
+- [x] Add credit-card purchase transactions that increase card debt without debiting a bank account.
+- [x] Add bank-to-card repayment transfers that reduce both the paying account and card debt without creating a second expense.
+- [x] Add card currency validation and reject repayments above the recorded outstanding balance.
+- [x] Add opening outstanding balances and support linking existing manually recorded card liabilities as the single opening-balance source.
+- [x] Include calculated credit-card balances in net-worth and Debts views; protect cards with history/opening debt from deletion.
+- [x] Extend Shortcuts imported-message review to confirm account transactions, card purchases or card repayments while preserving imported-message duplicate protection.
+- [x] Add unit and UI coverage for purchase/repayment accounting, duplicate imports, liability linking and deletion safeguards.
+- [ ] Re-run the complete native CI workflow on the latest branch head; do not treat these new tests as passed until the run succeeds.
+
+**Workstream E status (2026-10-30):** The current branch defines 129 unit-test methods and 12 UI tests. The last verified native run (#238, commit c677f05) passed 119 unit tests and 10 UI tests before the credit-card reconciliation implementation. A fresh run on the current branch head is still required. The existing PWA remains untouched; PR #1 remains a draft and is not approved for merge or release.
