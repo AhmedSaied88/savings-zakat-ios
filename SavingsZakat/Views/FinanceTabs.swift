@@ -1741,6 +1741,7 @@ private struct ZakatCalculationContent: View {
             personalGoldSetting
             Button("Calculate Zakat", action: onCalculate)
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("zakat-calculate-button")
             if let result {
                 resultTotals(result)
                 breakdownRows(result)
