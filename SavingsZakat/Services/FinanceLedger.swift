@@ -189,7 +189,8 @@ struct FinanceLedger {
             throw LedgerError.cardNotFound(cardID)
         }
         guard snapshot.liabilities[liabilityIndex].kind == .creditCard,
-              snapshot.liabilities[liabilityIndex].currency == cardCurrency(for: card) else {
+              snapshot.liabilities[liabilityIndex].currency == cardCurrency(for: card),
+              snapshot.liabilities[liabilityIndex].linkedCardID == nil || snapshot.liabilities[liabilityIndex].linkedCardID == cardID else {
             throw LedgerError.invalidCardTransaction
         }
         guard !snapshot.liabilities.contains(where: { $0.linkedCardID == cardID && $0.id != liabilityID }) else {
