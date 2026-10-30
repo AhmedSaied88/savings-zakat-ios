@@ -6,7 +6,7 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 **Working prototype foundation — not release-ready or verified on a physical iPhone.** This isolated SwiftUI application includes a versioned local store and validated ledger; five primary tabs (Wallet, Accounts, Activity, Debts and Zakat); Shortcuts-assisted bank-message import with redaction, custom parser rules and explicit transaction confirmation; an editable cash/gold/silver/investment register; a Hawl calendar with local reminders; combined Zakat calculations with per-asset breakdown; encrypted local backup/restore; persisted valuation/parser preferences; and monthly income/expense insights.
 
-The latest previously verified full GitHub Actions simulator run passed on macOS 15 / Xcode 16.4. Recurring transactions and credit-card reconciliation were added after that run and still require a fresh CI run:
+The latest previously verified full GitHub Actions simulator run passed on macOS 15 / Xcode 16.4. Credit-card reconciliation and its new UI flow were added after that run and still require a fresh CI run:
 - Branch: `chore/task-1-baseline-architecture`
 - Commit: `c677f05a9a531573e1fb25c0573cb7a738874857`
 - Workflow run: [Native iOS build and tests #238](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41073908869)
