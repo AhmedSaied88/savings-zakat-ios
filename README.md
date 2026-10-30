@@ -20,7 +20,7 @@ Latest confirmed full Xcode test run for the ledger work:
 - `SavingsZakat/Views/` — tab-based SwiftUI Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat screens, plus Hawl, insights, settings and encrypted backup views.
 - `SavingsZakatTests/` — calculation, calendar, persistence, ledger, import, notification, backup, preferences and insights tests.
 - `SavingsZakatUITests/` — iPhone simulator UI automation for navigation, account/transaction entry and card masking/payment details.
-- `Documentation/Architecture.md` — architecture, data safety and migration contract.
+- `Documentation/Architecture.md` — architecture, data safety and migration contract.\n- `Documentation/Device-Test-Checklist.md` — physical-iPhone validation steps for Shortcuts, reminders, backup, offline behavior and accessibility.
 - `docs/superpowers/specs/` — approved product/design requirements.
 - `docs/superpowers/plans/` — phased implementation plan.
 - `project.yml` — XcodeGen project definition.
