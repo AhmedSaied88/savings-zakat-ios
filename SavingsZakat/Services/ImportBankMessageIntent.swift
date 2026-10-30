@@ -34,8 +34,8 @@ struct SavingsZakatShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: ImportBankMessageIntent(),
             phrases: [
-                "Import bank message into \\(.applicationName)",
-                "Review bank message in \\(.applicationName)"
+                "Import bank message into \(.applicationName)",
+                "Review bank message in \(.applicationName)"
             ],
             shortTitle: "Import bank message",
             systemImageName: "message.badge.filled"
