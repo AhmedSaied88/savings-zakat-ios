@@ -28,6 +28,8 @@ struct FinanceLedger {
         case cardHasActivity(UUID)
         case duplicateCardLiability(UUID)
         case repaymentExceedsOutstanding
+        case duplicateCard(UUID)
+        case invalidCard
     }
 
     private(set) var snapshot: FinanceSnapshot
@@ -61,6 +63,26 @@ struct FinanceLedger {
                     return balance
                 }
             }
+    }
+
+    mutating func addCard(_ card: FinanceCard) throws {
+        guard !snapshot.cards.contains(where: { $0.id == card.id }) else {
+            throw LedgerError.duplicateCard(card.id)
+        }
+        if card.kind == .credit {
+            guard (card.openingOutstandingBalance ?? 0) >= 0,
+                  (card.creditLimit ?? 0) >= 0,
+                  (card.minimumDue ?? 0) >= 0 else {
+                throw LedgerError.invalidCard
+            }
+        }
+        if let linkedAccountID = card.linkedAccountID {
+            guard let account = snapshot.accounts.first(where: { $0.id == linkedAccountID }),
+                  account.currency == cardCurrency(for: card) else {
+                throw LedgerError.invalidCard
+            }
+        }
+        snapshot.cards.append(card)
     }
 
     mutating func post(_ transaction: FinanceTransaction) throws {
