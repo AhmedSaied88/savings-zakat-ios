@@ -1527,8 +1527,8 @@ private struct TransactionEditorSheet: View {
                             item = FinanceTransaction(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                                                       amount: value, currency: selectedAccount.currency,
                                                       direction: .transfer, date: date, accountID: accountID,
-                                                      destinationCardID: selectedCard.id,
-                                                      category: "Card repayment · \(selectedCard.name)")
+                                                      category: "Card repayment · \(selectedCard.name)",
+                                                      destinationCardID: selectedCard.id)
                         }
                         onSave(item)
                         dismiss()
