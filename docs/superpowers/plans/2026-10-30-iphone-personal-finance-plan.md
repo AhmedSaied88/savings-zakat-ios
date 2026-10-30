@@ -57,6 +57,13 @@
 - [ ] Implement ledger validation and duplicate transaction protection.
 - [ ] Test account deletion constraints and transfer accounting.
 
+### Task 4: Wallet and account/card UI
+**Files:** Refactor `ContentView.swift`; create Wallet, Accounts, Cards, Transactions and Liabilities SwiftUI views under `SavingsZakat/Views/`.
+- [ ] Add UI tests for account CRUD, card masking, credit-card due dates and transaction categories.
+- [ ] Implement Design 4 composition with Design 3 blue palette: white/pale-blue surfaces, royal-blue actions, violet accents and gold asset highlights.
+- [ ] Build Wallet, Accounts & Cards, Transactions, Add Account and Debts sections with native navigation/sheets.
+- [ ] Verify accessibility labels, Dynamic Type, Dark Mode and 44pt touch targets.
+
 ## Workstream B — Bank SMS via Shortcuts
 
 ### Task 5: SMS parser and privacy layer
