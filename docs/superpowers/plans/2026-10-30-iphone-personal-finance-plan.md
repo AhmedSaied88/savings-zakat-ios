@@ -44,11 +44,13 @@
 **Baseline evidence (2026-10-30):** Branch `feature/iphone-personal-finance-native`, commit `6c1b08ef59063892cb1103d07b40b9d10c8a9213`; GitHub Actions run `41017441370` completed successfully on macOS 15 / Xcode 16.4 / iPhone 16 simulator. XCTest: 16 tests, 0 failures. This is the pre-change baseline; Task 1 documentation updates do not alter executable source.
 
 ### Task 2: Versioned local store
-**Files:** Create `SavingsZakat/Services/FinanceStore.swift`, `SavingsZakat/Models/FinanceSnapshot.swift`, `SavingsZakatTests/FinanceStoreTests.swift`.
+**Files:** Existing `SavingsZakat/Services/FinanceStore.swift`, `SavingsZakat/Models/FinanceModels.swift` (`FinanceSnapshot`), and `SavingsZakatTests/FinanceStoreTests.swift`.
 **Interfaces:** `FinanceStore.load() throws -> FinanceSnapshot`; `FinanceStore.save(_ snapshot: FinanceSnapshot) throws`; `FinanceSnapshot.schemaVersion: Int`.
-- [ ] Test first launch, save/reload, migration, corrupt-file recovery and atomic writes.
-- [ ] Implement versioned local persistence and safe migration from prototype holdings JSON.
-- [ ] Verify create/update/delete survive app relaunch in tests.
+- [x] Test first launch, save/reload, legacy migration, corrupt-file recovery, unsupported schema rejection and atomic snapshot replacement.
+- [x] Implement versioned local persistence and safe migration from prototype holdings JSON.
+- [x] Verify create/update/delete changes survive save/reload in tests.
+
+**Task 2 verification note:** The new legacy-migration test was first run against the old store and failed because the loaded snapshot contained no migrated holdings and the legacy `testHoldingsJSON` key remained. The store now imports the legacy holdings array only when no snapshot exists, writes the new snapshot atomically, and removes the old key only after the write succeeds. Malformed legacy JSON and failed writes leave the legacy value intact. A local Swift 6.2 XCTest harness ran all 10 `FinanceStoreTests` successfully. The full macOS/Xcode GitHub Actions run for the final branch head is still pending; do not mark Task 2 complete until that run passes.
 
 ### Task 3: Accounts, cards, liabilities and ledger
 **Files:** Create `Account.swift`, `PaymentCard.swift`, `Transaction.swift`, `Liability.swift`, `FinanceLedger.swift` and `FinanceLedgerTests.swift` under Models/Services/Tests.
