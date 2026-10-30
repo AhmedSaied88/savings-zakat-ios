@@ -4,6 +4,7 @@ struct CardEntrySheet: View {
     var card: FinanceCard? = nil
     var accounts: [FinanceAccount]
     var openingBalanceLocked: Bool = false
+    var currencyLocked: Bool = false
     var onSave: (FinanceCard) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
@@ -28,6 +29,7 @@ struct CardEntrySheet: View {
                     ForEach(FinanceCardKind.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                 }
                 .accessibilityIdentifier("card-kind-picker")
+                .disabled(card != nil)
                 TextField("Last four digits only", text: Binding(
                     get: { lastFour },
                     set: { value in lastFour = String(value.filter(\.isNumber).suffix(4)) }
@@ -38,13 +40,14 @@ struct CardEntrySheet: View {
                         Text("Not linked").tag(UUID?.none)
                         ForEach(accounts) { Text($0.name).tag(Optional($0.id)) }
                     }
+                    .disabled(currencyLocked)
                 }
                 if kind == .credit {
                     Section("Credit card details") {
                         Picker("Currency", selection: $currency) {
                             ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) { Text($0).tag($0) }
                         }
-                        .disabled(linkedAccountID != nil)
+                        .disabled(linkedAccountID != nil || currencyLocked)
                         TextField(openingBalanceLocked ? "Opening balance managed by linked debt" : "Opening outstanding balance (optional)", text: $openingOutstandingBalance)
                             .keyboardType(.decimalPad)
                             .disabled(openingBalanceLocked)
