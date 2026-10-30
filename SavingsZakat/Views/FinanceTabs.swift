@@ -735,7 +735,9 @@ struct DebtsTab: View {
             }
             .navigationTitle("Debts")
             .sheet(isPresented: $showAdd) {
-                LiabilityEntrySheet(cards: snapshot.cards, accounts: snapshot.accounts) { liability in
+                LiabilityEntrySheet(cards: snapshot.cards.filter { card in
+                    card.kind == .credit && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id })
+                }, accounts: snapshot.accounts) { liability in
                     var ledger = FinanceLedger(snapshot: snapshot)
                     do {
                         try ledger.addLiability(liability)
