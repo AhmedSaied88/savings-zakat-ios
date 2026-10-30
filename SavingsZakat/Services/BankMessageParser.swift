@@ -71,7 +71,7 @@ enum BankMessageParser {
         guard let amount = Decimal(string: rawAmount, locale: Locale(identifier: "en_US_POSIX")) else {
             return nil
         }
-        return (amount, rawCurrency == "LE" ? "EGP" : rawCurrency)
+        return (amount, ["LE", "جنيه", "ج.م"].contains(rawCurrency) ? "EGP" : rawCurrency)
     }
 
     private static func classify(_ text: String) -> (direction: TransactionDirection, category: String, confidence: BankParseConfidence)? {
