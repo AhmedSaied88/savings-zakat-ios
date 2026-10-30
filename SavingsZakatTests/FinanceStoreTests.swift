@@ -250,6 +250,38 @@ final class FinanceStoreTests: XCTestCase {
         XCTAssertNil(decoded.holdings.first?.purity)
     }
 
+
+    func testPersistsFinancePreferencesAndCustomBankRules() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FinanceStore(directoryURL: directory)
+        let rule = BankMessageRule(keyword: "marketplace", direction: .expense, category: "Online shopping")
+        let preferences = FinancePreferences(
+            exchangeRatesToEGP: ["EGP": 1, "USD": 49.5],
+            goldPricesPerGramEGP: ["21": 4_900],
+            silverPricePerGramEGP: 55,
+            nisabEGP: 100_000,
+            includePersonalGold: true,
+            bankMessageRules: [rule]
+        )
+        let snapshot = FinanceSnapshot(preferences: preferences)
+
+        try store.save(snapshot)
+
+        XCTAssertEqual(try store.load().preferences, preferences)
+    }
+
+    func testOlderFinanceSnapshotDecodesWithoutPreferences() throws {
+        let encoded = try JSONEncoder().encode(FinanceSnapshot())
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object.removeValue(forKey: "preferences")
+        let oldData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(FinanceSnapshot.self, from: oldData)
+
+        XCTAssertNil(decoded.preferences)
+    }
+
     private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
         let suiteName = "FinanceStoreTests." + UUID().uuidString
         return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
