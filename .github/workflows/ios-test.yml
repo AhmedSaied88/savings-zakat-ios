@@ -1,6 +1,8 @@
 name: Native iOS build and tests
 
 on:
+  # A push and its pull_request event can target the same commit. Use the
+  # source commit SHA below so only one CI run is active for that revision.
   pull_request:
     paths:
       - 'SavingsZakat/**'
@@ -23,9 +25,14 @@ on:
       - '.github/workflows/ios-test.yml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     runs-on: macos-15
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -41,6 +48,7 @@ jobs:
         run: xcodegen generate
 
       - name: Build app and test bundles
+        timeout-minutes: 12
         run: |
           PROJECT="$(find . -maxdepth 1 -name '*.xcodeproj' -print -quit)"
           test -n "$PROJECT"
@@ -52,9 +60,12 @@ jobs:
 
       - name: Run XCTest and UI tests on an available iPhone simulator
         shell: bash
+        timeout-minutes: 25
         run: |
           set -euo pipefail
           PROJECT="$(find . -maxdepth 1 -name '*.xcodeproj' -print -quit)"
+          RESULT_BUNDLE="$RUNNER_TEMP/SavingsZakatTests.xcresult"
+          TEST_LOG="$RUNNER_TEMP/SavingsZakat-xcodebuild-tests.log"
           DESTINATION_ID="$(xcrun simctl list devices available -j | python3 -c '
           import json, sys
           payload = json.load(sys.stdin)
@@ -69,8 +80,8 @@ jobs:
           ')"
 
           if [[ -z "$DESTINATION_ID" ]]; then
-            echo "::notice::No available iPhone simulator runtime/device on this runner. Generic iOS Simulator build passed; XCTest/UI tests were not executed."
-            exit 0
+            echo "::error::No available iPhone simulator runtime/device. Tests were not executed."
+            exit 1
           fi
 
           echo "Running tests on simulator $DESTINATION_ID"
@@ -78,4 +89,26 @@ jobs:
             -project "$PROJECT" \
             -scheme SavingsZakat \
             -destination "platform=iOS Simulator,id=$DESTINATION_ID" \
-            CODE_SIGNING_ALLOWED=NO
+            -parallel-testing-enabled NO \
+            -resultBundlePath "$RESULT_BUNDLE" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$TEST_LOG"
+
+      - name: Collect simulator diagnostics after test failure
+        if: failure()
+        shell: bash
+        run: |
+          echo "=== Available simulator devices ==="
+          xcrun simctl list devices available || true
+          echo "=== Relevant processes ==="
+          ps -Ao pid,etime,command | grep -E 'xcodebuild|Simulator|CoreSimulator|testmanagerd' | grep -v grep || true
+
+      - name: Upload XCTest diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: savings-zakat-xctest-diagnostics-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/SavingsZakatTests.xcresult
+            ${{ runner.temp }}/SavingsZakat-xcodebuild-tests.log
+          if-no-files-found: ignore
+          retention-days: 7
