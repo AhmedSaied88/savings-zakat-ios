@@ -164,6 +164,30 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Settings & backup"].exists)
     }
 
+
+    func testWalletDisplaysEmptyAccountsState() throws {
+        let app = launchCleanApp()
+        XCTAssertTrue(app.staticTexts["No accounts yet"].waitForExistence(timeout: 5))
+    }
+
+    func testHawlCalendarDisplaysEmptyStateWithoutRequestingReminders() throws {
+        let app = launchCleanApp()
+        app.tabBars.buttons["Zakat"].tap()
+        app.buttons["View Hawl calendar and reminders"].tap()
+        XCTAssertTrue(app.staticTexts["No Hawl dates"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Schedule / refresh reminders"].exists)
+        XCTAssertFalse(app.staticTexts["Notifications are not permitted."].exists)
+    }
+
+    func testZakatCalculationControlsRemainVisible() throws {
+        let app = launchCleanApp()
+        app.tabBars.buttons["Zakat"].tap()
+        XCTAssertTrue(app.staticTexts["Combined Zakat calculation"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Nisab (EGP)"].exists)
+        XCTAssertTrue(app.switches["Include personal-use gold"].exists)
+        XCTAssertTrue(app.buttons["Calculate Zakat"].exists)
+    }
+
     private func launchCleanApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-reset"]
