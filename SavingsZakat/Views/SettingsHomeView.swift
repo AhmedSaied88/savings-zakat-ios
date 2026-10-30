@@ -54,6 +54,7 @@ struct FinancePreferencesView: View {
                 } label: {
                     Label("Add custom keyword rule", systemImage: "plus.circle")
                         .frame(minHeight: 44)
+                        .accessibilityIdentifier("add-custom-bank-rule")
                 }
                 Text("Create a custom keyword rule for a bank-message category. Custom matches remain medium confidence and require review.")
                     .font(.footnote).foregroundStyle(.secondary)
