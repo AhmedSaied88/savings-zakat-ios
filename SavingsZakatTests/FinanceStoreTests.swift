@@ -98,6 +98,26 @@ final class FinanceStoreTests: XCTestCase {
         XCTAssertNotNil(defaults.object(forKey: "testHoldingsJSON"))
     }
 
+
+    func testRepeatedSaveLeavesCompleteLatestSnapshot() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FinanceStore(directoryURL: directory)
+        let firstHolding = Holding(id: UUID(), kind: .cash, amount: 10, currency: "EGP", grams: nil, carat: nil,
+                                   acquiredDate: date("2025-01-10"), hawlStartDate: date("2025-01-10"), purpose: .investment)
+        let latestHolding = Holding(id: UUID(), kind: .gold, amount: 20, currency: nil, grams: 20, carat: 21,
+                                    acquiredDate: date("2025-02-10"), hawlStartDate: date("2025-02-10"), purpose: .investment)
+
+        try store.save(FinanceSnapshot(holdings: [firstHolding]))
+        let latestSnapshot = FinanceSnapshot(holdings: [latestHolding])
+        try store.save(latestSnapshot)
+
+        let file = directory.appendingPathComponent("finance-data.json")
+        let persistedData = try Data(contentsOf: file)
+        XCTAssertEqual(try JSONDecoder().decode(FinanceSnapshot.self, from: persistedData), latestSnapshot)
+        XCTAssertEqual(try store.load(), latestSnapshot)
+    }
+
     private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
         let suiteName = "FinanceStoreTests." + UUID().uuidString
         return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
