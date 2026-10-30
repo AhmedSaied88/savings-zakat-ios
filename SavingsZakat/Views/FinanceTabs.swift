@@ -557,9 +557,10 @@ struct AssetsZakatTab: View {
     @State private var silverPrice: Double?
     @State private var nisab = 0.0
     @State private var result: ZakatResult?
-    @State private var showCash = false
-    @State private var showGold = false
-    @State private var showSilver = false
+    @State private var editingHolding: Holding?
+    @State private var editorKind: HoldingKind = .cash
+    @State private var showHoldingEditor = false
+    @State private var assetError: String?
 
     var body: some View {
         NavigationStack {
@@ -567,25 +568,63 @@ struct AssetsZakatTab: View {
                 Section("Savings and Zakat assets") {
                     if snapshot.holdings.isEmpty {
                         ContentUnavailableView("No assets recorded", systemImage: "sparkles",
-                                               description: Text("Add cash, gold or silver holdings."))
+                                               description: Text("Add cash, gold, silver or a manual investment."))
                     }
                     ForEach(snapshot.holdings) { holding in
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(label(holding)).font(.headline)
-                            Text("Hawl start: \(holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
-                                .font(.caption).foregroundStyle(.secondary)
-                            if let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
-                                Text((due.status == .officiallyConfirmed ? "Egyptian Hijri anniversary: " : "Estimated Hijri anniversary: ")
-                                     + due.date.formatted(date: .long, time: .omitted))
+                        Button {
+                            editingHolding = holding
+                            editorKind = holding.kind
+                            showHoldingEditor = true
+                        } label: {
+                            VStack(alignment: .leading, spacing: 5) {
+                                HStack {
+                                    Text(label(holding)).font(.headline).foregroundStyle(.primary)
+                                    Spacer()
+                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                                }
+                                Text("Acquired: \(holding.acquiredDate.formatted(date: .abbreviated, time: .omitted)) · Hawl starts: \(holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.caption).foregroundStyle(.secondary)
+                                if let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
+                                    let days = Calendar(identifier: .gregorian).dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: due.date)).day ?? 0
+                                    HStack(spacing: 6) {
+                                        Text((due.status == .officiallyConfirmed ? "Confirmed" : "Estimated") + " Hawl: " + due.date.formatted(date: .abbreviated, time: .omitted))
+                                        Text(days >= 0 ? "· \(days) days left" : "· Matured")
+                                    }
                                     .font(.caption)
                                     .foregroundStyle(due.status == .officiallyConfirmed ? Color.secondary : Color.orange)
+                                }
+                                if let value = estimatedValueEGP(for: holding) {
+                                    Text(value, format: .currency(code: "EGP"))
+                                        .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                                } else {
+                                    Text("Valuation needed")
+                                        .font(.caption).foregroundStyle(.orange)
+                                }
                             }
-                        }.padding(.vertical, 4)
+                            .padding(.vertical, 5)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Edit asset details")
+                        .swipeActions {
+                            Button(role: .destructive) { deleteHolding(holding) } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
-                    .onDelete { offsets in snapshot.holdings.remove(atOffsets: offsets); onSave(); calculate() }
-                    Button { showCash = true } label: { Label("Add cash / currency", systemImage: "banknote").frame(minHeight: 44) }
-                    Button { showGold = true } label: { Label("Add gold", systemImage: "circle.lefthalf.filled").frame(minHeight: 44) }
-                    Button { showSilver = true } label: { Label("Add silver", systemImage: "circle").frame(minHeight: 44) }
+                    ForEach(HoldingKind.allCases, id: \.self) { kind in
+                        Button {
+                            editingHolding = nil
+                            editorKind = kind
+                            showHoldingEditor = true
+                        } label: {
+                            Label(addTitle(for: kind), systemImage: addIcon(for: kind))
+                                .frame(minHeight: 44)
+                        }
+                    }
+                    if let assetError {
+                        Text(assetError).font(.footnote).foregroundStyle(.red)
+                    }
                 }
                 Section("Combined Zakat calculation") {
                     HStack {
@@ -615,7 +654,7 @@ struct AssetsZakatTab: View {
                                       format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                         }
                     }
-                    ForEach(["24", "21", "18"], id: \.self) { carat in
+                    ForEach(["24", "22", "21", "18", "14"], id: \.self) { carat in
                         HStack {
                             Text("Gold \(carat)K / gram")
                             TextField("EGP", value: Binding(get: { goldPrices[carat] ?? 0 }, set: { goldPrices[carat] = $0 }),
@@ -623,30 +662,76 @@ struct AssetsZakatTab: View {
                         }
                     }
                     HStack {
-                        Text("Silver / gram")
+                        Text("Silver / gram (999)")
                         TextField("EGP", value: Binding(get: { silverPrice ?? 0 }, set: { silverPrice = $0 }),
                                   format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                     }
                 }
             }
             .navigationTitle("Savings & Zakat")
-            .sheet(isPresented: $showCash) {
-                CashHoldingEntry { snapshot.holdings.append($0); onSave() }
-            }
-            .sheet(isPresented: $showGold) {
-                GoldHoldingEntry { snapshot.holdings.append($0); onSave() }
-            }
-            .sheet(isPresented: $showSilver) {
-                SilverHoldingEntry { snapshot.holdings.append($0); onSave() }
+            .sheet(isPresented: $showHoldingEditor) {
+                HoldingEditorSheet(holding: editingHolding, defaultKind: editorKind) { updated in
+                    var ledger = AssetLedger(holdings: snapshot.holdings)
+                    do {
+                        if snapshot.holdings.contains(where: { $0.id == updated.id }) {
+                            try ledger.update(updated)
+                        } else {
+                            try ledger.add(updated)
+                        }
+                        snapshot.holdings = ledger.holdings
+                        assetError = nil
+                        onSave()
+                        calculate()
+                    } catch {
+                        assetError = validationMessage(for: error)
+                    }
+                }
             }
         }
     }
 
     private func label(_ holding: Holding) -> String {
         switch holding.kind {
-        case .cash: return "Cash · \(holding.currency ?? "EGP") · \(holding.amount)"
-        case .gold: return "Gold · \(holding.carat ?? 24)K · \(holding.grams ?? holding.amount) g"
-        case .silver: return "Silver · \(holding.grams ?? holding.amount) g"
+        case .cash:
+            return "Cash · \(holding.currency ?? "EGP") · \(holding.amount)"
+        case .gold:
+            return "Gold · \(holding.carat ?? 24)K · \(holding.grams ?? holding.amount) g"
+        case .silver:
+            return "Silver · \(holding.purity ?? 999)‰ · \(holding.grams ?? holding.amount) g"
+        case .investment:
+            return "\(holding.name ?? "Investment") · \(holding.currency ?? "EGP") · \(holding.amount)"
+        }
+    }
+
+    private func addTitle(for kind: HoldingKind) -> String {
+        switch kind {
+        case .cash: return "Add cash / currency"
+        case .gold: return "Add gold"
+        case .silver: return "Add silver"
+        case .investment: return "Add manual investment"
+        }
+    }
+
+    private func addIcon(for kind: HoldingKind) -> String {
+        switch kind {
+        case .cash: return "banknote"
+        case .gold: return "circle.lefthalf.filled"
+        case .silver: return "circle"
+        case .investment: return "chart.line.uptrend.xyaxis"
+        }
+    }
+
+    private func estimatedValueEGP(for holding: Holding) -> Double? {
+        switch holding.kind {
+        case .cash, .investment:
+            guard let currency = holding.currency, let rate = rates[currency], rate.isFinite, rate > 0 else { return nil }
+            return holding.amount * rate
+        case .gold:
+            guard let price = goldPrices[String(holding.carat ?? 24)], price.isFinite, price > 0 else { return nil }
+            return (holding.grams ?? holding.amount) * price
+        case .silver:
+            guard let price = silverPrice, price.isFinite, price > 0 else { return nil }
+            return (holding.grams ?? holding.amount) * price * Double(holding.purity ?? 999) / 1000
         }
     }
 
@@ -658,10 +743,147 @@ struct AssetsZakatTab: View {
         }
     }
 
+    private func deleteHolding(_ holding: Holding) {
+        var ledger = AssetLedger(holdings: snapshot.holdings)
+        do {
+            try ledger.delete(id: holding.id)
+            snapshot.holdings = ledger.holdings
+            assetError = nil
+            onSave()
+            calculate()
+        } catch {
+            assetError = validationMessage(for: error)
+        }
+    }
+
+    private func validationMessage(for error: Error) -> String {
+        guard let error = error as? AssetLedger.AssetError else { return "Could not save this asset." }
+        switch error {
+        case .invalidAmount: return "Enter a valid amount or weight greater than zero."
+        case .invalidCurrency: return "Choose a valid three-letter currency."
+        case .invalidDates: return "Acquisition and Hawl dates must be valid and Hawl cannot start before acquisition."
+        case .invalidGoldCarat: return "Choose a supported gold carat."
+        case .invalidSilverPurity: return "Silver purity must be between 800 and 999."
+        case .missingInvestmentName: return "Enter a name for this investment."
+        case .duplicateHolding: return "This asset already exists."
+        case .holdingNotFound: return "This asset could not be found."
+        }
+    }
+
     private func calculate() {
         result = ZakatCalculator.calculate(holdings: snapshot.holdings, ratesToEGP: rates,
                                            goldPricesPerGramEGP: goldPrices, silverPricePerGramEGP: silverPrice,
                                            nisabEGP: nisab, asOf: Date())
+    }
+}
+
+private struct HoldingEditorSheet: View {
+    let holding: Holding?
+    let defaultKind: HoldingKind
+    let onSave: (Holding) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var kind: HoldingKind
+    @State private var name: String
+    @State private var amount: String
+    @State private var currency: String
+    @State private var carat: Int
+    @State private var purity: Int
+    @State private var purpose: HoldingPurpose
+    @State private var acquiredDate: Date
+    @State private var hawlStartDate: Date
+
+    init(holding: Holding?, defaultKind: HoldingKind, onSave: @escaping (Holding) -> Void) {
+        self.holding = holding
+        self.defaultKind = defaultKind
+        self.onSave = onSave
+        _kind = State(initialValue: holding?.kind ?? defaultKind)
+        _name = State(initialValue: holding?.name ?? "")
+        let initialAmount = holding.map {
+            ($0.kind == .gold || $0.kind == .silver) ? ($0.grams ?? $0.amount) : $0.amount
+        }
+        _amount = State(initialValue: initialAmount.map { String($0) } ?? "")
+        _currency = State(initialValue: holding?.currency ?? "EGP")
+        _carat = State(initialValue: holding?.carat ?? 21)
+        _purity = State(initialValue: holding?.purity ?? 999)
+        _purpose = State(initialValue: holding?.purpose ?? .investment)
+        _acquiredDate = State(initialValue: holding?.acquiredDate ?? Date())
+        _hawlStartDate = State(initialValue: holding?.hawlStartDate ?? Date())
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Picker("Asset type", selection: $kind) {
+                    ForEach(HoldingKind.allCases, id: \.self) { item in
+                        Text(item.rawValue.capitalized).tag(item)
+                    }
+                }
+                if kind == .investment {
+                    TextField("Investment name", text: $name)
+                }
+                TextField(kind == .gold || kind == .silver ? "Weight (grams)" : "Amount", text: $amount)
+                    .keyboardType(.decimalPad)
+                if kind == .cash || kind == .investment {
+                    Picker("Currency", selection: $currency) {
+                        ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) {
+                            Text($0).tag($0)
+                        }
+                    }
+                }
+                if kind == .gold {
+                    Picker("Carat", selection: $carat) {
+                        ForEach([24, 22, 21, 18, 14], id: \.self) { Text("\($0)K").tag($0) }
+                    }
+                    Picker("Purpose", selection: $purpose) {
+                        Text("Investment").tag(HoldingPurpose.investment)
+                        Text("Personal use").tag(HoldingPurpose.personalUse)
+                    }
+                }
+                if kind == .silver {
+                    Picker("Purity", selection: $purity) {
+                        ForEach([999, 925, 900, 800], id: \.self) { Text("\($0)‰").tag($0) }
+                    }
+                }
+                DatePicker("Acquisition date (Gregorian)", selection: $acquiredDate, in: ...Date(), displayedComponents: .date)
+                DatePicker("Hawl start (Gregorian)", selection: $hawlStartDate,
+                           in: acquiredDate...Date(), displayedComponents: .date)
+                Text("The Gregorian dates are stored. Egyptian Hijri conversion and confidence status are shown separately.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .navigationTitle(holding == nil ? "Add asset" : "Edit asset")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard let value = Double(amount), value.isFinite, value > 0 else { return }
+                        let isMetal = kind == .gold || kind == .silver
+                        let updated = Holding(
+                            id: holding?.id ?? UUID(),
+                            kind: kind,
+                            amount: value,
+                            currency: (kind == .cash || kind == .investment) ? currency : nil,
+                            grams: isMetal ? value : nil,
+                            carat: kind == .gold ? carat : nil,
+                            acquiredDate: acquiredDate,
+                            hawlStartDate: hawlStartDate,
+                            purpose: kind == .gold ? purpose : .investment,
+                            name: (kind == .investment || kind == .silver) ? name : nil,
+                            purity: kind == .silver ? purity : nil
+                        )
+                        onSave(updated)
+                        dismiss()
+                    }
+                    .disabled(!(Double(amount).map { $0.isFinite && $0 > 0 } ?? false) ||
+                              (kind == .investment && name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                }
+            }
+            .onChange(of: acquiredDate) { _, newValue in
+                if hawlStartDate < newValue { hawlStartDate = newValue }
+            }
+        }
     }
 }
 
