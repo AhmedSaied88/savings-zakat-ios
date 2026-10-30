@@ -1,6 +1,12 @@
 import SwiftUI
 import Charts
 
+private struct CurrencyInsightGroup: Identifiable {
+    let currency: String
+    let values: [MonthlyFinanceSummary]
+    var id: String { currency }
+}
+
 struct FinanceInsightsView: View {
     let snapshot: FinanceSnapshot
 
@@ -12,10 +18,10 @@ struct FinanceInsightsView: View {
         )
     }
 
-    private var currencyGroups: [(currency: String, values: [MonthlyFinanceSummary])] {
+    private var currencyGroups: [CurrencyInsightGroup] {
         let grouped = Dictionary(grouping: summaries, by: \.currency)
         return grouped.keys.sorted().map { currency in
-            (currency, grouped[currency] ?? [])
+            CurrencyInsightGroup(currency: currency, values: grouped[currency] ?? [])
         }
     }
 
@@ -29,7 +35,7 @@ struct FinanceInsightsView: View {
                 )
             }
 
-            ForEach(currencyGroups, id: \.currency) { group in
+            ForEach(currencyGroups) { group in
                 Section("\(group.currency) · last 6 months") {
                     Chart(group.values) { item in
                         BarMark(
