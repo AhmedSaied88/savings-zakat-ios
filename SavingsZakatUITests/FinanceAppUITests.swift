@@ -104,12 +104,18 @@ final class FinanceAppUITests: XCTestCase {
         if dueDateToggle.value as? String != "1" {
             dueDateToggle.tap()
         }
+        XCTAssertEqual(dueDateToggle.value as? String, "1",
+                       "The payment due-date option should be enabled before saving")
+        XCTAssertTrue(app.datePickers["Payment due date"].waitForExistence(timeout: 3),
+                      "Enabling the due-date option should reveal its date picker")
 
         app.buttons["Save"].tap()
 
         let creditCardRow = app.buttons["card-row-UI Test Credit"]
         XCTAssertTrue(scrollTo(creditCardRow, in: app),
                       "The saved credit card row should be accessible")
+        XCTAssertTrue(creditCardRow.label.contains("Credit"),
+                      "The saved card should retain its credit-card type")
         XCTAssertTrue(creditCardRow.label.contains("Payment due"),
                       "The accessible credit card row should include its payment due-date description")
     }
