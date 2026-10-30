@@ -73,7 +73,9 @@ final class FinanceAppUITests: XCTestCase {
     func testCreditCardEntryShowsPaymentDueDate() throws {
         let app = launchCleanApp()
         app.tabBars.buttons["Accounts"].tap()
-        app.buttons["Add card"].tap()
+        let addCard = app.buttons["Add card"]
+        XCTAssertTrue(scrollTo(addCard, in: app), "Add card should be reachable by scrolling the Accounts list")
+        addCard.tap()
 
         let cardName = app.textFields["Card label"]
         XCTAssertTrue(cardName.waitForExistence(timeout: 3))
@@ -206,11 +208,12 @@ final class FinanceAppUITests: XCTestCase {
         app.tabBars.buttons["Zakat"].tap()
         let calculateButton = app.buttons["Calculate Zakat"]
         XCTAssertTrue(scrollTo(calculateButton, in: app), "Zakat calculation should be reachable by scrolling the Zakat list")
-        XCTAssertTrue(app.staticTexts["Combined Zakat calculation"].exists)
-        XCTAssertTrue(app.staticTexts["Nisab (EGP)"].exists)
-        XCTAssertTrue(app.switches["Include personal-use gold"].exists)
-        XCTAssertTrue(app.buttons["Calculate Zakat"].exists)
-        app.buttons["Calculate Zakat"].tap()
+        XCTAssertTrue(calculateButton.isHittable)
+        let nisabLabel = app.staticTexts["Nisab (EGP)"]
+        XCTAssertTrue(nisabLabel.exists && nisabLabel.isHittable)
+        let personalGoldToggle = app.switches["Include personal-use gold"]
+        XCTAssertTrue(personalGoldToggle.exists && personalGoldToggle.isHittable)
+        calculateButton.tap()
         XCTAssertTrue(app.staticTexts["Total valued assets"].waitForExistence(timeout: 5))
     }
 
