@@ -53,7 +53,7 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Card records contain only last four digits plus optional credit limit, statement date, payment due date and minimum due. Transaction category is optional for older snapshots and newly entered transactions can assign a category.
 
 ## UI direction
-The five primary SwiftUI tabs provide Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat. Settings, monthly insights, the Hawl calendar and encrypted backup are reachable from Wallet. The Wallet net-worth headline currently covers account balances and recorded liabilities only; it explicitly excludes gold/silver holdings until their valuations are incorporated. UI automation has been added, but Xcode CI and accessibility/Dynamic Type/Dark Mode validation remain pending.
+The five primary SwiftUI tabs provide Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat. Settings, monthly insights, the Hawl calendar and encrypted backup are reachable from Wallet. The Wallet net-worth headline currently covers account balances and recorded liabilities only; it explicitly excludes gold/silver holdings until their valuations are incorporated. The simulator workflow has passed 116 unit tests and 10 UI tests on macOS 15 / Xcode 16.4 (run #234, commit `ecb9aa7`). This verifies automated simulator behavior only; full physical-device, VoiceOver, Dynamic Type and Dark Mode review remains outstanding.
 
 ## Free operation
 No subscriptions, paid APIs, paid backend, paid notification provider or mandatory cloud account. Manual rates/prices and user-controlled local backup are available offline.
