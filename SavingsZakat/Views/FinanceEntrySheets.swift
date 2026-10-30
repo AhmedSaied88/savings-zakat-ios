@@ -9,6 +9,10 @@ struct CardEntrySheet: View {
     @State private var kind = FinanceCardKind.debit
     @State private var lastFour = ""
     @State private var linkedAccountID: UUID?
+    @State private var creditLimit = ""
+    @State private var minimumDue = ""
+    @State private var statementDate = Date()
+    @State private var paymentDueDate = Date()
 
     var body: some View {
         NavigationStack {
@@ -27,6 +31,14 @@ struct CardEntrySheet: View {
                         ForEach(accounts) { Text($0.name).tag(Optional($0.id)) }
                     }
                 }
+                if kind == .credit {
+                    Section("Credit card details") {
+                        TextField("Credit limit (optional)", text: $creditLimit).keyboardType(.decimalPad)
+                        TextField("Minimum payment (optional)", text: $minimumDue).keyboardType(.decimalPad)
+                        DatePicker("Statement date", selection: $statementDate, displayedComponents: .date)
+                        DatePicker("Payment due date", selection: $paymentDueDate, displayedComponents: .date)
+                    }
+                }
                 Text("Never enter the full card number, CVV, PIN or OTP.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
@@ -35,7 +47,7 @@ struct CardEntrySheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        onSave(FinanceCard(name: name.trimmingCharacters(in: .whitespacesAndNewlines), issuer: issuer.isEmpty ? nil : issuer, kind: kind, lastFour: lastFour, linkedAccountID: linkedAccountID))
+                        onSave(FinanceCard(name: name.trimmingCharacters(in: .whitespacesAndNewlines), issuer: issuer.isEmpty ? nil : issuer, kind: kind, lastFour: lastFour, linkedAccountID: linkedAccountID, creditLimit: Decimal(string: creditLimit), statementDate: kind == .credit ? statementDate : nil, paymentDueDate: kind == .credit ? paymentDueDate : nil, minimumDue: Decimal(string: minimumDue)))
                         dismiss()
                     }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
