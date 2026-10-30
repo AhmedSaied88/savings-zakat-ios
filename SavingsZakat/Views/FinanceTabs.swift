@@ -1517,8 +1517,9 @@ private struct TransactionEditorSheet: View {
                             guard let selectedCard, let cardCurrency else { return }
                             item = FinanceTransaction(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                                                       amount: value, currency: cardCurrency, direction: .expense,
-                                                      date: date, cardID: selectedCard.id,
-                                                      category: "Card purchase · \(selectedCard.name) · \(category)")
+                                                      date: date,
+                                                      category: "Card purchase · \(selectedCard.name) · \(category)",
+                                                      cardID: selectedCard.id)
                         case .cardRepayment:
                             guard let accountID, let selectedAccount, let selectedCard,
                                   selectedAccount.currency == (selectedCard.currency
