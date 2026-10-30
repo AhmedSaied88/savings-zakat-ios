@@ -13,23 +13,7 @@ enum HawlCalculator {
         egyptianCalendar: EgyptianHijriCalendar = EgyptianHijriCalendar(officialMonthStarts: []),
         fallbackTimeZone: TimeZone = TimeZone(identifier: "Africa/Cairo") ?? .current
     ) -> HawlDueDate? {
-        var gregorian = Calendar(identifier: .gregorian)
-        gregorian.timeZone = fallbackTimeZone
-        let start = gregorian.startOfDay(for: startDate)
-
-        if let hijri = egyptianCalendar.convert(startDate),
-           hijri.status == .officiallyConfirmed {
-            // An official anniversary is only calculable if the matching month in
-            // the following Hijri year and the following month boundary are known.
-            // The current data provider exposes conversion, not inverse conversion;
-            // therefore never label a civil-calendar approximation as official.
-            _ = hijri
-        }
-
-        var estimateCalendar = Calendar(identifier: .islamicCivil)
-        estimateCalendar.timeZone = fallbackTimeZone
-        guard let anniversary = estimateCalendar.date(byAdding: .year, value: 1, to: start) else { return nil }
-        return HawlDueDate(date: gregorian.startOfDay(for: anniversary), status: .estimated)
+        egyptianCalendar.anniversary(of: startDate)
     }
 
     /// Compatibility helper. The date is an estimate unless an official Egyptian
