@@ -85,6 +85,12 @@ final class BankMessageParserTests: XCTestCase {
         XCTAssertFalse(safe.contains("123456"))
     }
 
+    func testRedactsCVVAndPINValues() {
+        let safe = SensitiveTextRedactor.redact("CVV: 123 PIN: 9876")
+        XCTAssertFalse(safe.contains("123"))
+        XCTAssertFalse(safe.contains("9876"))
+    }
+
     func testRedactsArabicVerificationCode() {
         let safe = BankMessageParser.redactedText("رمز التحقق: 123456 لإتمام العملية")
         XCTAssertFalse(safe.contains("123456"))
