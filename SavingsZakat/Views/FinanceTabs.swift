@@ -1,5 +1,14 @@
 import SwiftUI
 
+/// Shared palette for the native finance interface.
+enum FinancePalette {
+    static let royalBlue = Color(red: 0.12, green: 0.34, blue: 0.78)
+    static let paleBlue = Color(red: 0.93, green: 0.96, blue: 1.00)
+    static let violet = Color(red: 0.43, green: 0.32, blue: 0.72)
+    static let gold = Color(red: 0.72, green: 0.52, blue: 0.12)
+    static let whiteSurface = Color(.systemBackground)
+}
+
 struct WalletDashboardTab: View {
     @Binding var snapshot: FinanceSnapshot
     @Binding var preferences: FinancePreferences
@@ -1833,8 +1842,8 @@ private struct WalletSummaryContent: View {
                 .font(.largeTitle.bold()).monospacedDigit()
                 .accessibilityLabel("Net worth \(summary.netWorth) Egyptian pounds")
             HStack(spacing: 18) {
-                metric("Assets", summary.totalAssets, color: .blue)
-                metric("Debts", summary.totalLiabilities, color: .orange)
+                metric("Assets", summary.totalAssets, color: FinancePalette.royalBlue)
+                metric("Debts", summary.totalLiabilities, color: FinancePalette.violet)
             }
             Text("This first summary excludes unvalued gold and silver holdings.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -1844,7 +1853,11 @@ private struct WalletSummaryContent: View {
             }
         }
         .padding(.vertical, 8)
-        .listRowBackground(Color.blue.opacity(0.06))
+        
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
+        .background(FinancePalette.paleBlue, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .listRowBackground(Color.clear)
     }
 
     private func metric(_ title: String, _ value: Decimal, color: Color) -> some View {
@@ -1881,8 +1894,10 @@ private struct WalletAccountRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon(for: account.kind))
-                .font(.title3).foregroundStyle(.blue).frame(width: 34, height: 34)
-                .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                .font(.title3)
+                .foregroundStyle(account.kind == .savings ? FinancePalette.violet : FinancePalette.royalBlue)
+                .frame(width: 36, height: 36)
+                .background(FinancePalette.whiteSurface.opacity(0.9), in: RoundedRectangle(cornerRadius: 10))
             VStack(alignment: .leading, spacing: 3) {
                 Text(account.name).font(.headline)
                 Text(account.institution ?? account.kind.rawValue.capitalized)
