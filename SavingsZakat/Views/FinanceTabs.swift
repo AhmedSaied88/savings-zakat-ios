@@ -675,7 +675,7 @@ struct AssetsZakatTab: View {
         let monthNames = ["", "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
                           "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
                           "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
-        let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \\(hijri.hijriMonth)"
+        let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \(hijri.hijriMonth)"
         if status == .officiallyConfirmed && hijri.status == .officiallyConfirmed {
             return "Egyptian Hijri \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) (Confirmed)"
         }
@@ -901,7 +901,7 @@ private struct HoldingEditorSheet: View {
         let monthNames = ["", "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
                           "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
                           "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
-        let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \\(hijri.hijriMonth)"
+        let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \(hijri.hijriMonth)"
         if hijri.status == .officiallyConfirmed {
             return "Egyptian Hijri date: \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) · Confirmed"
         }
@@ -1270,6 +1270,100 @@ private struct SilverHoldingEntry: View {
                         dismiss()
                     }.disabled(!(Double(grams).map { $0 > 0 && $0.isFinite } ?? false))
                 }
+            }
+        }
+    }
+}
+
+
+private struct ZakatCalculationContent: View {
+    @Binding var preferences: FinancePreferences
+    let onSave: () -> Void
+    let result: ZakatResult?
+    let onCalculate: () -> Void
+    let breakdownTitle: (ZakatHoldingStatus) -> String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            nisabInput
+            personalGoldSetting
+            Button("Calculate Zakat", action: onCalculate)
+                .buttonStyle(.borderedProminent)
+            if let result {
+                resultTotals(result)
+                breakdownRows(result)
+                provisionalWarnings(result)
+            }
+            Text("Confirm all prices, rates and religious calculation settings before relying on the result.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+    private var nisabInput: some View {
+        HStack {
+            Text("Nisab (EGP)")
+            Spacer()
+            TextField("Nisab", value: Binding(
+                get: { preferences.nisabEGP },
+                set: { preferences.nisabEGP = $0; onSave() }
+            ), format: .number)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+        }
+    }
+
+    private var personalGoldSetting: some View {
+        Toggle("Include personal-use gold", isOn: Binding(
+            get: { preferences.includePersonalGold },
+            set: { preferences.includePersonalGold = $0; onSave() }
+        ))
+    }
+
+    private func resultTotals(_ result: ZakatResult) -> some View {
+        VStack(spacing: 8) {
+            valueRow("Total valued assets", result.totalValuedWealthEGP)
+            valueRow("Completed-Hawl wealth", result.maturedEligibleWealthEGP)
+            valueRow("Excluded personal-use gold", result.excludedWealthEGP)
+            valueRow("Estimated Zakat", result.zakatDueEGP)
+        }
+    }
+
+    private func valueRow(_ title: String, _ value: Double) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text("EGP \\(value, format: .number.precision(.fractionLength(2)))").bold()
+        }
+    }
+
+    private func breakdownRows(_ result: ZakatResult) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Asset calculation breakdown").font(.headline)
+            ForEach(result.breakdown) { item in
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack {
+                        Text(item.label).font(.subheadline.weight(.semibold))
+                        Spacer()
+                        if let value = item.valueEGP {
+                            Text(value, format: .currency(code: "EGP"))
+                                .font(.subheadline.monospacedDigit())
+                        } else {
+                            Text("Not valued").font(.caption).foregroundStyle(.orange)
+                        }
+                    }
+                    Text(breakdownTitle(item.status) + " · " + item.explanation)
+                        .font(.caption)
+                        .foregroundStyle(item.status == .included ? Color.secondary : Color.orange)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func provisionalWarnings(_ result: ZakatResult) -> some View {
+        if result.isProvisional {
+            ForEach(result.warnings, id: \.self) { warning in
+                Text(warning).font(.footnote).foregroundStyle(.orange)
             }
         }
     }
