@@ -116,6 +116,9 @@ struct AccountsCardsTab: View {
                     }
                     ForEach(snapshot.cards) { card in
                         let cardCurrency = card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
+                        let paymentDueDescription = card.paymentDueDate.map {
+                            "Payment due \($0.formatted(date: .abbreviated, time: .omitted))"
+                        }
                         Button { editingCard = card } label: {
                             VStack(alignment: .leading, spacing: 5) {
                                 HStack {
@@ -151,7 +154,10 @@ struct AccountsCardsTab: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityElement(children: .combine)
+                        // Keep the card row as one clear VoiceOver target while retaining
+                        // the due-date description in its accessible label.
+                        .accessibilityLabel(([card.name, card.kind.rawValue.capitalized, paymentDueDescription]
+                            .compactMap { $0 }).joined(separator: ", "))
                         .accessibilityIdentifier("card-row-\(card.name)")
                     }
                     .onDelete { offsets in
@@ -1939,6 +1945,7 @@ private struct WalletQuickOverviewContent: View {
             } label: {
                 Label("Settings & backup", systemImage: "gearshape")
             }
+            .accessibilityIdentifier("wallet-settings-link")
         }
     }
 }
