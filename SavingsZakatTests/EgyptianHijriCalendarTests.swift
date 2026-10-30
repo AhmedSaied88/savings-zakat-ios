@@ -51,6 +51,49 @@ final class EgyptianHijriCalendarTests: XCTestCase {
         XCTAssertEqual(due.status, .estimated)
     }
 
+
+    func testBundledEgyptianMuharramStartIsConfirmedWithSource() throws {
+        let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(secondsFromGMT: 0)!)
+        let result = try XCTUnwrap(calendar.convert(date("2026-06-16")))
+        XCTAssertEqual(result.hijriYear, 1448)
+        XCTAssertEqual(result.hijriMonth, 1)
+        XCTAssertEqual(result.hijriDay, 1)
+        XCTAssertEqual(result.status, .officiallyConfirmed)
+        XCTAssertTrue(result.sourceURL?.contains("dar-alifta.org") == true)
+    }
+
+    func testBundledMonthBoundaryTransitionsFromMuharramToSafar() throws {
+        let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(secondsFromGMT: 0)!)
+        let lastMuharramDay = try XCTUnwrap(calendar.convert(date("2026-07-14")))
+        let firstSafarDay = try XCTUnwrap(calendar.convert(date("2026-07-15")))
+
+        XCTAssertEqual(lastMuharramDay.hijriMonth, 1)
+        XCTAssertEqual(lastMuharramDay.hijriDay, 29)
+        XCTAssertEqual(lastMuharramDay.status, .officiallyConfirmed)
+        XCTAssertEqual(firstSafarDay.hijriMonth, 2)
+        XCTAssertEqual(firstSafarDay.hijriDay, 1)
+        XCTAssertEqual(firstSafarDay.status, .officiallyConfirmed)
+    }
+
+    func testLastBundledAnnouncementConfirmsOnlyItsFirstDayUntilNextMonthIsPublished() throws {
+        let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(secondsFromGMT: 0)!)
+        let firstDay = try XCTUnwrap(calendar.convert(date("2026-10-12")))
+        let followingDay = try XCTUnwrap(calendar.convert(date("2026-10-13")))
+
+        XCTAssertEqual(firstDay.hijriMonth, 5)
+        XCTAssertEqual(firstDay.hijriDay, 1)
+        XCTAssertEqual(firstDay.status, .officiallyConfirmed)
+        XCTAssertEqual(followingDay.status, .estimated)
+    }
+
+    func testBundledCalendarContainsOrderedConsecutiveMonthRecordsWithProvenance() {
+        let records = EgyptianCalendarRepository.officialMonthStarts
+        XCTAssertEqual(records.count, 5)
+        XCTAssertEqual(records.map(\.hijriMonth), [1, 2, 3, 4, 5])
+        XCTAssertTrue(records.allSatisfy { $0.sourceURL.contains("dar-alifta.org") })
+        XCTAssertTrue(records.allSatisfy { $0.announcementDate <= $0.gregorianStart })
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
