@@ -39,8 +39,10 @@ Physical-device installation requires an Apple signing team/profile. The simulat
 
 - Current local storage is a versioned Codable JSON snapshot at Application Support/`SavingsZakat/finance-data.json`.
 - Schema version 1 is supported. Unsupported schema versions are rejected; a sequential migration pipeline is not yet implemented.
-- The earlier `@AppStorage("testHoldingsJSON")` prototype format has not been automatically migrated. Do not assume older test records are imported.
-- The current persistence tests cover save/load, empty first launch and card last-four handling. Corrupt-file recovery and migration tests remain outstanding.
+- The earlier `@AppStorage("testHoldingsJSON")` prototype format is imported on first load when no finance snapshot exists. The legacy key is removed only after the new snapshot is written successfully.
+- Malformed legacy data and failed writes are surfaced without deleting the legacy value. Existing snapshots are not merged with legacy data.
+- Persistence tests cover save/reload, first launch, migration, malformed/corrupt data preservation, unsupported schema rejection, repeated atomic snapshot replacement and record create/update/delete persistence.
+- Sequential schema-version migrations remain outstanding; schema version 1 is the only supported format.
 
 ## Boundaries and outstanding work
 
