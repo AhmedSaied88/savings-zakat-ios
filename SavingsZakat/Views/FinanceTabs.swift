@@ -149,6 +149,8 @@ struct AccountsCardsTab: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("card-row-\\(card.name)")
                     }
                     .onDelete { offsets in
                         let selectedCards = offsets.map { snapshot.cards[$0] }
