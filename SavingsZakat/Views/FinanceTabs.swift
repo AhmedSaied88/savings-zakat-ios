@@ -69,6 +69,7 @@ struct AccountsCardsTab: View {
     @State private var showNewAccount = false
     @State private var editingAccount: FinanceAccount?
     @State private var showNewCard = false
+    @State private var editingCard: FinanceCard?
     @State private var errorMessage: String?
 
     private var ledger: FinanceLedger { FinanceLedger(snapshot: snapshot) }
@@ -115,35 +116,39 @@ struct AccountsCardsTab: View {
                     }
                     ForEach(snapshot.cards) { card in
                         let cardCurrency = card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
-                        VStack(alignment: .leading, spacing: 5) {
-                            HStack {
-                                Label(card.name, systemImage: card.kind == .credit ? "creditcard.fill" : "creditcard")
-                                    .font(.headline)
-                                Spacer()
-                                Text("•••• \(card.lastFour ?? "----")").monospacedDigit().foregroundStyle(.secondary).accessibilityIdentifier("card-last-four")
-                            }
-                            Text(card.issuer ?? card.kind.rawValue.capitalized)
-                                .font(.caption).foregroundStyle(.secondary)
-                            if card.kind == .credit {
-                                HStack(spacing: 12) {
-                                    Text("Outstanding")
-                                    Text((try? ledger.creditCardOutstanding(for: card.id)) ?? (card.openingOutstandingBalance ?? 0),
-                                         format: .currency(code: cardCurrency))
-                                        .accessibilityIdentifier("card-outstanding-\(card.name)")
-                                    if let limit = card.creditLimit {
-                                        Text("Limit: \(limit, format: .currency(code: cardCurrency))")
+                        Button { editingCard = card } label: {
+                            VStack(alignment: .leading, spacing: 5) {
+                                HStack {
+                                    Label(card.name, systemImage: card.kind == .credit ? "creditcard.fill" : "creditcard")
+                                        .font(.headline)
+                                    Spacer()
+                                    Text("•••• \(card.lastFour ?? "----")").monospacedDigit().foregroundStyle(.secondary).accessibilityIdentifier("card-last-four")
+                                }
+                                Text(card.issuer ?? card.kind.rawValue.capitalized)
+                                    .font(.caption).foregroundStyle(.secondary)
+                                if card.kind == .credit {
+                                    HStack(spacing: 12) {
+                                        Text("Outstanding")
+                                        Text((try? ledger.creditCardOutstanding(for: card.id)) ?? (card.openingOutstandingBalance ?? 0),
+                                             format: .currency(code: cardCurrency))
+                                            .accessibilityIdentifier("card-outstanding-\(card.name)")
+                                        if let limit = card.creditLimit {
+                                            Text("Limit: \(limit, format: .currency(code: cardCurrency))")
+                                        }
+                                        if let minimum = card.minimumDue {
+                                            Text("Minimum: \(minimum, format: .currency(code: cardCurrency))")
+                                        }
+                                    }.font(.caption).foregroundStyle(.secondary)
+                                    if let due = card.paymentDueDate {
+                                        Label("Payment due \(due.formatted(date: .abbreviated, time: .omitted))",
+                                              systemImage: "calendar").font(.caption).foregroundStyle(.orange)
                                     }
-                                    if let minimum = card.minimumDue {
-                                        Text("Minimum: \(minimum, format: .currency(code: cardCurrency))")
-                                    }
-                                }.font(.caption).foregroundStyle(.secondary)
-                                if let due = card.paymentDueDate {
-                                    Label("Payment due \(due.formatted(date: .abbreviated, time: .omitted))",
-                                          systemImage: "calendar").font(.caption).foregroundStyle(.orange)
                                 }
                             }
+                            .padding(.vertical, 4)
+                            .contentShape(Rectangle())
                         }
-                        .padding(.vertical, 4)
+                        .buttonStyle(.plain)
                     }
                     .onDelete { offsets in
                         let selectedCards = offsets.map { snapshot.cards[$0] }
@@ -194,6 +199,31 @@ struct AccountsCardsTab: View {
                     } catch {
                         errorMessage = "Could not save card. Check its currency, opening balance and account link."
                     }
+                }
+            }
+            .sheet(item: $editingCard) { card in
+                CardEntrySheet(
+                    card: card,
+                    accounts: snapshot.accounts,
+                    openingBalanceLocked: snapshot.liabilities.contains { $0.linkedCardID == card.id }
+                ) { updated in
+                    guard let index = snapshot.cards.firstIndex(where: { $0.id == updated.id }) else { return }
+                    let hasActivity = snapshot.transactions.contains {
+                        $0.cardID == card.id || $0.destinationCardID == card.id
+                    }
+                    let linkedAccountMatches = updated.linkedAccountID == nil ||
+                        snapshot.accounts.first(where: { $0.id == updated.linkedAccountID })?.currency == (updated.currency ?? "EGP")
+                    guard linkedAccountMatches,
+                          (!hasActivity || updated.currency == card.currency),
+                          updated.openingOutstandingBalance.map({ $0 >= 0 }) ?? true,
+                          updated.minimumDue.map({ $0 >= 0 }) ?? true,
+                          updated.creditLimit.map({ $0 >= 0 }) ?? true else {
+                        errorMessage = "Could not update card. Currency and balances must remain consistent with existing activity."
+                        return
+                    }
+                    snapshot.cards[index] = updated
+                    errorMessage = nil
+                    onSave()
                 }
             }
         }
