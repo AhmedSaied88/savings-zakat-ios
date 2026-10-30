@@ -53,6 +53,7 @@ struct CardEntrySheet: View {
                         TextField("Credit limit (optional)", text: $creditLimit).keyboardType(.decimalPad)
                         TextField("Minimum payment (optional)", text: $minimumDue).keyboardType(.decimalPad)
                         Toggle("Set payment due date", isOn: $hasPaymentDueDate)
+                            .accessibilityIdentifier("card-payment-due-date-toggle")
                         if hasPaymentDueDate {
                             DatePicker("Payment due date", selection: $paymentDueDate, displayedComponents: .date)
                                 .accessibilityIdentifier("card-payment-due-date-picker")
