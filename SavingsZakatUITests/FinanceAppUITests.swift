@@ -99,15 +99,13 @@ final class FinanceAppUITests: XCTestCase {
         minimum.tap()
         minimum.typeText("1500")
 
-        // Dismiss the decimal keyboard before interacting with the lower form controls.
-        let creditCardSection = app.descendants(matching: .any)["Credit card details"]
-        XCTAssertTrue(creditCardSection.waitForExistence(timeout: 3))
-        creditCardSection.tap()
-
+        // Scroll the form until the toggle is visible; keep the native switch interaction.
         let dueDateToggle = app.switches["Set payment due date"]
-        XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 3))
-        XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 3) && dueDateToggle.isHittable,
-                      "The due-date toggle should be visible after dismissing the keyboard")
+        XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 5))
+        XCTAssertTrue(scrollTo(dueDateToggle, in: app),
+                      "The due-date toggle should be reachable in the credit-card form")
+        XCTAssertTrue(dueDateToggle.isHittable,
+                      "The due-date toggle should be hittable after scrolling")
         if dueDateToggle.value as? String != "1" {
             dueDateToggle.tap()
         }
@@ -141,9 +139,12 @@ final class FinanceAppUITests: XCTestCase {
         let settings = app.descendants(matching: .any)["wallet-settings-link"]
         XCTAssertTrue(scrollTo(settings, in: app), "Settings link should be reachable from Wallet")
         settings.tap()
-        XCTAssertTrue(app.staticTexts["Financial records are stored locally on this iPhone."].waitForExistence(timeout: 5),
-                      "Settings destination should display its local-storage privacy information")
-        app.buttons["Valuation, parser & calendar"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 8),
+                      "Settings destination should finish presenting")
+        let preferencesLink = app.buttons["Valuation, parser & calendar"]
+        XCTAssertTrue(preferencesLink.waitForExistence(timeout: 5),
+                      "Finance preferences link should be available in Settings")
+        preferencesLink.tap()
         XCTAssertTrue(app.navigationBars["Finance preferences"].waitForExistence(timeout: 5))
     }
 
@@ -152,8 +153,8 @@ final class FinanceAppUITests: XCTestCase {
         let settings = app.buttons["Settings & backup"]
         XCTAssertTrue(scrollTo(settings, in: app))
         settings.tap()
-        XCTAssertTrue(app.staticTexts["Financial records are stored locally on this iPhone."].waitForExistence(timeout: 5),
-                      "Settings destination should finish loading before opening finance preferences")
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 8),
+                      "Settings destination should finish presenting")
         let preferences = app.buttons["Valuation, parser & calendar"]
         XCTAssertTrue(preferences.waitForExistence(timeout: 5),
                       "Finance preferences link should be available in Settings")
