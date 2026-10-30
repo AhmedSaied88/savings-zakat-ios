@@ -28,8 +28,13 @@ enum ZakatCalculator {
                 if let price = goldPricesPerGramEGP[String(carat)], price > 0, price.isFinite { value = (holding.grams ?? holding.amount) * price }
                 else { value = nil; warnings.append("Missing valid gold resale price for \(carat)K.") }
             case .silver:
-                if let price = silverPricePerGramEGP, price > 0, price.isFinite { value = (holding.grams ?? holding.amount) * price }
-                else { value = nil; warnings.append("Missing valid silver price per gram.") }
+                let purityFactor = Double(holding.purity ?? 999) / 1000
+                if let price = silverPricePerGramEGP, price > 0, price.isFinite {
+                    value = (holding.grams ?? holding.amount) * price * purityFactor
+                } else {
+                    value = nil
+                    warnings.append("Missing valid silver price per gram.")
+                }
             }
 
             guard let value, value.isFinite, value >= 0 else { continue }
