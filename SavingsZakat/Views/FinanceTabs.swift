@@ -527,6 +527,11 @@ private struct AccountEditorSheet: View {
                 Picker("Currency", selection: $currency) {
                     ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) { Text($0).tag($0) }
                 }
+                .disabled(currencyLocked)
+                if currencyLocked {
+                    Text("Currency cannot be changed while this account has transactions.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 TextField("Opening balance", text: $balance).keyboardType(.decimalPad)
             }
             .navigationTitle(account == nil ? "Add account" : "Edit account")
