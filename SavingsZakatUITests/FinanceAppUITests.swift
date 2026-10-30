@@ -110,11 +110,8 @@ final class FinanceAppUITests: XCTestCase {
         let creditCardRow = app.buttons["card-row-UI Test Credit"]
         XCTAssertTrue(scrollTo(creditCardRow, in: app),
                       "The saved credit card row should be accessible")
-        let paymentDueLabel = app.descendants(matching: .any)["card-payment-due-UI Test Credit"]
-        XCTAssertTrue(paymentDueLabel.waitForExistence(timeout: 5),
-                      "The saved credit card should expose a separately accessible payment due label")
-        XCTAssertTrue(paymentDueLabel.label.contains("Payment due"),
-                      "The payment due label should include its due-date description")
+        XCTAssertTrue(creditCardRow.label.contains("Payment due"),
+                      "The accessible credit card row should include its payment due-date description")
     }
 
 
@@ -127,10 +124,11 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Monthly insights"].waitForExistence(timeout: 5))
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
-        let settings = app.buttons["Settings & backup"]
+        let settings = app.descendants(matching: .any)["wallet-settings-link"]
         XCTAssertTrue(scrollTo(settings, in: app), "Settings link should be reachable from Wallet")
         settings.tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Financial records are stored locally on this iPhone."].waitForExistence(timeout: 5),
+                      "Settings destination should display its local-storage privacy information")
         app.buttons["Valuation, parser & calendar"].tap()
         XCTAssertTrue(app.navigationBars["Finance preferences"].waitForExistence(timeout: 5))
     }
