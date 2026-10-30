@@ -15,76 +15,26 @@ struct WalletDashboardTab: View {
         NavigationStack {
             List {
                 Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Net worth · accounts and debts").font(.subheadline).foregroundStyle(.secondary)
-                        Text(summary.netWorth, format: .currency(code: "EGP"))
-                            .font(.largeTitle.bold()).monospacedDigit()
-                            .accessibilityLabel("Net worth \(summary.netWorth) Egyptian pounds")
-                        HStack(spacing: 18) {
-                            metric("Assets", summary.totalAssets, color: .blue)
-                            metric("Debts", summary.totalLiabilities, color: .orange)
-                        }
-                        Text("This first summary excludes unvalued gold and silver holdings.")
-                            .font(.caption).foregroundStyle(.secondary)
-                        if summary.isProvisional {
-                            Label("Some currencies need exchange rates", systemImage: "exclamationmark.triangle.fill")
-                                .font(.caption).foregroundStyle(.orange)
-                        }
-                    }
-                    .padding(.vertical, 8)
-                    .listRowBackground(Color.blue.opacity(0.06))
+                    WalletSummaryContent(summary: summary)
                 }
                 Section {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if snapshot.accounts.isEmpty {
-                            ContentUnavailableView("No accounts yet", systemImage: "building.columns",
-                                                   description: Text("Add a bank, cash or savings account from Accounts."))
-                        } else {
-                            ForEach(snapshot.accounts) { account in
-                                HStack(spacing: 12) {
-                                    Image(systemName: icon(for: account.kind))
-                                        .font(.title3).foregroundStyle(.blue).frame(width: 34, height: 34)
-                                        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(account.name).font(.headline)
-                                        Text(account.institution ?? account.kind.rawValue.capitalized)
-                                            .font(.caption).foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    Text((try? ledger.balance(for: account.id)) ?? 0, format: .currency(code: account.currency))
-                                        .font(.subheadline.weight(.semibold)).monospacedDigit()
-                                }
-                                .padding(.vertical, 3)
-                            }
-                        }
-                    }
+                    WalletAccountsContent(accounts: snapshot.accounts, ledger: ledger)
                 } header: {
                     Text("Accounts")
                 }
                 Section("Recent activity") {
-                    if snapshot.transactions.isEmpty {
-                        Text("Your confirmed income, expenses and transfers will appear here.")
-                            .foregroundStyle(.secondary)
-                    }
-                    ForEach(snapshot.transactions.sorted { $0.date > $1.date }.prefix(5)) { transaction in
-                        TransactionRow(transaction: transaction, accountName: accountName(transaction.accountID))
-                    }
+                    WalletRecentActivityContent(
+                        transactions: snapshot.transactions,
+                        accountName: accountName
+                    )
                 }
                 Section("Quick overview") {
-                    Label("\(snapshot.cards.count) cards", systemImage: "creditcard")
-                    Label("\(snapshot.liabilities.count) loans and debts", systemImage: "doc.text")
-                    Label("\(snapshot.holdings.count) savings and Zakat assets", systemImage: "sparkles")
-                    NavigationLink {
-                        FinanceInsightsView(snapshot: snapshot)
-                    } label: {
-                        Label("Monthly income & expenses", systemImage: "chart.bar")
-                    }
-                    NavigationLink {
-                        SettingsHomeView(snapshot: $snapshot, preferences: $preferences,
-                                         onSave: onSave, onRestore: onRestore)
-                    } label: {
-                        Label("Settings & backup", systemImage: "gearshape")
-                    }
+                    WalletQuickOverviewContent(
+                        snapshot: $snapshot,
+                        preferences: $preferences,
+                        onSave: onSave,
+                        onRestore: onRestore
+                    )
                 }
             }
             .navigationTitle("Wallet")
