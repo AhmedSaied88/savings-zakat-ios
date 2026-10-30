@@ -48,6 +48,7 @@ struct HawlCalendarView: View {
                     }
                 }
                 .disabled(isUpdatingReminders || holdings.isEmpty)
+                .accessibilityLabel("Schedule / refresh reminders")
                 .accessibilityIdentifier("schedule-hawl-reminders")
                 Button(role: .destructive) {
                     Task {
