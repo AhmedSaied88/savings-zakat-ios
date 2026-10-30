@@ -95,6 +95,24 @@ final class EgyptianHijriCalendarTests: XCTestCase {
         XCTAssertTrue(records.allSatisfy { $0.announcementDate <= $0.gregorianStart })
     }
 
+
+    func testGapInOfficialMonthRecordsDoesNotConfirmUnboundedDays() throws {
+        let records = [
+            EgyptianHijriMonthStart(
+                hijriYear: 1448, hijriMonth: 1, gregorianStart: date("2026-06-16"),
+                sourceURL: "https://example.org/muharram", announcementDate: date("2026-06-15")
+            ),
+            EgyptianHijriMonthStart(
+                hijriYear: 1448, hijriMonth: 3, gregorianStart: date("2026-08-14"),
+                sourceURL: "https://example.org/rabi", announcementDate: date("2026-08-13")
+            )
+        ]
+        let calendar = EgyptianHijriCalendar(officialMonthStarts: records, timeZone: TimeZone(secondsFromGMT: 0)!)
+
+        XCTAssertEqual(try XCTUnwrap(calendar.convert(date("2026-06-16"))).status, .officiallyConfirmed)
+        XCTAssertEqual(try XCTUnwrap(calendar.convert(date("2026-06-17"))).status, .estimated)
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
