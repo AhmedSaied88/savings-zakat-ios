@@ -125,6 +125,7 @@ struct BackupSettingsView: View {
                 Button("OK", role: .cancel) { errorMessage = nil }
             } message: {
                 Text(errorMessage ?? "An unknown backup error occurred.")
+            }
     }
 
     private func createBackup() {
