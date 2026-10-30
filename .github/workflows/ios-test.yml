@@ -1,4 +1,5 @@
 name: Native iOS build and tests
+
 on:
   pull_request:
     paths:
@@ -20,17 +21,60 @@ on:
       - 'project.yml'
       - '.github/workflows/ios-test.yml'
   workflow_dispatch:
+
 jobs:
   build-and-test:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+
+      - name: Report Xcode and simulator availability
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+
       - name: Install XcodeGen
         run: brew install xcodegen
+
       - name: Generate Xcode project
         run: xcodegen generate
+
       - name: Build app and test bundles
         run: |
           PROJECT="$(find . -maxdepth 1 -name '*.xcodeproj' -print -quit)"
           test -n "$PROJECT"
-          xcodebuild build-for-testing -project "$PROJECT" -scheme SavingsZakat -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
+          xcodebuild build-for-testing \
+            -project "$PROJECT" \
+            -scheme SavingsZakat \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run XCTest and UI tests on an available iPhone simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROJECT="$(find . -maxdepth 1 -name '*.xcodeproj' -print -quit)"
+          DESTINATION_ID="$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          payload = json.load(sys.stdin)
+          devices = [
+              device
+              for runtime, entries in payload.get("devices", {}).items()
+              if runtime.startswith("com.apple.CoreSimulator.SimRuntime.iOS-")
+              for device in entries
+              if device.get("isAvailable") and device.get("name", "").startswith("iPhone")
+          ]
+          print(devices[0]["udid"] if devices else "")
+          ')"
+
+          if [[ -z "$DESTINATION_ID" ]]; then
+            echo "::notice::No available iPhone simulator runtime/device on this runner. Generic iOS Simulator build passed; XCTest/UI tests were not executed."
+            exit 0
+          fi
+
+          echo "Running tests on simulator $DESTINATION_ID"
+          xcodebuild test-without-building \
+            -project "$PROJECT" \
+            -scheme SavingsZakat \
+            -destination "platform=iOS Simulator,id=$DESTINATION_ID" \
+            CODE_SIGNING_ALLOWED=NO
