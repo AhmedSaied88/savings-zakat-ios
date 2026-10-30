@@ -29,6 +29,19 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmedsaied88.savingszakat.tests
         SWIFT_VERSION: '5.9'
         GENERATE_INFOPLIST_FILE: YES
+  SavingsZakatUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: SavingsZakatUITests
+    dependencies:
+      - target: SavingsZakat
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ahmedsaied88.savingszakat.uitests
+        SWIFT_VERSION: '5.9'
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: SavingsZakat
 
 schemes:
   SavingsZakat:
