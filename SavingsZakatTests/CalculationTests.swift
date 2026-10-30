@@ -32,7 +32,8 @@ final class ZakatCalculatorTests: XCTestCase {
         let result = ZakatCalculator.calculate(holdings: [cash, sar], ratesToEGP: ["EGP": 1, "SAR": 13], goldPricesPerGramEGP: [:], silverPricePerGramEGP: nil, nisabEGP: 5_000, asOf: asOf)
         XCTAssertEqual(result.maturedEligibleWealthEGP, 11_300, accuracy: 0.01)
         XCTAssertEqual(result.zakatDueEGP, 282.5, accuracy: 0.01)
-        XCTAssertFalse(result.isProvisional)
+        XCTAssertTrue(result.isProvisional)
+        XCTAssertTrue(result.warnings.contains { $0.contains("Hawl date") })
     }
 
     func testMissingCurrencyRateMakesResultProvisionalInsteadOfSilentlyCountingAsZero() {
