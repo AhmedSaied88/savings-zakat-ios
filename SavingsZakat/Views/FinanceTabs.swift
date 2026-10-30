@@ -197,6 +197,7 @@ struct TransactionsTab: View {
     let onSaveImports: () -> Void
     let onRefreshImports: () -> Void
     @State private var showAdd = false
+    @State private var showAddRecurring = false
     @State private var selectedMessage: ImportedMessage?
     @State private var errorMessage: String?
 
@@ -257,6 +258,68 @@ struct TransactionsTab: View {
                         .padding(.vertical, 5)
                     }
                 }
+
+                Section("Recurring transactions") {
+                    let rules = snapshot.recurringTransactions ?? []
+                    if rules.isEmpty {
+                        Text("Set up regular income or expenses such as salary, rent or subscriptions.")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(rules) { rule in
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack {
+                                Text(rule.title).font(.headline)
+                                Spacer()
+                                Text(rule.amount, format: .currency(code: rule.currency))
+                                    .font(.subheadline.weight(.semibold)).monospacedDigit()
+                            }
+                            HStack {
+                                Text("\(rule.direction.rawValue.capitalized) · Every \(rule.interval) \(rule.frequency.rawValue)")
+                                Spacer()
+                                Text(rule.isEnabled ? "Enabled" : "Paused")
+                                    .foregroundStyle(rule.isEnabled ? Color.green : Color.secondary)
+                            }
+                            .font(.caption).foregroundStyle(.secondary)
+                            Text("Next: \(rule.nextDueDate.formatted(date: .abbreviated, time: .omitted))")
+                                .font(.caption).foregroundStyle(.secondary)
+                            HStack {
+                                Button(rule.isEnabled ? "Pause" : "Resume") {
+                                    guard let index = snapshot.recurringTransactions?.firstIndex(where: { $0.id == rule.id }) else { return }
+                                    snapshot.recurringTransactions?[index].isEnabled.toggle()
+                                    onSave()
+                                }
+                                .buttonStyle(.bordered)
+                                Spacer()
+                                Button("Delete", role: .destructive) {
+                                    snapshot.recurringTransactions?.removeAll { $0.id == rule.id }
+                                    onSave()
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    Button {
+                        showAddRecurring = true
+                    } label: {
+                        Label("Add recurring transaction", systemImage: "repeat")
+                    }
+                    .disabled(snapshot.accounts.isEmpty)
+                    Button {
+                        do {
+                            var ledger = FinanceLedger(snapshot: snapshot)
+                            let count = try ledger.generateDueRecurringTransactions(asOf: Date())
+                            snapshot = ledger.snapshot
+                            onSave()
+                            errorMessage = "Created \(count) due recurring transaction(s). They now affect account balances."
+                        } catch {
+                            errorMessage = "Could not create due recurring entries: \(error.localizedDescription)"
+                        }
+                    } label: {
+                        Label("Create due entries", systemImage: "calendar.badge.clock")
+                    }
+                    .disabled(!rules.contains(where: { $0.isEnabled && $0.nextDueDate <= Date() }))
+                }
                 Section("Activity") {
                     if snapshot.transactions.isEmpty {
                         ContentUnavailableView("No transactions", systemImage: "arrow.left.arrow.right",
@@ -284,6 +347,19 @@ struct TransactionsTab: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showAdd = true } label: { Image(systemName: "plus") }
                         .accessibilityLabel("Add transaction")
+                }
+            }
+            .sheet(isPresented: $showAddRecurring) {
+                RecurringTransactionEditorSheet(accounts: snapshot.accounts) { rule in
+                    var ledger = FinanceLedger(snapshot: snapshot)
+                    do {
+                        try ledger.addRecurringRule(rule)
+                        snapshot = ledger.snapshot
+                        errorMessage = nil
+                        onSave()
+                    } catch {
+                        errorMessage = "Could not save recurring transaction: \\(error.localizedDescription)"
+                    }
                 }
             }
             .sheet(isPresented: $showAdd) {
@@ -335,6 +411,84 @@ struct TransactionsTab: View {
     private func accountName(_ id: UUID?) -> String? {
         guard let id else { return nil }
         return snapshot.accounts.first(where: { $0.id == id })?.name
+    }
+}
+
+
+private struct RecurringTransactionEditorSheet: View {
+    let accounts: [FinanceAccount]
+    let onSave: (RecurringTransaction) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+    @State private var amount = ""
+    @State private var direction = TransactionDirection.expense
+    @State private var accountID: UUID?
+    @State private var category = "Bills"
+    @State private var frequency = RecurringFrequency.monthly
+    @State private var interval = 1
+    @State private var nextDueDate = Date()
+
+    init(accounts: [FinanceAccount], onSave: @escaping (RecurringTransaction) -> Void) {
+        self.accounts = accounts
+        self.onSave = onSave
+        _accountID = State(initialValue: accounts.first?.id)
+    }
+
+    private var selectedAccount: FinanceAccount? {
+        accounts.first(where: { $0.id == accountID })
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Transaction") {
+                    TextField("Description", text: $title)
+                    TextField("Amount", text: $amount).keyboardType(.decimalPad)
+                    Picker("Type", selection: $direction) {
+                        Text("Expense").tag(TransactionDirection.expense)
+                        Text("Income").tag(TransactionDirection.income)
+                    }
+                    Picker("Account", selection: $accountID) {
+                        ForEach(accounts) { Text($0.name).tag(Optional($0.id)) }
+                    }
+                    Picker("Category", selection: $category) {
+                        ForEach(["Food", "Transport", "Shopping", "Bills", "Housing", "Health", "Education", "Salary", "Other"], id: \.self) {
+                            Text($0).tag($0)
+                        }
+                    }
+                    if let selectedAccount {
+                        LabeledContent("Currency", value: selectedAccount.currency)
+                    }
+                }
+                Section("Schedule") {
+                    Picker("Repeat", selection: $frequency) {
+                        ForEach(RecurringFrequency.allCases, id: \.self) {
+                            Text($0.rawValue.capitalized).tag($0)
+                        }
+                    }
+                    Stepper("Every \(interval) interval(s)", value: $interval, in: 1...24)
+                    DatePicker("First due date", selection: $nextDueDate, displayedComponents: .date)
+                }
+                Text("Recurring entries are not posted automatically. Use “Create due entries” when you want them added to your ledger.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .navigationTitle("New recurring entry")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard let accountID, let selectedAccount, let value = Decimal(string: amount), value > 0 else { return }
+                        onSave(RecurringTransaction(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                                                    amount: value, currency: selectedAccount.currency,
+                                                    direction: direction, accountID: accountID, category: category,
+                                                    frequency: frequency, interval: interval, nextDueDate: nextDueDate))
+                        dismiss()
+                    }
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                              !(Decimal(string: amount).map { $0 > 0 } ?? false) || accountID == nil)
+                }
+            }
+        }
     }
 }
 
