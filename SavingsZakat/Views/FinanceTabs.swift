@@ -141,7 +141,9 @@ struct AccountsCardsTab: View {
                                     }.font(.caption).foregroundStyle(.secondary)
                                     if let due = card.paymentDueDate {
                                         Label("Payment due \(due.formatted(date: .abbreviated, time: .omitted))",
-                                              systemImage: "calendar").font(.caption).foregroundStyle(.orange)
+                                              systemImage: "calendar")
+                                            .font(.caption).foregroundStyle(.orange)
+                                            .accessibilityIdentifier("card-payment-due-\(card.name)")
                                     }
                                 }
                             }
