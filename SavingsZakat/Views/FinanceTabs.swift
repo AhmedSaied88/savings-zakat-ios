@@ -93,6 +93,7 @@ struct AccountsCardsTab: View {
                                 Text((try? ledger.balance(for: account.id)) ?? account.openingBalance,
                                      format: .currency(code: account.currency))
                                     .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                                    .accessibilityIdentifier("account-balance-\(account.name)")
                             }
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
@@ -126,6 +127,7 @@ struct AccountsCardsTab: View {
                             if card.kind == .credit {
                                 HStack(spacing: 12) {
                                     Text("Outstanding: \((try? ledger.creditCardOutstanding(for: card.id)) ?? card.openingOutstandingBalance ?? 0, format: .currency(code: cardCurrency))")
+                                        .accessibilityIdentifier("card-outstanding-\(card.name)")
                                     if let limit = card.creditLimit {
                                         Text("Limit: \(limit, format: .currency(code: cardCurrency))")
                                     }
@@ -654,6 +656,7 @@ struct DebtsTab: View {
                                 Text((try? ledger.creditCardOutstanding(for: card.id)) ?? 0,
                                      format: .currency(code: currency))
                                     .font(.subheadline.bold()).monospacedDigit()
+                                    .accessibilityIdentifier("debt-card-outstanding-\(card.name)")
                             }
                             if let due = card.paymentDueDate {
                                 Label("Due \(due.formatted(date: .abbreviated, time: .omitted))",
