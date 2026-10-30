@@ -5,6 +5,7 @@ enum SensitiveTextRedactor {
         var safe = normalizeDigits(in: text)
         let patterns = [
             #"(?i)\b(?:otp|one[- ]time password|cvv|cvc|pin|verification code|security code)\s*[:#-]?\s*\d{3,8}\b"#,
+            #"(?i)\b(?:password|passcode|banking password)\s*[:#-]?\s*[A-Z0-9!@#$%^&*_-]{4,24}\b"#,
             #"(?i)(?:رمز التحقق|كود التحقق|رمز التأكيد|كلمة المرور لمرة واحدة|الرقم السري)\s*[:#-]?\s*\d{3,8}\b"#,
             #"(?<!\d)(?:\d[ -]?){12,19}(?!\d)"#
         ]
