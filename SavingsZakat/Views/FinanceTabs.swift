@@ -820,7 +820,7 @@ struct DebtsTab: View {
                             }
                             if item.kind == .creditCard {
                                 let linkableCards = snapshot.cards.filter { card in
-                                    card.kind == .credit && (card.openingOutstandingBalance ?? 0) == 0 && (card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP") == item.currency && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id && $0.id != item.id })
+                                    card.kind == .credit && (card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP") == item.currency && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id && $0.id != item.id })
                                 }
                                 if !linkableCards.isEmpty {
                                     Menu("Link to credit card") {
@@ -853,7 +853,7 @@ struct DebtsTab: View {
             .navigationTitle("Debts")
             .sheet(isPresented: $showAdd) {
                 LiabilityEntrySheet(cards: snapshot.cards.filter { card in
-                    card.kind == .credit && (card.openingOutstandingBalance ?? 0) == 0 && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id })
+                    card.kind == .credit && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id })
                 }, accounts: snapshot.accounts) { liability in
                     var ledger = FinanceLedger(snapshot: snapshot)
                     do {
