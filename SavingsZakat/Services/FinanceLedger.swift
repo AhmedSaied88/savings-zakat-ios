@@ -21,6 +21,8 @@ struct FinanceLedger {
         case accountHasActivity(UUID)
         case duplicateLiability(UUID)
         case invalidLiabilityAmount
+        case invalidRecurringRule
+        case duplicateRecurringRule(UUID)
     }
 
     private(set) var snapshot: FinanceSnapshot
@@ -109,6 +111,75 @@ struct FinanceLedger {
             destinationAccountID: destinationID
         )
         try post(transaction)
+    }
+
+
+    mutating func addRecurringRule(_ rule: RecurringTransaction) throws {
+        guard rule.amount > 0, rule.interval > 0,
+              rule.direction == .income || rule.direction == .expense,
+              let account = snapshot.accounts.first(where: { $0.id == rule.accountID }),
+              account.currency == rule.currency,
+              !(snapshot.recurringTransactions ?? []).contains(where: { $0.id == rule.id }) else {
+            if (snapshot.recurringTransactions ?? []).contains(where: { $0.id == rule.id }) {
+                throw LedgerError.duplicateRecurringRule(rule.id)
+            }
+            throw LedgerError.invalidRecurringRule
+        }
+        snapshot.recurringTransactions = (snapshot.recurringTransactions ?? []) + [rule]
+    }
+
+    mutating func generateDueRecurringTransactions(
+        asOf: Date,
+        calendar: Calendar = .current,
+        maxOccurrencesPerRule: Int = 120
+    ) throws -> Int {
+        guard maxOccurrencesPerRule > 0 else { throw LedgerError.invalidRecurringRule }
+        var generated = 0
+        var rules = snapshot.recurringTransactions ?? []
+
+        for index in rules.indices where rules[index].isEnabled {
+            var occurrenceCount = 0
+            while rules[index].nextDueDate <= asOf && occurrenceCount < maxOccurrencesPerRule {
+                let rule = rules[index]
+                guard rule.amount > 0, rule.interval > 0,
+                      rule.direction == .income || rule.direction == .expense,
+                      let account = snapshot.accounts.first(where: { $0.id == rule.accountID }),
+                      account.currency == rule.currency else {
+                    throw LedgerError.invalidRecurringRule
+                }
+
+                let occurrenceDate = rule.nextDueDate
+                let alreadyGenerated = snapshot.transactions.contains {
+                    $0.recurringRuleID == rule.id && $0.recurrenceOccurrenceDate == occurrenceDate
+                }
+                if !alreadyGenerated {
+                    let transaction = FinanceTransaction(
+                        title: rule.title,
+                        amount: rule.amount,
+                        currency: rule.currency,
+                        direction: rule.direction,
+                        date: occurrenceDate,
+                        accountID: rule.accountID,
+                        source: .manual,
+                        reviewStatus: .confirmed,
+                        category: rule.category,
+                        recurringRuleID: rule.id,
+                        recurrenceOccurrenceDate: occurrenceDate
+                    )
+                    try post(transaction)
+                    generated += 1
+                }
+
+                guard let nextDate = rule.frequency.nextDate(after: occurrenceDate, interval: rule.interval, calendar: calendar),
+                      nextDate > occurrenceDate else {
+                    throw LedgerError.invalidRecurringRule
+                }
+                rules[index].nextDueDate = nextDate
+                occurrenceCount += 1
+            }
+        }
+        snapshot.recurringTransactions = rules
+        return generated
     }
 
     mutating func addLiability(_ liability: FinanceLiability) throws {
