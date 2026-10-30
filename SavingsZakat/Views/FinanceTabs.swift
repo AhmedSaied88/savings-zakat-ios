@@ -575,153 +575,10 @@ struct AssetsZakatTab: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Savings and Zakat assets") {
-                    if snapshot.holdings.isEmpty {
-                        ContentUnavailableView("No assets recorded", systemImage: "sparkles",
-                                               description: Text("Add cash, gold, silver or a manual investment."))
-                    }
-                    ForEach(snapshot.holdings) { holding in
-                        Button {
-                            editingHolding = holding
-                            editorKind = holding.kind
-                            showHoldingEditor = true
-                        } label: {
-                            VStack(alignment: .leading, spacing: 5) {
-                                HStack {
-                                    Text(label(holding)).font(.headline).foregroundStyle(.primary)
-                                    Spacer()
-                                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-                                }
-                                Text("Acquired: \(holding.acquiredDate.formatted(date: .abbreviated, time: .omitted)) · Hawl starts: \(holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
-                                    .font(.caption).foregroundStyle(.secondary)
-                                if let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
-                                    let days = cairoDayDifference(from: Date(), to: due.date)
-                                    HStack(spacing: 6) {
-                                        Text("Hawl due: " + due.date.formatted(date: .abbreviated, time: .omitted))
-                                        Text("· " + hijriLabel(for: due.date, status: due.status))
-                                        Text(days >= 0 ? "· \(days) days left" : "· Matured")
-                                    }
-                                    .font(.caption)
-                                    .foregroundStyle(due.status == .officiallyConfirmed ? Color.secondary : Color.orange)
-                                }
-                                if let value = estimatedValueEGP(for: holding) {
-                                    Text(value, format: .currency(code: "EGP"))
-                                        .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                                } else {
-                                    Text("Valuation needed")
-                                        .font(.caption).foregroundStyle(.orange)
-                                }
-                            }
-                            .padding(.vertical, 5)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityHint("Edit asset details")
-                        .swipeActions {
-                            Button(role: .destructive) { deleteHolding(holding) } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
-                    ForEach(HoldingKind.allCases, id: \.self) { kind in
-                        Button {
-                            editingHolding = nil
-                            editorKind = kind
-                            showHoldingEditor = true
-                        } label: {
-                            Label(addTitle(for: kind), systemImage: addIcon(for: kind))
-                                .frame(minHeight: 44)
-                        }
-                    }
-                    if let assetError {
-                        Text(assetError).font(.footnote).foregroundStyle(.red)
-                    }
-                }
-                Section("Hawl calendar") {
-                    NavigationLink {
-                        HawlCalendarView(holdings: snapshot.holdings)
-                    } label: {
-                        Label("View Hawl calendar and reminders", systemImage: "calendar.badge.clock")
-                            .frame(minHeight: 44)
-                    }
-                }
-                Section("Combined Zakat calculation") {
-                    HStack {
-                        Text("Nisab (EGP)")
-                        TextField("Nisab", value: Binding(
-                            get: { preferences.nisabEGP },
-                            set: { preferences.nisabEGP = $0; onSave() }
-                        ), format: .number)
-                            .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                    }
-                    Toggle("Include personal-use gold", isOn: Binding(
-                        get: { preferences.includePersonalGold },
-                        set: { preferences.includePersonalGold = $0; onSave() }
-                    ))
-                    Button("Calculate Zakat") { calculate() }.buttonStyle(.borderedProminent)
-                    if let result {
-                        valueRow("Total valued assets", result.totalValuedWealthEGP)
-                        valueRow("Completed-Hawl wealth", result.maturedEligibleWealthEGP)
-                        valueRow("Excluded personal-use gold", result.excludedWealthEGP)
-                        valueRow("Estimated Zakat", result.zakatDueEGP)
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Asset calculation breakdown").font(.headline)
-                            ForEach(result.breakdown) { item in
-                                VStack(alignment: .leading, spacing: 3) {
-                                    HStack {
-                                        Text(item.label).font(.subheadline.weight(.semibold))
-                                        Spacer()
-                                        if let value = item.valueEGP {
-                                            Text(value, format: .currency(code: "EGP"))
-                                                .font(.subheadline.monospacedDigit())
-                                        } else {
-                                            Text("Not valued").font(.caption).foregroundStyle(.orange)
-                                        }
-                                    }
-                                    Text(breakdownTitle(item.status) + " · " + item.explanation)
-                                        .font(.caption).foregroundStyle(item.status == .included ? .secondary : .orange)
-                                }
-                            }
-                        }
-                        if result.isProvisional {
-                            ForEach(result.warnings, id: \.self) {
-                                Text($0).font(.footnote).foregroundStyle(.orange)
-                            }
-                        }
-                    }
-                    Text("Confirm all prices, rates and religious calculation settings before relying on the result.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                }
-                Section("Manual valuation rates") {
-                    ForEach(["SAR", "USD", "AED", "EUR", "GBP"], id: \.self) { code in
-                        HStack {
-                            Text("1 \(code) = EGP")
-                            TextField("Rate", value: Binding(
-                                get: { preferences.exchangeRatesToEGP[code] ?? 0 },
-                                set: { preferences.exchangeRatesToEGP[code] = $0; onSave() }
-                            ),
-                                      format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                        }
-                    }
-                    ForEach(["24", "22", "21", "18", "14"], id: \.self) { carat in
-                        HStack {
-                            Text("Gold \(carat)K / gram")
-                            TextField("EGP", value: Binding(
-                                get: { preferences.goldPricesPerGramEGP[carat] ?? 0 },
-                                set: { preferences.goldPricesPerGramEGP[carat] = $0; onSave() }
-                            ),
-                                      format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                        }
-                    }
-                    HStack {
-                        Text("Silver / gram (999)")
-                        TextField("EGP", value: Binding(
-                            get: { preferences.silverPricePerGramEGP ?? 0 },
-                            set: { preferences.silverPricePerGramEGP = $0; onSave() }
-                        ),
-                                  format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                    }
-                }
+                assetsSection
+                hawlCalendarSection
+                zakatCalculationSection
+                valuationRatesSection
             }
             .onChange(of: preferences) { _, _ in
                 if result != nil { calculate() }
@@ -863,6 +720,169 @@ struct AssetsZakatTab: View {
         case .excludedPersonalUse: return "Excluded"
         case .missingValuation: return "Missing valuation"
         case .invalid: return "Invalid asset"
+        }
+    }
+
+
+    private var assetsSection: some View {
+        Section("Savings and Zakat assets") {
+            if snapshot.holdings.isEmpty {
+                ContentUnavailableView("No assets recorded", systemImage: "sparkles",
+                                       description: Text("Add cash, gold, silver or a manual investment."))
+            }
+            ForEach(snapshot.holdings) { holding in
+                Button {
+                    editingHolding = holding
+                    editorKind = holding.kind
+                    showHoldingEditor = true
+                } label: {
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack {
+                            Text(label(holding)).font(.headline).foregroundStyle(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                        }
+                        Text("Acquired: \(holding.acquiredDate.formatted(date: .abbreviated, time: .omitted)) · Hawl starts: \(holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
+                            .font(.caption).foregroundStyle(.secondary)
+                        if let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
+                            let days = cairoDayDifference(from: Date(), to: due.date)
+                            HStack(spacing: 6) {
+                                Text("Hawl due: " + due.date.formatted(date: .abbreviated, time: .omitted))
+                                Text("· " + hijriLabel(for: due.date, status: due.status))
+                                Text(days >= 0 ? "· \(days) days left" : "· Matured")
+                            }
+                            .font(.caption)
+                            .foregroundStyle(due.status == .officiallyConfirmed ? Color.secondary : Color.orange)
+                        }
+                        if let value = estimatedValueEGP(for: holding) {
+                            Text(value, format: .currency(code: "EGP"))
+                                .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        } else {
+                            Text("Valuation needed")
+                                .font(.caption).foregroundStyle(.orange)
+                        }
+                    }
+                    .padding(.vertical, 5)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Edit asset details")
+                .swipeActions {
+                    Button(role: .destructive) { deleteHolding(holding) } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+            }
+            ForEach(HoldingKind.allCases, id: \.self) { kind in
+                Button {
+                    editingHolding = nil
+                    editorKind = kind
+                    showHoldingEditor = true
+                } label: {
+                    Label(addTitle(for: kind), systemImage: addIcon(for: kind))
+                        .frame(minHeight: 44)
+                }
+            }
+            if let assetError {
+                Text(assetError).font(.footnote).foregroundStyle(.red)
+            }
+        }
+    }
+
+
+    private var hawlCalendarSection: some View {
+        Section("Hawl calendar") {
+            NavigationLink {
+                HawlCalendarView(holdings: snapshot.holdings)
+            } label: {
+                Label("View Hawl calendar and reminders", systemImage: "calendar.badge.clock")
+                    .frame(minHeight: 44)
+            }
+        }
+    }
+
+
+    private var zakatCalculationSection: some View {
+        Section("Combined Zakat calculation") {
+            HStack {
+                Text("Nisab (EGP)")
+                TextField("Nisab", value: Binding(
+                    get: { preferences.nisabEGP },
+                    set: { preferences.nisabEGP = $0; onSave() }
+                ), format: .number)
+                    .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+            }
+            Toggle("Include personal-use gold", isOn: Binding(
+                get: { preferences.includePersonalGold },
+                set: { preferences.includePersonalGold = $0; onSave() }
+            ))
+            Button("Calculate Zakat") { calculate() }.buttonStyle(.borderedProminent)
+            if let result {
+                valueRow("Total valued assets", result.totalValuedWealthEGP)
+                valueRow("Completed-Hawl wealth", result.maturedEligibleWealthEGP)
+                valueRow("Excluded personal-use gold", result.excludedWealthEGP)
+                valueRow("Estimated Zakat", result.zakatDueEGP)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Asset calculation breakdown").font(.headline)
+                    ForEach(result.breakdown) { item in
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack {
+                                Text(item.label).font(.subheadline.weight(.semibold))
+                                Spacer()
+                                if let value = item.valueEGP {
+                                    Text(value, format: .currency(code: "EGP"))
+                                        .font(.subheadline.monospacedDigit())
+                                } else {
+                                    Text("Not valued").font(.caption).foregroundStyle(.orange)
+                                }
+                            }
+                            Text(breakdownTitle(item.status) + " · " + item.explanation)
+                                .font(.caption).foregroundStyle(item.status == .included ? .secondary : .orange)
+                        }
+                    }
+                }
+                if result.isProvisional {
+                    ForEach(result.warnings, id: \.self) {
+                        Text($0).font(.footnote).foregroundStyle(.orange)
+                    }
+                }
+            }
+            Text("Confirm all prices, rates and religious calculation settings before relying on the result.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+
+    private var valuationRatesSection: some View {
+        Section("Manual valuation rates") {
+            ForEach(["SAR", "USD", "AED", "EUR", "GBP"], id: \.self) { code in
+                HStack {
+                    Text("1 \(code) = EGP")
+                    TextField("Rate", value: Binding(
+                        get: { preferences.exchangeRatesToEGP[code] ?? 0 },
+                        set: { preferences.exchangeRatesToEGP[code] = $0; onSave() }
+                    ),
+                              format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                }
+            }
+            ForEach(["24", "22", "21", "18", "14"], id: \.self) { carat in
+                HStack {
+                    Text("Gold \(carat)K / gram")
+                    TextField("EGP", value: Binding(
+                        get: { preferences.goldPricesPerGramEGP[carat] ?? 0 },
+                        set: { preferences.goldPricesPerGramEGP[carat] = $0; onSave() }
+                    ),
+                              format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                }
+            }
+            HStack {
+                Text("Silver / gram (999)")
+                TextField("EGP", value: Binding(
+                    get: { preferences.silverPricePerGramEGP ?? 0 },
+                    set: { preferences.silverPricePerGramEGP = $0; onSave() }
+                ),
+                          format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+            }
         }
     }
 
