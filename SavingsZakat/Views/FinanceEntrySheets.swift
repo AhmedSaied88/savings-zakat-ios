@@ -23,9 +23,11 @@ struct CardEntrySheet: View {
                     ForEach(FinanceCardKind.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                 }
                 .accessibilityIdentifier("card-kind-picker")
-                TextField("Last four digits only", text: $lastFour)
-                    .keyboardType(.numberPad)
-                    .onChange(of: lastFour) { _, value in lastFour = String(value.filter(\.isNumber).suffix(4)) }
+                TextField("Last four digits only", text: Binding(
+                    get: { lastFour },
+                    set: { value in lastFour = String(value.filter(\.isNumber).suffix(4)) }
+                ))
+                .keyboardType(.numberPad)
                 if !accounts.isEmpty {
                     Picker("Linked account", selection: $linkedAccountID) {
                         Text("Not linked").tag(UUID?.none)
