@@ -25,9 +25,9 @@ struct BackupService {
 
     static let currentBackupVersion = 1
     static let minimumPassphraseLength = 12
-    static let pbkdf2Iterations = 210_000
-    private static let minimumAllowedIterations = 100_000
-    private static let maximumAllowedIterations = 500_000
+    static let pbkdf2Iterations = 600_000
+    private static let minimumAllowedIterations = 300_000
+    private static let maximumAllowedIterations = 1_000_000
     private static let maximumCiphertextBytes = 50 * 1024 * 1024
     private static let authenticatedContext = Data("SavingsZakat.EncryptedBackup.v1".utf8)
 
