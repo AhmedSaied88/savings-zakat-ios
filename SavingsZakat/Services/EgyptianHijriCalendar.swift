@@ -49,16 +49,26 @@ struct EgyptianHijriCalendar {
             let start = gregorian.startOfDay(for: current.gregorianStart)
             if index + 1 < officialMonthStarts.count {
                 let next = officialMonthStarts[index + 1]
-                let end = gregorian.startOfDay(for: next.gregorianStart)
-                guard target >= start && target < end else { continue }
-                let day = gregorian.dateComponents([.day], from: start, to: target).day ?? 0
-                return EgyptianHijriDate(
-                    hijriYear: current.hijriYear,
-                    hijriMonth: current.hijriMonth,
-                    hijriDay: day + 1,
-                    status: .officiallyConfirmed,
-                    sourceURL: current.sourceURL
-                )
+                if Self.isImmediateNextMonth(after: current, before: next) {
+                    let end = gregorian.startOfDay(for: next.gregorianStart)
+                    guard target >= start && target < end else { continue }
+                    let day = gregorian.dateComponents([.day], from: start, to: target).day ?? 0
+                    return EgyptianHijriDate(
+                        hijriYear: current.hijriYear,
+                        hijriMonth: current.hijriMonth,
+                        hijriDay: day + 1,
+                        status: .officiallyConfirmed,
+                        sourceURL: current.sourceURL
+                    )
+                } else if target == start {
+                    return EgyptianHijriDate(
+                        hijriYear: current.hijriYear,
+                        hijriMonth: current.hijriMonth,
+                        hijriDay: 1,
+                        status: .officiallyConfirmed,
+                        sourceURL: current.sourceURL
+                    )
+                }
             } else if target == start {
                 // The announced first day is confirmed even before the following
                 // month's announcement is available. Later days remain estimated.
@@ -85,6 +95,12 @@ struct EgyptianHijriCalendar {
             calculationNote: "Foundation Islamic-civil arithmetic fallback; not an official Egyptian announcement or an Egypt-specific astronomical visibility calculation."
         )
     }
+    private static func isImmediateNextMonth(after current: EgyptianHijriMonthStart, before next: EgyptianHijriMonthStart) -> Bool {
+        let expectedYear = current.hijriMonth == 12 ? current.hijriYear + 1 : current.hijriYear
+        let expectedMonth = current.hijriMonth == 12 ? 1 : current.hijriMonth + 1
+        return next.hijriYear == expectedYear && next.hijriMonth == expectedMonth
+    }
+
     /// Returns the same Hijri month/day in the following year only when both
     /// official month boundaries are present in the source-backed dataset.
     func anniversary(of gregorianDate: Date) -> HawlDueDate? {
@@ -96,7 +112,11 @@ struct EgyptianHijriCalendar {
            let targetIndex = officialMonthStarts.firstIndex(where: {
                $0.hijriYear == original.hijriYear + 1 && $0.hijriMonth == original.hijriMonth
            }),
-           targetIndex + 1 < officialMonthStarts.count {
+           targetIndex + 1 < officialMonthStarts.count,
+           Self.isImmediateNextMonth(
+               after: officialMonthStarts[targetIndex],
+               before: officialMonthStarts[targetIndex + 1]
+           ) {
             let monthStart = gregorian.startOfDay(for: officialMonthStarts[targetIndex].gregorianStart)
             let nextStart = gregorian.startOfDay(for: officialMonthStarts[targetIndex + 1].gregorianStart)
             let monthLength = gregorian.dateComponents([.day], from: monthStart, to: nextStart).day ?? 0
