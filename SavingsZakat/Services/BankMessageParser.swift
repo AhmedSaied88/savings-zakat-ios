@@ -20,7 +20,7 @@ struct ParsedBankMessage: Equatable {
 
 enum BankMessageParser {
     private static let amountRegex = try! NSRegularExpression(
-        pattern: #"(?i)\b(EGP|LE|USD|SAR|AED|EUR|GBP)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)\b|(?<!\d)([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*(EGP|LE|USD|SAR|AED|EUR|GBP)\b"#
+        pattern: #"(?i)(?<![\p{L}\d])(EGP|LE|USD|SAR|AED|EUR|GBP|جنيه|ج\.م)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?!\d)|(?<!\d)([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*(EGP|LE|USD|SAR|AED|EUR|GBP|جنيه|ج\.م)(?![\p{L}])"#
     )
 
     static func parse(_ message: String) -> ParsedBankMessage? {
