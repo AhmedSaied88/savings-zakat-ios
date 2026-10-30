@@ -805,112 +805,111 @@ struct DebtsTab: View {
         }
     }
 
-    var body: some View {
+    private var creditCards: [FinanceCard] {
+        snapshot.cards.filter { $0.kind == .credit }
+    }
+
+    private var standaloneLiabilities: [FinanceLiability] {
+        snapshot.liabilities.filter { $0.linkedCardID == nil }
+    }
+
+    private var body: some View {
         NavigationStack {
             List {
-                Section("Credit cards · calculated balances") {
-                    let creditCards = snapshot.cards.filter { $0.kind == .credit }
-                    if creditCards.isEmpty {
-                        Text("Add a credit card in Accounts to track purchases and repayments.")
-                            .foregroundStyle(.secondary)
-                    }
-                    ForEach(creditCards) { card in
-                        let currency = card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(card.name).font(.headline)
-                            HStack {
-                                Text("Outstanding")
-                                Spacer()
-                                Text((try? ledger.creditCardOutstanding(for: card.id)) ?? 0,
-                                     format: .currency(code: currency))
-                                    .font(.subheadline.bold()).monospacedDigit()
-                                    .accessibilityIdentifier("debt-card-outstanding-\(card.name)")
-                            }
-                            if let due = card.paymentDueDate {
-                                Label("Due \(due.formatted(date: .abbreviated, time: .omitted))",
-                                      systemImage: "calendar").font(.caption).foregroundStyle(.orange)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-                Section("Other recorded debt by currency") {
-                    let standalone = snapshot.liabilities.filter { $0.linkedCardID == nil }
-                    let groups = Dictionary(grouping: standalone, by: \.currency)
-                    ForEach(groups.keys.sorted(), id: \.self) { currency in
-                        let total = groups[currency, default: []].reduce(Decimal.zero) { $0 + $1.outstandingAmount }
-                        HStack {
-                            Text(currency)
-                            Spacer()
-                            Text(total, format: .currency(code: currency)).font(.headline).monospacedDigit()
-                        }
-                    }
-                    Text("If a standalone credit-card liability is the opening balance of a listed card, link it to that card to prevent double counting.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                Section("Loans, instalments and standalone debts") {
-                    let standalone = snapshot.liabilities.filter { $0.linkedCardID == nil }
-                    if standalone.isEmpty {
-                        ContentUnavailableView("No other debts recorded", systemImage: "checkmark.circle",
-                                               description: Text("Add a loan, instalment or standalone debt."))
-                    }
-                    ForEach(standalone) { item in
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(item.name).font(.headline)
-                            HStack {
-                                Text(item.kind.rawValue.capitalized)
-                                Spacer()
-                                Text(item.outstandingAmount, format: .currency(code: item.currency))
-                                    .font(.subheadline.bold()).monospacedDigit()
-                            }.font(.caption)
-                            if let due = item.dueDate {
-                                Label("Due \(due.formatted(date: .abbreviated, time: .omitted))",
-                                      systemImage: "calendar").font(.caption).foregroundStyle(.orange)
-                            }
-                            if item.kind == .creditCard {
-                                let linkableCards = linkableCards(for: item)
-                                if !linkableCards.isEmpty {
-                                    Menu("Link to credit card") {
-                                        ForEach(linkableCards) { card in
-                                            Button(card.name) {
-                                                var updatedLedger = FinanceLedger(snapshot: snapshot)
-                                                do {
-                                                    try updatedLedger.linkOpeningLiability(item.id, to: card.id)
-                                                    snapshot = updatedLedger.snapshot
-                                                    onSave()
-                                                } catch { }
-                                            }
-                                        }
-                                    }
-                                    .font(.caption)
-                                }
-                            }
-                        }.padding(.vertical, 4)
-                    }
-                    .onDelete { offsets in
-                        let items = standalone
-                        for index in offsets { snapshot.liabilities.removeAll { $0.id == items[index].id } }
-                        onSave()
-                    }
-                    Button { showAdd = true } label: {
-                        Label("Add loan / debt", systemImage: "plus.circle.fill").frame(minHeight: 44)
-                    }
-                }
+                creditCardSection
+                debtSummarySection
+                debtListSection
             }
             .navigationTitle("Debts")
             .sheet(isPresented: $showAdd) {
-                LiabilityEntrySheet(cards: snapshot.cards.filter { card in
-                    card.kind == .credit && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id })
-                }, accounts: snapshot.accounts) { liability in
-                    var ledger = FinanceLedger(snapshot: snapshot)
-                    do {
-                        try ledger.addLiability(liability)
-                        snapshot = ledger.snapshot
-                        onSave()
-                    } catch { }
+                LiabilityEntrySheet { item in
+                    snapshot.liabilities.append(item)
+                    onSave()
                 }
             }
         }
+    }
+
+    private var creditCardSection: some View {
+        Section("Credit cards · calculated balances") {
+            if creditCards.isEmpty {
+                Text("Add a credit card in Accounts to track purchases and repayments.")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(creditCards) { card in
+                CreditCardDebtRow(
+                    card: card,
+                    currency: currency(for: card),
+                    outstanding: (try? ledger.creditCardOutstanding(for: card.id)) ?? 0
+                )
+            }
+        }
+    }
+
+    private var debtSummarySection: some View {
+        let groups = Dictionary(grouping: standaloneLiabilities, by: \\.currency)
+        return Section("Other recorded debt by currency") {
+            ForEach(groups.keys.sorted(), id: \\.self) { currency in
+                let total = groups[currency, default: []].reduce(Decimal.zero) { partial, item in
+                    partial + item.outstandingAmount
+                }
+                HStack {
+                    Text(currency)
+                    Spacer()
+                    Text(total, format: .currency(code: currency))
+                        .font(.headline).monospacedDigit()
+                }
+            }
+            Text("If a standalone credit-card liability is the opening balance of a listed card, link it to that card to prevent double counting.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private var debtListSection: some View {
+        Section("Loans, instalments and standalone debts") {
+            if standaloneLiabilities.isEmpty {
+                ContentUnavailableView(
+                    "No other debts recorded",
+                    systemImage: "checkmark.circle",
+                    description: Text("Add a loan, instalment or standalone debt.")
+                )
+            }
+            ForEach(standaloneLiabilities) { item in
+                LiabilityDebtRow(
+                    item: item,
+                    linkableCards: item.kind == .creditCard ? linkableCards(for: item) : [],
+                    onLink: { card in
+                        var updatedLedger = FinanceLedger(snapshot: snapshot)
+                        do {
+                            try updatedLedger.linkOpeningLiability(item.id, to: card.id)
+                            snapshot = updatedLedger.snapshot
+                            onSave()
+                        } catch { }
+                    }
+                )
+            }
+            .onDelete { offsets in
+                let items = standaloneLiabilities
+                for index in offsets {
+                    snapshot.liabilities.removeAll { $0.id == items[index].id }
+                }
+                onSave()
+            }
+            Button {
+                showAdd = true
+            } label: {
+                Label("Add loan / debt", systemImage: "plus.circle.fill")
+                    .frame(minHeight: 44)
+            }
+        }
+    }
+
+    private func currency(for card: FinanceCard) -> String {
+        if let currency = card.currency { return currency }
+        if let account = snapshot.accounts.first(where: { $0.id == card.linkedAccountID }) {
+            return account.currency
+        }
+        return "EGP"
     }
 }
 
@@ -1937,5 +1936,62 @@ private struct WalletQuickOverviewContent: View {
                 Label("Settings & backup", systemImage: "gearshape")
             }
         }
+    }
+}
+
+
+private struct CreditCardDebtRow: View {
+    let card: FinanceCard
+    let currency: String
+    let outstanding: Decimal
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(card.name).font(.headline)
+            HStack {
+                Text("Outstanding")
+                Spacer()
+                Text(outstanding, format: .currency(code: currency))
+                    .font(.subheadline.bold()).monospacedDigit()
+                    .accessibilityIdentifier("debt-card-outstanding-\\(card.name)")
+            }
+            if let due = card.paymentDueDate {
+                Label("Due \\(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
+                    .font(.caption).foregroundStyle(.orange)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct LiabilityDebtRow: View {
+    let item: FinanceLiability
+    let linkableCards: [FinanceCard]
+    let onLink: (FinanceCard) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(item.name).font(.headline)
+            HStack {
+                Text(item.kind.rawValue.capitalized)
+                Spacer()
+                Text(item.outstandingAmount, format: .currency(code: item.currency))
+                    .font(.subheadline.bold()).monospacedDigit()
+            }
+            .font(.caption)
+            if let due = item.dueDate {
+                Label("Due \\(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
+                    .font(.caption).foregroundStyle(.orange)
+            }
+            if item.kind == .creditCard && !linkableCards.isEmpty {
+                Menu("Link to credit card") {
+                    ForEach(linkableCards) { card in
+                        Button(card.name) { onLink(card) }
+                    }
+                }
+                .font(.caption)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
