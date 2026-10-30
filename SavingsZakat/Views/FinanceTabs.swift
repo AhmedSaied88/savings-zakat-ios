@@ -332,6 +332,11 @@ struct TransactionsTab: View {
             }
             .sheet(item: $selectedMessage) { message in
                 ImportedMessageConfirmationSheet(message: message, accounts: snapshot.accounts) { transaction in
+                    if let existing = snapshot.transactions.first(where: { $0.importedMessageID == message.id }) {
+                        updateImportedMessage(message.id, state: .confirmed, transactionID: existing.id)
+                        errorMessage = nil
+                        return
+                    }
                     var ledger = FinanceLedger(snapshot: snapshot)
                     do {
                         try ledger.post(transaction)
@@ -447,7 +452,8 @@ private struct ImportedMessageConfirmationSheet: View {
                             destinationAccountID: direction == .transfer ? destinationAccountID : nil,
                             source: .shortcut,
                             reviewStatus: .confirmed,
-                            category: message.category ?? "Other"
+                            category: message.category ?? "Other",
+                            importedMessageID: message.id
                         )
                         onConfirm(transaction)
                         dismiss()
