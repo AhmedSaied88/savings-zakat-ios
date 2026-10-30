@@ -118,9 +118,9 @@ struct ContentView: View {
                             Text(label(h)).font(.headline)
                             Text("Hawl start: \(h.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
                                 .font(.caption).foregroundStyle(.secondary)
-                            if let due = HawlCalculator.dueDate(startDate: h.hawlStartDate) {
-                                Text("Calendar anniversary: \(due.formatted(date: .long, time: .omitted))")
-                                    .font(.caption).foregroundStyle(.secondary)
+                            if let due = HawlCalculator.dueDateResult(startDate: h.hawlStartDate) {
+                                Text("\(due.status == .officiallyConfirmed ? "Egyptian Hijri anniversary" : "Estimated Hijri anniversary"): \(due.date.formatted(date: .long, time: .omitted))")
+                                    .font(.caption).foregroundStyle(due.status == .officiallyConfirmed ? .secondary : .orange)
                             }
                         }
                     }.onDelete { offsets in snapshot.holdings.remove(atOffsets: offsets); save(); calculate() }
