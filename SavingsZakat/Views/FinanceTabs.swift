@@ -556,6 +556,7 @@ struct AssetsZakatTab: View {
     @State private var goldPrices: [String: Double] = [:]
     @State private var silverPrice: Double?
     @State private var nisab = 0.0
+    @State private var includePersonalGold = false
     @State private var result: ZakatResult?
     @State private var editingHolding: Holding?
     @State private var editorKind: HoldingKind = .cash
@@ -633,11 +634,31 @@ struct AssetsZakatTab: View {
                         TextField("Nisab", value: $nisab, format: .number)
                             .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                     }
+                    Toggle("Include personal-use gold", isOn: $includePersonalGold)
                     Button("Calculate Zakat") { calculate() }.buttonStyle(.borderedProminent)
                     if let result {
                         valueRow("Total valued assets", result.totalValuedWealthEGP)
                         valueRow("Completed-Hawl wealth", result.maturedEligibleWealthEGP)
+                        valueRow("Excluded personal-use gold", result.excludedWealthEGP)
                         valueRow("Estimated Zakat", result.zakatDueEGP)
+                        Section("Asset calculation breakdown") {
+                            ForEach(result.breakdown) { item in
+                                VStack(alignment: .leading, spacing: 3) {
+                                    HStack {
+                                        Text(item.label).font(.subheadline.weight(.semibold))
+                                        Spacer()
+                                        if let value = item.valueEGP {
+                                            Text(value, format: .currency(code: "EGP"))
+                                                .font(.subheadline.monospacedDigit())
+                                        } else {
+                                            Text("Not valued").font(.caption).foregroundStyle(.orange)
+                                        }
+                                    }
+                                    Text(breakdownTitle(item.status) + " · " + item.explanation)
+                                        .font(.caption).foregroundStyle(item.status == .included ? .secondary : .orange)
+                                }
+                            }
+                        }
                         if result.isProvisional {
                             ForEach(result.warnings, id: \.self) {
                                 Text($0).font(.footnote).foregroundStyle(.orange)
@@ -792,10 +813,21 @@ struct AssetsZakatTab: View {
         }
     }
 
+    private func breakdownTitle(_ status: ZakatHoldingStatus) -> String {
+        switch status {
+        case .included: return "Included"
+        case .waitingForHawl: return "Waiting for Hawl"
+        case .excludedPersonalUse: return "Excluded"
+        case .missingValuation: return "Missing valuation"
+        case .invalid: return "Invalid asset"
+        }
+    }
+
     private func calculate() {
         result = ZakatCalculator.calculate(holdings: snapshot.holdings, ratesToEGP: rates,
                                            goldPricesPerGramEGP: goldPrices, silverPricePerGramEGP: silverPrice,
-                                           nisabEGP: nisab, asOf: Date())
+                                           nisabEGP: nisab, asOf: Date(),
+                                           includePersonalGold: includePersonalGold)
     }
 }
 
