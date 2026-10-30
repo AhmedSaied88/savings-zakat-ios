@@ -21,7 +21,7 @@ Local delivery remains subject to iOS notification settings, Focus modes, device
 
 ## Rescheduling and cancellation
 
-- Tapping **Schedule / refresh reminders** replaces the app's existing Hawl reminder set with the current asset dates and current device time zone.
+- Tapping **Schedule / refresh reminders** replaces the app's existing Hawl reminder set with the current asset dates and current device time zone. The scheduler caps pending Hawl notifications at 64 (the iOS pending-notification limit) and prioritizes the nearest fire dates; if more are planned, the app reports how many were omitted.
 - Editing an asset cancels its old reminders; refresh the schedule to create reminders for the corrected Hawl date.
 - Deleting an asset cancels that asset's pending reminders.
 - **Cancel all Hawl reminders** removes only notifications whose identifiers use the app's `hawl.` prefix; unrelated app notifications are not removed.
