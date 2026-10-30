@@ -99,12 +99,15 @@ final class FinanceAppUITests: XCTestCase {
         minimum.tap()
         minimum.typeText("1500")
 
+        // Dismiss the decimal keyboard before interacting with the lower Form control.
+        app.navigationBars["New card"].tap()
+
         // The Form lazily exposes lower controls; scroll the form before querying the switch.
         for _ in 0..<4 {
             app.swipeUp()
-            if app.switches["Set payment due date"].exists { break }
+            if app.switches["card-payment-due-date-toggle"].exists { break }
         }
-        let dueDateToggle = app.switches["Set payment due date"]
+        let dueDateToggle = app.switches["card-payment-due-date-toggle"]
         XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 5),
                       "The due-date toggle should appear after scrolling the credit-card form")
         XCTAssertTrue(dueDateToggle.isHittable,
