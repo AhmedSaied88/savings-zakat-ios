@@ -136,7 +136,7 @@ struct FinanceLedger {
             if source == target { return amount }
             guard let rate = rates[source], rate > 0 else {
                 provisional = true
-                warnings.append("Missing (source) to (target) exchange rate for (label).")
+                warnings.append("Missing \\(source) to \\(target) exchange rate for \\(label).")
                 return 0
             }
             return amount * rate
