@@ -15,7 +15,15 @@ final class BackupServiceTests: XCTestCase {
             title: "Groceries", amount: 500, currency: "EGP", direction: .expense,
             date: date("2026-10-01"), accountID: account.id, reviewStatus: .confirmed
         )
-        let snapshot = FinanceSnapshot(accounts: [account], transactions: [transaction], holdings: [holding])
+        let preferences = FinancePreferences(
+            exchangeRatesToEGP: ["EGP": 1, "USD": 50],
+            goldPricesPerGramEGP: ["21": 4_800],
+            silverPricePerGramEGP: 60,
+            nisabEGP: 120_000,
+            includePersonalGold: true,
+            bankMessageRules: [BankMessageRule(keyword: "marketplace", direction: .expense, category: "Shopping")]
+        )
+        let snapshot = FinanceSnapshot(accounts: [account], transactions: [transaction], holdings: [holding], preferences: preferences)
         let service = BackupService()
 
         let archive = try service.exportBackup(snapshot: snapshot, passphrase: passphrase)
