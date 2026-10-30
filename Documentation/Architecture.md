@@ -50,13 +50,20 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - A user explicitly triggers due-entry creation from Activity. No background or automatic posting occurs. Each generated transaction stores its recurring rule ID and occurrence date; the ledger checks that pair to avoid posting the same occurrence twice.
 - Due entries are confirmed ledger transactions and affect balances only after the user chooses Create due entries. Generation is capped at 120 occurrences per rule per action to bound catch-up work. The UI supports adding, pausing, resuming and deleting rules.
 
+## Credit-card reconciliation
+- Credit-card purchases are expense transactions linked to a credit card, with no bank-account source. They increase the card's outstanding balance and appear in expense reporting, but do not reduce a bank account.
+- Credit-card repayments are transfer transactions from a bank/cash account to a credit card. They reduce the paying account and the card balance by the same amount; they are not recorded as expenses.
+- Only credit cards can receive purchases or repayments. Card and paying-account currencies must match. Repayments larger than the current outstanding balance are rejected; fees, interest and overpayments must be entered separately or addressed in a later workflow.
+- A credit card can carry an opening outstanding balance. An existing manually recorded credit-card liability can be linked to the card and is then treated as its opening balance, not added a second time. Standalone liabilities remain separate. Existing liabilities should be linked when they represent a card already tracked in Accounts.
+- Card records retain only last four digits and optional limit/due details; no full PAN, CVV, PIN or OTP is stored. Cards with linked transactions or opening liabilities cannot be deleted.
+
 ## Finance ledger
 - `FinanceLedger` operates on a value-copy of `FinanceSnapshot`; successful mutations return the updated snapshot for the caller to persist through `FinanceStore`.
 - Only confirmed transactions affect account balances. Imported transactions marked `needsReview` are rejected by ledger posting until confirmed.
 - Income and expenses must reference an existing source account and match its currency. Transfers must reference two different existing accounts in the same currency; cross-currency transfers are rejected until an explicit exchange/fee model exists.
 - Duplicate transaction IDs and duplicate liability IDs are rejected. Accounts with transaction history or linked cards cannot be deleted.
 - Net-worth summaries convert account balances and liabilities to the selected currency using caller-supplied positive rates. Missing rates generate explicit provisional warnings; no missing value is silently represented as a valid zero.
-- Card records contain only last four digits plus optional credit limit, statement date, payment due date and minimum due. Transaction category is optional for older snapshots and newly entered transactions can assign a category.
+- Card records contain only last four digits plus optional currency, opening outstanding balance, credit limit, statement date, payment due date and minimum due. Card purchases and repayments are linked through optional transaction card IDs; all added fields are optional for backward-compatible decoding. Transaction category is optional for older snapshots and newly entered transactions can assign a category.
 
 ## UI direction
 The five primary SwiftUI tabs provide Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat. Settings, monthly insights, the Hawl calendar and encrypted backup are reachable from Wallet. The Wallet net-worth headline currently covers account balances and recorded liabilities only; it explicitly excludes gold/silver holdings until their valuations are incorporated. The simulator workflow has passed 116 unit tests and 10 UI tests on macOS 15 / Xcode 16.4 (run #234, commit `ecb9aa7`). This verifies automated simulator behavior only; full physical-device, VoiceOver, Dynamic Type and Dark Mode review remains outstanding.
