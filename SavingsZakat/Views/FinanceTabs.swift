@@ -711,6 +711,9 @@ struct AssetsZakatTab: View {
                         }
                         snapshot.holdings = ledger.holdings
                         assetError = nil
+                        if holding != nil {
+                            Task { await HawlNotificationScheduler().cancel(holdingID: updated.id) }
+                        }
                         onSave()
                         calculate()
                     } catch {
@@ -801,6 +804,7 @@ struct AssetsZakatTab: View {
             try ledger.delete(id: holding.id)
             snapshot.holdings = ledger.holdings
             assetError = nil
+            Task { await HawlNotificationScheduler().cancel(holdingID: holding.id) }
             onSave()
             calculate()
         } catch {
