@@ -723,6 +723,12 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
+            .onChange(of: preferences) { _, _ in
+                if result != nil { calculate() }
+            }
+            .onChange(of: snapshot.holdings) { _, _ in
+                if result != nil { calculate() }
+            }
             .navigationTitle("Savings & Zakat")
             .sheet(isPresented: $showHoldingEditor) {
                 HoldingEditorSheet(holding: editingHolding, defaultKind: editorKind) { updated in
