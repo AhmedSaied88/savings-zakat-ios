@@ -1420,6 +1420,13 @@ private struct TransactionEditorSheet: View {
                               (entryKind == .cardRepayment && (selectedAccount == nil || !eligiblePaymentCards.contains(where: { $0.id == cardID }))))
                 }
             }
+            .onChange(of: entryKind) { _, newValue in
+                if newValue == .cardRepayment && !eligiblePaymentCards.contains(where: { $0.id == cardID }) {
+                    cardID = eligiblePaymentCards.first?.id
+                } else if newValue == .cardPurchase && selectedCard == nil {
+                    cardID = creditCards.first?.id
+                }
+            }
             .onChange(of: accountID) { _, newValue in
                 let newCurrency = accounts.first(where: { $0.id == newValue })?.currency
                 if destinationAccountID == newValue ||
