@@ -46,9 +46,10 @@ struct HawlReminderPlanner {
             let identifier = Self.notificationPrefix + holding.id.uuidString + "." + String(offset)
             let dueLabel = dueDay.formatted(date: .long, time: .omitted)
             let title = offset == 0 ? "Hawl is due today" : "Hawl reminder"
+            let asset = Self.assetLabel(holding)
             let body = offset == 0
-                ? "Your asset's Hawl date is today (\(dueLabel)). Review your Zakat calculation."
-                : "Your asset's Hawl date is in \(offset) days (\(dueLabel)). Review your Zakat calculation."
+                ? "\(asset): Hawl is due today (\(dueLabel)). Review your Zakat calculation."
+                : "\(asset): Hawl is in \(offset) days (\(dueLabel)). Review your Zakat calculation."
             return HawlLocalNotification(
                 identifier: identifier,
                 holdingID: holding.id,
@@ -58,6 +59,15 @@ struct HawlReminderPlanner {
                 fireDate: fireDate,
                 timeZoneIdentifier: timeZone.identifier
             )
+        }
+    }
+
+    private static func assetLabel(_ holding: Holding) -> String {
+        switch holding.kind {
+        case .cash: return "Cash \(holding.currency ?? "EGP")"
+        case .gold: return "Gold \(holding.carat ?? 24)K"
+        case .silver: return "Silver"
+        case .investment: return holding.name ?? "Investment"
         }
     }
 }
@@ -98,7 +108,9 @@ struct SystemHawlNotificationCenter: HawlNotificationCenterProtocol {
 
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: notification.timeZoneIdentifier) ?? .current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: notification.fireDate)
+        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: notification.fireDate)
+        components.calendar = calendar
+        components.timeZone = calendar.timeZone
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         let request = UNNotificationRequest(identifier: notification.identifier, content: content, trigger: trigger)
         try await center.add(request)
