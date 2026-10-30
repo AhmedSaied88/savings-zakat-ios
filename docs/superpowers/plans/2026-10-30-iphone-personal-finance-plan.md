@@ -97,10 +97,12 @@
 ## Workstream C — Assets, Egyptian Calendar and Zakat
 
 ### Task 7: Unified assets
-**Files:** Modify `Holding.swift`; create unified asset list, silver-entry and holding-editor views; add asset-management tests.
-- [ ] Test cash, currencies, gold, silver and manual investments plus edit/delete.
-- [ ] Implement unified list with value, dates, category, Hawl countdown and provisional pricing state.
-- [ ] Keep Gregorian date pickers for acquisition and Hawl start.
+**Files:** Modify `Holding.swift`; create `AssetLedger.swift`, unified asset list/editor and asset-management tests.
+- [x] Add tests for cash, currencies, gold, silver and manual investments plus edit/delete (Xcode execution pending).
+- [x] Implement a unified list with estimated value, acquisition/Hawl dates, countdown, category and missing-price state.
+- [x] Keep Gregorian date pickers for acquisition and Hawl start.
+
+**Task 7 implementation note (2026-10-30):** Added a validated `AssetLedger` for create/update/delete, positive finite values, supported currencies, date ordering, gold carat, silver purity and named manual investments. Expanded `Holding` with backward-compatible optional name/purity fields and added investment valuation plus purity-adjusted silver valuation to Zakat calculation. The Savings & Zakat screen now uses one editable asset register for cash, gold, silver and manual investments; it shows estimated EGP valuation when inputs exist, Gregorian acquisition/Hawl dates, Hawl countdown and a visible valuation-needed state. Nine asset-ledger tests and two persistence/backward-compatibility tests are authored; Xcode execution remains pending due the GitHub runner allocation failure.
 
 ### Task 8: Egypt-specific Hijri engine
 **Files:** Create `EgyptianHijriCalendar.swift`, `EgyptianMonthStart.swift`, `EgyptianCalendarRepository.swift`, tests and `Documentation/Egyptian-Calendar-Sources.md`.
