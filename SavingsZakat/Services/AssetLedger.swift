@@ -22,16 +22,24 @@ struct AssetLedger {
         guard !holdings.contains(where: { $0.id == holding.id }) else {
             throw AssetError.duplicateHolding(holding.id)
         }
-        try validate(holding, asOf: asOf)
-        holdings.append(holding)
+        var normalized = holding
+        if normalized.kind == .cash || normalized.kind == .investment {
+            normalized.currency = normalized.currency?.uppercased()
+        }
+        try validate(normalized, asOf: asOf)
+        holdings.append(normalized)
     }
 
     mutating func update(_ holding: Holding, asOf: Date = Date()) throws {
         guard let index = holdings.firstIndex(where: { $0.id == holding.id }) else {
             throw AssetError.holdingNotFound(holding.id)
         }
-        try validate(holding, asOf: asOf)
-        holdings[index] = holding
+        var normalized = holding
+        if normalized.kind == .cash || normalized.kind == .investment {
+            normalized.currency = normalized.currency?.uppercased()
+        }
+        try validate(normalized, asOf: asOf)
+        holdings[index] = normalized
     }
 
     mutating func delete(id: UUID) throws {
