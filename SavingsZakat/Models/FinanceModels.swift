@@ -45,8 +45,12 @@ struct FinanceCard: Identifiable, Codable, Equatable {
     var statementDate: Date?
     var paymentDueDate: Date?
     var minimumDue: Decimal?
+    /// Currency used for card purchases and repayments. Optional for old snapshots.
+    var currency: String?
+    /// Starting amount owed before this app begins tracking card activity.
+    var openingOutstandingBalance: Decimal?
 
-    init(id: UUID = UUID(), name: String, issuer: String? = nil, kind: FinanceCardKind, lastFour: String? = nil, linkedAccountID: UUID? = nil, creditLimit: Decimal? = nil, statementDate: Date? = nil, paymentDueDate: Date? = nil, minimumDue: Decimal? = nil) {
+    init(id: UUID = UUID(), name: String, issuer: String? = nil, kind: FinanceCardKind, lastFour: String? = nil, linkedAccountID: UUID? = nil, creditLimit: Decimal? = nil, statementDate: Date? = nil, paymentDueDate: Date? = nil, minimumDue: Decimal? = nil, currency: String? = nil, openingOutstandingBalance: Decimal? = nil) {
         self.id = id
         self.name = name
         self.issuer = issuer
@@ -58,6 +62,8 @@ struct FinanceCard: Identifiable, Codable, Equatable {
         self.statementDate = statementDate
         self.paymentDueDate = paymentDueDate
         self.minimumDue = minimumDue
+        self.currency = currency?.uppercased()
+        self.openingOutstandingBalance = openingOutstandingBalance
     }
 }
 
@@ -94,8 +100,12 @@ struct FinanceTransaction: Identifiable, Codable, Equatable {
     var importedMessageID: UUID?
     var recurringRuleID: UUID?
     var recurrenceOccurrenceDate: Date?
+    /// Set for a purchase charged to a credit card; such a purchase does not debit a bank account.
+    var cardID: UUID?
+    /// Set for a bank-to-credit-card repayment; it is a transfer, not a second expense.
+    var destinationCardID: UUID?
 
-    init(id: UUID = UUID(), title: String, amount: Decimal, currency: String, direction: TransactionDirection, date: Date, accountID: UUID? = nil, destinationAccountID: UUID? = nil, source: TransactionSource = .manual, reviewStatus: TransactionReviewStatus = .confirmed, category: String? = nil, notes: String? = nil, importedMessageID: UUID? = nil, recurringRuleID: UUID? = nil, recurrenceOccurrenceDate: Date? = nil) {
+    init(id: UUID = UUID(), title: String, amount: Decimal, currency: String, direction: TransactionDirection, date: Date, accountID: UUID? = nil, destinationAccountID: UUID? = nil, source: TransactionSource = .manual, reviewStatus: TransactionReviewStatus = .confirmed, category: String? = nil, notes: String? = nil, importedMessageID: UUID? = nil, recurringRuleID: UUID? = nil, recurrenceOccurrenceDate: Date? = nil, cardID: UUID? = nil, destinationCardID: UUID? = nil) {
         self.id = id
         self.title = title
         self.amount = amount
@@ -111,6 +121,8 @@ struct FinanceTransaction: Identifiable, Codable, Equatable {
         self.importedMessageID = importedMessageID
         self.recurringRuleID = recurringRuleID
         self.recurrenceOccurrenceDate = recurrenceOccurrenceDate
+        self.cardID = cardID
+        self.destinationCardID = destinationCardID
     }
 }
 
@@ -128,14 +140,17 @@ struct FinanceLiability: Identifiable, Codable, Equatable {
     var outstandingAmount: Decimal
     var currency: String
     var dueDate: Date?
+    /// Links a manually entered opening card balance to a credit card so it is not counted twice.
+    var linkedCardID: UUID?
 
-    init(id: UUID = UUID(), name: String, kind: FinanceLiabilityKind, outstandingAmount: Decimal, currency: String, dueDate: Date? = nil) {
+    init(id: UUID = UUID(), name: String, kind: FinanceLiabilityKind, outstandingAmount: Decimal, currency: String, dueDate: Date? = nil, linkedCardID: UUID? = nil) {
         self.id = id
         self.name = name
         self.kind = kind
         self.outstandingAmount = outstandingAmount
         self.currency = currency.uppercased()
         self.dueDate = dueDate
+        self.linkedCardID = linkedCardID
     }
 }
 
