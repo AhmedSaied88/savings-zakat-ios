@@ -144,13 +144,15 @@ struct FinanceSnapshot: Codable, Equatable {
     var transactions: [FinanceTransaction]
     var liabilities: [FinanceLiability]
     var holdings: [Holding]
+    var preferences: FinancePreferences?
 
-    init(schemaVersion: Int = currentSchemaVersion, accounts: [FinanceAccount] = [], cards: [FinanceCard] = [], transactions: [FinanceTransaction] = [], liabilities: [FinanceLiability] = [], holdings: [Holding] = []) {
+    init(schemaVersion: Int = currentSchemaVersion, accounts: [FinanceAccount] = [], cards: [FinanceCard] = [], transactions: [FinanceTransaction] = [], liabilities: [FinanceLiability] = [], holdings: [Holding] = [], preferences: FinancePreferences? = nil) {
         self.schemaVersion = schemaVersion
         self.accounts = accounts
         self.cards = cards
         self.transactions = transactions
         self.liabilities = liabilities
         self.holdings = holdings
+        self.preferences = preferences
     }
 }
