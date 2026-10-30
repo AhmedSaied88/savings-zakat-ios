@@ -43,4 +43,24 @@ struct ImportedMessage: Identifiable, Codable, Equatable {
         self.state = state
         self.linkedTransactionID = linkedTransactionID
     }
+
+    init(
+        id: UUID = UUID(),
+        senderIdentifier: String,
+        receivedAt: Date,
+        parsed: ParsedBankMessage,
+        state: ImportedMessageState = .needsReview,
+        linkedTransactionID: UUID? = nil
+    ) {
+        self.init(
+            id: id,
+            senderIdentifier: senderIdentifier,
+            receivedAt: receivedAt,
+            parsed: Optional(parsed),
+            redactedText: parsed.redactedSourceText,
+            fingerprint: parsed.fingerprint,
+            state: state,
+            linkedTransactionID: linkedTransactionID
+        )
+    }
 }
