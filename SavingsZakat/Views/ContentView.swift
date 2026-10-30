@@ -24,7 +24,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            WalletDashboardTab(snapshot: snapshot, rates: preferences.exchangeRatesToEGP)
+            WalletDashboardTab(snapshot: $snapshot, preferences: $preferences, onSave: save, onRestore: restoreSnapshot)
                 .tabItem { Label("Wallet", systemImage: "wallet.bifold") }
             AccountsCardsTab(snapshot: $snapshot, onSave: save)
                 .tabItem { Label("Accounts", systemImage: "building.columns") }
