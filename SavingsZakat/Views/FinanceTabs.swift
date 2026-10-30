@@ -216,8 +216,11 @@ struct AccountsCardsTab: View {
                     }
                     let linkedAccountMatches = updated.linkedAccountID == nil ||
                         snapshot.accounts.first(where: { $0.id == updated.linkedAccountID })?.currency == (updated.currency ?? "EGP")
+                    let existingCurrency = card.currency
+                        ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency
+                        ?? "EGP"
                     guard linkedAccountMatches,
-                          (!hasActivity || updated.currency == card.currency),
+                          (!hasActivity || updated.currency == existingCurrency),
                           updated.openingOutstandingBalance.map({ $0 >= 0 }) ?? true,
                           updated.minimumDue.map({ $0 >= 0 }) ?? true,
                           updated.creditLimit.map({ $0 >= 0 }) ?? true else {
