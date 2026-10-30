@@ -94,5 +94,6 @@ final class BankMessageParserTests: XCTestCase {
     func testAmbiguousMessageIsNotGuessed() {
         XCTAssertNil(BankMessageParser.parse("You received and debited EGP 100.00"))
         XCTAssertNil(BankMessageParser.parse("Your account has an update."))
+        XCTAssertNil(BankMessageParser.parse("Purchase EGP 100.00. Available balance EGP 900.00."))
     }
 }
