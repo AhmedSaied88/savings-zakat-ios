@@ -20,7 +20,8 @@ Latest confirmed full Xcode test run for the ledger work:
 - `SavingsZakat/Views/` — tab-based SwiftUI Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat screens, plus Hawl, insights, settings and encrypted backup views.
 - `SavingsZakatTests/` — calculation, calendar, persistence, ledger, import, notification, backup, preferences and insights tests.
 - `SavingsZakatUITests/` — iPhone simulator UI automation for navigation, account/transaction entry and card masking/payment details.
-- `Documentation/Architecture.md` — architecture, data safety and migration contract.\n- `Documentation/Device-Test-Checklist.md` — physical-iPhone validation steps for Shortcuts, reminders, backup, offline behavior and accessibility.
+- `Documentation/Architecture.md` — architecture, data safety and migration contract.
+- `Documentation/Device-Test-Checklist.md` — physical-iPhone validation steps for Shortcuts, reminders, backup, offline behavior and accessibility.
 - `docs/superpowers/specs/` — approved product/design requirements.
 - `docs/superpowers/plans/` — phased implementation plan.
 - `project.yml` — XcodeGen project definition.
@@ -49,7 +50,7 @@ Physical-device installation requires an Apple signing team/profile. The simulat
 ## Boundaries and outstanding work
 
 - This native iOS repository, its local data and its test deployment are separate from the PWA; do not replace, modify or migrate the PWA.
-- Egyptian official month-start records must be verified and bundled before dates can be labelled officially confirmed. Uncovered dates must remain estimated.
+- The initial Egyptian date seed contains five verified Dar Al-Ifta month starts (1448 AH, June–October 2026); broad historical coverage and an Egypt-calibrated astronomical estimate remain outstanding. Dates outside the bounded official intervals must remain estimated.
 - Hawl calculations, Zakat assumptions and all valuation inputs require further verification and transparent presentation.
 - Seven UI automation tests cover navigation, account/card entry, settings, parser rules, backup and large Dynamic Type; they still need a successful Xcode run. Full accessibility, Dynamic Type, Dark Mode and physical-device review remain outstanding.
 - The ledger currently validates income, expense, transfers, duplicate posting and liabilities; recurring transactions, full credit-card payment reconciliation and broader import deduplication remain future work.
