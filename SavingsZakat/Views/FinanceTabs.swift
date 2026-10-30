@@ -628,6 +628,14 @@ struct AssetsZakatTab: View {
                         Text(assetError).font(.footnote).foregroundStyle(.red)
                     }
                 }
+                Section("Hawl calendar") {
+                    NavigationLink {
+                        HawlCalendarView(holdings: snapshot.holdings)
+                    } label: {
+                        Label("View Hawl calendar and reminders", systemImage: "calendar.badge.clock")
+                            .frame(minHeight: 44)
+                    }
+                }
                 Section("Combined Zakat calculation") {
                     HStack {
                         Text("Nisab (EGP)")
