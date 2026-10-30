@@ -46,6 +46,7 @@ struct ContentView: View {
         if ProcessInfo.processInfo.arguments.contains("-ui-testing-reset"),
            let uiTestDirectory {
             try? FileManager.default.removeItem(at: uiTestDirectory.appendingPathComponent("finance-data.json"))
+            UserDefaults.standard.removeObject(forKey: "testHoldingsJSON")
         }
         do {
             snapshot = try store.load()
