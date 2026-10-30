@@ -75,11 +75,9 @@ final class FinanceAppUITests: XCTestCase {
         cardName.tap()
         cardName.typeText("UI Test Credit")
 
-        let debitPicker = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS %@", "Debit")
-        ).firstMatch
-        XCTAssertTrue(debitPicker.waitForExistence(timeout: 3))
-        debitPicker.tap()
+        let cardTypePicker = app.descendants(matching: .any)["card-kind-picker"]
+        XCTAssertTrue(cardTypePicker.waitForExistence(timeout: 3))
+        cardTypePicker.tap()
         app.buttons["Credit"].tap()
 
         let limit = app.textFields["Credit limit (optional)"]
