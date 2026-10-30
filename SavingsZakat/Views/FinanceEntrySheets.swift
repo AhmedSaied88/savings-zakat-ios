@@ -1,0 +1,84 @@
+import SwiftUI
+
+struct CardEntrySheet: View {
+    var accounts: [FinanceAccount]
+    var onSave: (FinanceCard) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @State private var issuer = ""
+    @State private var kind = FinanceCardKind.debit
+    @State private var lastFour = ""
+    @State private var linkedAccountID: UUID?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("Card label", text: $name)
+                TextField("Bank / issuer", text: $issuer)
+                Picker("Type", selection: $kind) {
+                    ForEach(FinanceCardKind.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+                }
+                TextField("Last four digits only", text: $lastFour)
+                    .keyboardType(.numberPad)
+                    .onChange(of: lastFour) { _, value in lastFour = String(value.filter(\.isNumber).suffix(4)) }
+                if !accounts.isEmpty {
+                    Picker("Linked account", selection: $linkedAccountID) {
+                        Text("Not linked").tag(UUID?.none)
+                        ForEach(accounts) { Text($0.name).tag(Optional($0.id)) }
+                    }
+                }
+                Text("Never enter the full card number, CVV, PIN or OTP.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .navigationTitle("New card")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(FinanceCard(name: name.trimmingCharacters(in: .whitespacesAndNewlines), issuer: issuer.isEmpty ? nil : issuer, kind: kind, lastFour: lastFour, linkedAccountID: linkedAccountID))
+                        dismiss()
+                    }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+}
+
+struct LiabilityEntrySheet: View {
+    var onSave: (FinanceLiability) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @State private var kind = FinanceLiabilityKind.loan
+    @State private var amount = ""
+    @State private var currency = "EGP"
+    @State private var hasDueDate = false
+    @State private var dueDate = Date()
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("Name", text: $name)
+                Picker("Type", selection: $kind) {
+                    ForEach(FinanceLiabilityKind.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+                }
+                TextField("Outstanding amount", text: $amount).keyboardType(.decimalPad)
+                Picker("Currency", selection: $currency) {
+                    ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) { Text($0).tag($0) }
+                }
+                Toggle("Add due date", isOn: $hasDueDate)
+                if hasDueDate { DatePicker("Due date", selection: $dueDate, displayedComponents: .date) }
+            }
+            .navigationTitle("New liability")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard let value = Decimal(string: amount), value > 0 else { return }
+                        onSave(FinanceLiability(name: name.trimmingCharacters(in: .whitespacesAndNewlines), kind: kind, outstandingAmount: value, currency: currency, dueDate: hasDueDate ? dueDate : nil))
+                        dismiss()
+                    }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !(Decimal(string: amount).map { $0 > 0 } ?? false))
+                }
+            }
+        }
+    }
+}
