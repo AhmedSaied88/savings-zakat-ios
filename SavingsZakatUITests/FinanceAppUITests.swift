@@ -108,7 +108,8 @@ final class FinanceAppUITests: XCTestCase {
         }
         XCTAssertEqual(dueDateToggle.value as? String, "1",
                        "The payment due-date option should be enabled before saving")
-        XCTAssertTrue(app.datePickers["Payment due date"].waitForExistence(timeout: 3),
+        let dueDatePicker = app.descendants(matching: .any)["card-payment-due-date-picker"]
+        XCTAssertTrue(dueDatePicker.waitForExistence(timeout: 3),
                       "Enabling the due-date option should reveal its date picker")
 
         app.buttons["Save"].tap()
