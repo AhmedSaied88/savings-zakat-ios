@@ -358,7 +358,7 @@ struct TransactionsTab: View {
                         errorMessage = nil
                         onSave()
                     } catch {
-                        errorMessage = "Could not save recurring transaction: \\(error.localizedDescription)"
+                        errorMessage = "Could not save recurring transaction: \(error.localizedDescription)"
                     }
                 }
             }
