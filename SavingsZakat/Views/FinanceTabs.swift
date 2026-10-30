@@ -587,7 +587,8 @@ struct AssetsZakatTab: View {
                                 if let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
                                     let days = cairoDayDifference(from: Date(), to: due.date)
                                     HStack(spacing: 6) {
-                                        Text((due.status == .officiallyConfirmed ? "Confirmed" : "Estimated") + " Hawl: " + due.date.formatted(date: .abbreviated, time: .omitted))
+                                        Text("Hawl due: " + due.date.formatted(date: .abbreviated, time: .omitted))
+                                        Text("· " + hijriLabel(for: due.date, status: due.status))
                                         Text(days >= 0 ? "· \(days) days left" : "· Matured")
                                     }
                                     .font(.caption)
