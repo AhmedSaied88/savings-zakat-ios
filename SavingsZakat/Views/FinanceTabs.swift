@@ -119,7 +119,7 @@ struct AccountsCardsTab: View {
                                 Label(card.name, systemImage: card.kind == .credit ? "creditcard.fill" : "creditcard")
                                     .font(.headline)
                                 Spacer()
-                                Text("•••• \(card.lastFour ?? "----")").monospacedDigit().foregroundStyle(.secondary)
+                                Text("•••• \(card.lastFour ?? "----")").monospacedDigit().foregroundStyle(.secondary).accessibilityIdentifier("card-last-four")
                             }
                             Text(card.issuer ?? card.kind.rawValue.capitalized)
                                 .font(.caption).foregroundStyle(.secondary)
