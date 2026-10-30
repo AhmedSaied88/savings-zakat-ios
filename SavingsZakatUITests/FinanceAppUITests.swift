@@ -96,6 +96,74 @@ final class FinanceAppUITests: XCTestCase {
         ).firstMatch.waitForExistence(timeout: 5))
     }
 
+
+    func testWalletInsightsAndSettingsNavigation() throws {
+        let app = launchCleanApp()
+
+        app.buttons["Monthly income & expenses"].tap()
+        XCTAssertTrue(app.navigationBars["Monthly insights"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        app.buttons["Settings & backup"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+        app.buttons["Valuation, parser & calendar"].tap()
+        XCTAssertTrue(app.navigationBars["Finance preferences"].waitForExistence(timeout: 5))
+    }
+
+    func testCanCreateCustomBankParserRule() throws {
+        let app = launchCleanApp()
+        app.buttons["Settings & backup"].tap()
+        app.buttons["Valuation, parser & calendar"].tap()
+        app.buttons["Add custom keyword rule"].tap()
+
+        let keyword = app.textFields["Keyword or phrase"]
+        XCTAssertTrue(keyword.waitForExistence(timeout: 3))
+        keyword.tap()
+        keyword.typeText("marketplace")
+
+        let category = app.textFields["Transaction category"]
+        category.tap()
+        category.typeText("Online shopping")
+
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["marketplace"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Online shopping"].exists)
+    }
+
+    func testBackupScreenRequiresPassphraseConfirmation() throws {
+        let app = launchCleanApp()
+        app.buttons["Settings & backup"].tap()
+        app.buttons["Backup & Restore"].tap()
+
+        let passphrase = app.secureTextFields["Backup passphrase"]
+        XCTAssertTrue(passphrase.waitForExistence(timeout: 3))
+        passphrase.tap()
+        passphrase.typeText("correct horse battery staple")
+
+        let confirmation = app.secureTextFields["Confirm passphrase"]
+        confirmation.tap()
+        confirmation.typeText("correct horse battery staple")
+
+        XCTAssertTrue(app.buttons["Export encrypted backup"].isEnabled)
+        XCTAssertTrue(app.buttons["Choose backup file"].isEnabled)
+    }
+
+    func testPrimaryNavigationRemainsAvailableAtAccessibilityTextSize() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ui-testing",
+            "-ui-testing-reset",
+            "-UIPreferredContentSizeCategoryName",
+            "UICTContentSizeCategoryAccessibilityXXXL"
+        ]
+        app.launch()
+
+        for tab in ["Wallet", "Accounts", "Activity", "Debts", "Zakat"] {
+            XCTAssertTrue(app.tabBars.buttons[tab].waitForExistence(timeout: 5), "Missing tab at large text size: \(tab)")
+        }
+        XCTAssertTrue(app.buttons["Settings & backup"].exists)
+    }
+
     private func launchCleanApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-reset"]
