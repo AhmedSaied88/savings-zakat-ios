@@ -6,7 +6,7 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 **Working prototype foundation — not release-ready or verified on a physical iPhone.** This isolated SwiftUI application includes a versioned local store and validated ledger; five primary tabs (Wallet, Accounts, Activity, Debts and Zakat); Shortcuts-assisted bank-message import with redaction, custom parser rules and explicit transaction confirmation; an editable cash/gold/silver/investment register; a Hawl calendar with local reminders; combined Zakat calculations with per-asset breakdown; encrypted local backup/restore; persisted valuation/parser preferences; and monthly income/expense insights.
 
-The latest previously verified full GitHub Actions simulator run passed on macOS 15 / Xcode 16.4. The recurring-transaction changes are newer and still require a fresh CI run:
+The latest previously verified full GitHub Actions simulator run passed on macOS 15 / Xcode 16.4. Recurring transactions and credit-card reconciliation were added after that run and still require a fresh CI run:
 - Branch: `chore/task-1-baseline-architecture`
 - Commit: `ecb9aa71359e89158c35e6b387db47771d2e6afe`
 - Workflow run: [Native iOS build and tests #234](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41067228705)
@@ -55,7 +55,7 @@ Physical-device installation requires an Apple signing team/profile. The simulat
 - The initial Egyptian date seed contains five verified Dar Al-Ifta month starts (1448 AH, June–October 2026); broad historical coverage and an Egypt-calibrated astronomical estimate remain outstanding. Dates outside the bounded official intervals must remain estimated.
 - Hawl calculations, Zakat assumptions and all valuation inputs require further verification and transparent presentation.
 - Seven UI automation tests cover navigation, account/card entry, settings, parser rules, backup and large Dynamic Type; they still need a successful Xcode run. Full accessibility, Dynamic Type, Dark Mode and physical-device review remain outstanding.
-- The ledger currently validates income, expense, transfers, duplicate posting and liabilities; recurring transactions, full credit-card payment reconciliation and broader import deduplication remain future work.
+- The ledger validates income, expenses, transfers, duplicate posting and liabilities. Recurring income/expense templates support manual due-entry generation. Credit-card purchases and repayments now reconcile separately: purchases increase card debt without debiting a bank account, while repayments debit the paying account and reduce card debt without being counted as another expense. Existing manually recorded card liabilities can be linked to a card as its opening balance to prevent double counting. Full import deduplication remains future work.
 - The Shortcuts App Intent, local import/review queue, unified asset register, initial Egyptian official-date seed, Hawl reminders, encrypted backup/restore, preferences and insights are implemented but not yet Xcode-verified. The Shortcut, notifications and backup/restore flows also need physical-iPhone testing. Broad historical Egyptian date coverage, an Egypt-calibrated astronomical estimate and release packaging remain incomplete.
 - Prices and exchange rates are manual; missing values must be shown as provisional.
 - Use fictional test data until physical-device validation and explicit approval for any production-use step.
