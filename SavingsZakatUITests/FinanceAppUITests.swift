@@ -101,8 +101,10 @@ final class FinanceAppUITests: XCTestCase {
 
         let dueDateToggle = app.switches["Set payment due date"]
         XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 3))
+        XCTAssertTrue(scrollTo(dueDateToggle, in: app),
+                      "The due-date toggle should be reachable above the numeric keyboard")
         if dueDateToggle.value as? String != "1" {
-            dueDateToggle.tap()
+            dueDateToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         }
         XCTAssertEqual(dueDateToggle.value as? String, "1",
                        "The payment due-date option should be enabled before saving")
