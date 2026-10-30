@@ -14,6 +14,7 @@ struct HawlLocalNotification: Equatable {
 struct HawlReminderPlanner {
     static let reminderOffsets = [30, 7, 1, 0]
     static let notificationPrefix = "hawl."
+    static let maximumPendingNotifications = 64
 
     func reminders(
         for holding: Holding,
@@ -130,6 +131,7 @@ struct HawlNotificationScheduler {
         case permissionDenied
         case scheduled(count: Int)
         case partiallyScheduled(count: Int, failedIdentifiers: [String])
+        case limited(count: Int, omittedCount: Int)
     }
 
     private let notificationCenter: HawlNotificationCenterProtocol
@@ -168,10 +170,14 @@ struct HawlNotificationScheduler {
             return .permissionDenied
         }
 
+        let prioritized = notifications.sorted { $0.fireDate < $1.fireDate }
+        let selected = Array(prioritized.prefix(HawlReminderPlanner.maximumPendingNotifications))
+        let omittedCount = max(0, prioritized.count - selected.count)
+
         await notificationCenter.removePending(withIdentifiers: existing)
         var scheduledCount = 0
         var failed: [String] = []
-        for notification in notifications {
+        for notification in selected {
             do {
                 try await notificationCenter.add(notification)
                 scheduledCount += 1
@@ -180,9 +186,13 @@ struct HawlNotificationScheduler {
             }
         }
 
-        return failed.isEmpty
-            ? .scheduled(count: scheduledCount)
-            : .partiallyScheduled(count: scheduledCount, failedIdentifiers: failed)
+        if !failed.isEmpty {
+            return .partiallyScheduled(count: scheduledCount, failedIdentifiers: failed)
+        }
+        if omittedCount > 0 {
+            return .limited(count: scheduledCount, omittedCount: omittedCount)
+        }
+        return .scheduled(count: scheduledCount)
     }
 
     func cancel(holdingID: UUID) async {
