@@ -56,9 +56,11 @@
 ### Task 3: Accounts, cards, liabilities and ledger
 **Files:** Inspect existing `FinanceModels.swift` first; extend/create account, payment card, transaction, liability and ledger types only where absent. Add `FinanceLedgerTests.swift` under `SavingsZakatTests/`.
 **Interfaces:** `FinanceLedger.netWorth(in:rates:) -> MoneySummary`; `FinanceLedger.post(_ transaction: Transaction) throws`; `FinanceLedger.transfer(amount:from:to:date:) throws`. Card display stores last four digits only.
-- [ ] Test balance changes, income/expense, paired transfers, credit-card liability, loans/instalments and currency conversion.
-- [ ] Implement ledger validation and duplicate transaction protection.
-- [ ] Test account deletion constraints and transfer accounting.
+- [x] Test balance changes, income/expense, paired transfers, credit-card liability, loans/instalments and currency conversion.
+- [x] Implement ledger validation and duplicate transaction protection.
+- [x] Test account deletion constraints and transfer accounting.
+
+**Task 3 verification (2026-10-30):** Added `FinanceLedger.swift` and 10 `FinanceLedgerTests`. GitHub Actions run `41020025055` passed on the native iOS branch with 33 XCTest tests and 0 failures. Tests cover income/expense balances, paired own-account transfers without inflating combined assets, card/loan/instalment liabilities, currency conversion and missing-rate warnings, review gating, duplicate transaction rejection, invalid values, currency mismatch and account deletion constraints. The ledger is a value type over `FinanceSnapshot`; callers persist its updated snapshot through `FinanceStore` after successful operations.
 
 ### Task 4: Wallet and account/card UI
 **Files:** Refactor `ContentView.swift`; create Wallet, Accounts, Cards, Transactions and Liabilities SwiftUI views under `SavingsZakat/Views/`.
