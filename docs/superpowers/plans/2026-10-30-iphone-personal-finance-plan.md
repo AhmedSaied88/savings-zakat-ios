@@ -1,10 +1,10 @@
 # iPhone Personal Finance & Savings & Zakat Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Deliver a free, offline-first native iPhone personal-finance app with account/card/transaction tracking, Shortcuts-assisted bank SMS import, and Egypt-specific Hijri Hawl and combined Zakat tools.
 
-**Architecture:** SwiftUI app with a versioned local persistence layer and domain services separated from views. SMS arrives only through user-configured iOS Shortcuts and a documented app handoff; all parsing, calculations, reminders and financial data remain on device. Egyptian calendar conversion uses a versioned source-backed date table plus clearly labelled estimates where official Egyptian dates are not yet available.
+**Architecture:** SwiftUI app with a versioned local persistence layer and domain services separated from views. SMS arrives only through user-configured iOS Shortcuts and a documented app handoff; all parsing, calculations, reminders and financial data remain locally. Egyptian calendar conversion uses a versioned source-backed date table plus clearly labelled estimates where official Egyptian dates are not yet available.
 
 **Tech Stack:** SwiftUI, Foundation, XCTest, UserNotifications, App Intents / URL handoff, Apple Shortcuts, GitHub Actions on macOS.
 
@@ -36,10 +36,12 @@
 
 ### Task 1: Baseline and architecture
 **Files:** Modify `README.md`; create `Documentation/Architecture.md`; test existing calculation suite.
-- [ ] Inspect all source files, project configuration, current branch and latest CI workflow.
-- [ ] Add baseline tests for current calculation and persistence behavior before refactoring.
-- [ ] Document model/service boundaries and migration strategy.
-- [ ] Run the complete existing XCTest workflow and record baseline result.
+- [x] Inspect all source files, project configuration, current branch and latest CI workflow.
+- [x] Add baseline tests for current calculation and persistence behavior before refactoring.
+- [x] Document model/service boundaries and migration strategy.
+- [x] Run the complete existing XCTest workflow and record baseline result.
+
+**Baseline evidence (2026-10-30):** Branch `feature/iphone-personal-finance-native`, commit `6c1b08ef59063892cb1103d07b40b9d10c8a9213`; GitHub Actions run `41017441370` completed successfully on macOS 15 / Xcode 16.4 / iPhone 16 simulator. XCTest: 16 tests, 0 failures. This is the pre-change baseline; Task 1 documentation updates do not alter executable source.
 
 ### Task 2: Versioned local store
 **Files:** Create `SavingsZakat/Services/FinanceStore.swift`, `SavingsZakat/Models/FinanceSnapshot.swift`, `SavingsZakatTests/FinanceStoreTests.swift`.
@@ -54,13 +56,6 @@
 - [ ] Test balance changes, income/expense, paired transfers, credit-card liability, loans/instalments and currency conversion.
 - [ ] Implement ledger validation and duplicate transaction protection.
 - [ ] Test account deletion constraints and transfer accounting.
-
-### Task 4: Wallet and account/card UI
-**Files:** Refactor `ContentView.swift`; create Wallet, Accounts, Cards, Transactions and Liabilities SwiftUI views under `SavingsZakat/Views/`.
-- [ ] Add UI tests for account CRUD, card masking, credit-card due dates and transaction categories.
-- [ ] Implement Design 4 composition with Design 3 blue palette: white/pale-blue surfaces, royal-blue actions, violet accents and gold asset highlights.
-- [ ] Build Wallet, Accounts & Cards, Transactions, Add Account and Debts sections with native navigation/sheets.
-- [ ] Verify accessibility labels, Dynamic Type, Dark Mode and 44pt touch targets.
 
 ## Workstream B — Bank SMS via Shortcuts
 
