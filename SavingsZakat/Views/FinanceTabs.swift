@@ -302,7 +302,7 @@ struct TransactionsTab: View {
                     Button {
                         showAddRecurring = true
                     } label: {
-                        Label("Add recurring transaction", systemImage: "repeat")
+                        Label("Add recurring transaction", systemImage: "repeat").accessibilityIdentifier("add-recurring-transaction")
                     }
                     .disabled(snapshot.accounts.isEmpty)
                     Button {
@@ -316,7 +316,7 @@ struct TransactionsTab: View {
                             errorMessage = "Could not create due recurring entries: \(error.localizedDescription)"
                         }
                     } label: {
-                        Label("Create due entries", systemImage: "calendar.badge.clock")
+                        Label("Create due entries", systemImage: "calendar.badge.clock").accessibilityIdentifier("create-due-recurring-entries")
                     }
                     .disabled(!rules.contains(where: { $0.isEnabled && $0.nextDueDate <= Date() }))
                 }
