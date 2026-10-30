@@ -118,6 +118,25 @@ final class FinanceStoreTests: XCTestCase {
         XCTAssertEqual(try store.load(), latestSnapshot)
     }
 
+
+    func testCreateUpdateAndDeleteChangesPersistAcrossReload() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FinanceStore(directoryURL: directory)
+        let original = FinanceAccount(name: "Main", kind: .bank, currency: "EGP", openingBalance: 1_000)
+        let removed = FinanceAccount(name: "Old wallet", kind: .wallet, currency: "EGP", openingBalance: 100)
+        try store.save(FinanceSnapshot(accounts: [original, removed]))
+
+        var updated = original
+        updated.name = "Main salary account"
+        updated.openingBalance = 2_500
+        let added = FinanceAccount(name: "Emergency savings", kind: .savings, currency: "EGP", openingBalance: 500)
+        let expected = FinanceSnapshot(accounts: [updated, added])
+        try store.save(expected)
+
+        XCTAssertEqual(try store.load(), expected)
+    }
+
     private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
         let suiteName = "FinanceStoreTests." + UUID().uuidString
         return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
