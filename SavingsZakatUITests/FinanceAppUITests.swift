@@ -65,6 +65,39 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["•••• 3456"].waitForExistence(timeout: 5))
     }
 
+    func testCreditCardEntryShowsPaymentDueDate() throws {
+        let app = launchCleanApp()
+        app.tabBars.buttons["Accounts"].tap()
+        app.buttons["Add card"].tap()
+
+        let cardName = app.textFields["Card label"]
+        XCTAssertTrue(cardName.waitForExistence(timeout: 3))
+        cardName.tap()
+        cardName.typeText("UI Test Credit")
+
+        let debitPicker = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "Debit")
+        ).firstMatch
+        XCTAssertTrue(debitPicker.waitForExistence(timeout: 3))
+        debitPicker.tap()
+        app.buttons["Credit"].tap()
+
+        let limit = app.textFields["Credit limit (optional)"]
+        XCTAssertTrue(limit.waitForExistence(timeout: 3))
+        limit.tap()
+        limit.typeText("50000")
+
+        let minimum = app.textFields["Minimum payment (optional)"]
+        minimum.tap()
+        minimum.typeText("1500")
+
+        app.buttons["Save"].tap()
+
+        XCTAssertTrue(app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Payment due")
+        ).firstMatch.waitForExistence(timeout: 5))
+    }
+
     private func launchCleanApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-reset"]
