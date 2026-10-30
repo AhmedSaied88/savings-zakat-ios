@@ -19,7 +19,8 @@ Build a polished native iPhone personal-finance app with wallet, bank/SMS transa
 ### Included
 - Wallet overview with net worth, spendable balance, savings, assets, and amounts owed.
 - Bank accounts with manually maintained balances and transaction history.
-- Bank SMS transaction capture by user sharing/pasting message text into the app; parse supported bank formats into proposed transactions, show the original message and parsed fields, and require user confirmation before posting. Provide editable bank-format rules and manual fallback.
+- iPhone-only bank SMS capture through Apple Shortcuts personal automations where supported: a Message-received automation filters by sender and/or text, passes the message text to the app through a local URL/deep-link or App Intent, and the app parses it on-device into a proposed transaction. Require user review/confirmation by default, with an optional trusted-rule workflow only after explicit configuration. Provide a manual share/paste fallback and editable bank-format rules.
+- A setup guide and ready-to-import Shortcut instructions/templates for supported Egyptian bank SMS formats; users configure the sender/keyword filters and grant required Shortcuts permissions on their own iPhone.
 - Debit cards linked to bank accounts, with masked card details only; never store PIN, CVV, full card number, or online-banking credentials.
 - Credit cards with issuer/name, masked last four digits, credit limit, current balance, statement date, payment due date, minimum due, and payment tracking.
 - Cash accounts, mobile wallets, prepaid cards, savings pots, and manual investments.
@@ -37,7 +38,7 @@ Build a polished native iPhone personal-finance app with wallet, bank/SMS transa
 - Offline operation; manual exchange rates and metal prices when free reliable data is unavailable.
 
 ### Platform limitations and exclusions
-- Unrestricted background reading of the iPhone SMS inbox is not available to ordinary iOS apps. Do not claim automatic full-inbox access. Use iOS share/paste/import flows for user-selected messages; consider an Android version separately if full SMS inbox automation is essential.
+- The app itself cannot directly read the iPhone SMS inbox. Shortcuts is the user-authorized automation bridge: availability, trigger behavior, permissions, and whether a message automation can run without confirmation depend on iOS version and the user's Shortcuts configuration. Do not promise universal silent/background delivery. Include share/paste/manual fallback.
 - No direct bank-account API aggregation unless a genuinely free, supported provider is verified; default to manual accounts and user-shared SMS.
 - No storing card PINs, CVVs, full PANs, banking passwords, or OTPs. Detect and discard/redact sensitive authentication data from imported messages.
 - No paid subscription, paid API, paid cloud database, or paid notification provider.
@@ -71,13 +72,13 @@ Build a polished native iPhone personal-finance app with wallet, bank/SMS transa
 - Screens:
   1. Home / Wallet: net worth, spendable, savings, assets, owed, quick actions and recent activity.
   2. Accounts & Cards: bank accounts, debit cards, credit cards, cash, mobile wallets and prepaid cards.
-  3. Transactions: SMS-import inbox, parsed transaction review, categories, transfers, recurring items, search and monthly summaries.
+  3. Transactions: Shortcuts-captured SMS inbox, parsed transaction review, categories, transfers, recurring items, search and monthly summaries.
   4. Add Account: simple category tiles inspired by the supplied reference, with concise forms.
   5. Assets: unified cash/currency/gold/silver/investment list and holding detail/edit.
   6. Debts: loans, instalments, credit-card liabilities and payment due dates.
   7. Zakat: transparent combined calculation and warnings.
   8. Hawl calendar: upcoming anniversaries, Hijri/Gregorian dates and confirmation status.
-  9. Settings: bank message parsing rules, manual rates/prices, calendar-data status, reminder permission, privacy and backup/restore.
+  9. Settings: Shortcuts setup and bank message parsing rules, manual rates/prices, calendar-data status, reminder permission, privacy and backup/restore.
 - Date fields use native Gregorian date pickers. After selection, show the calculated Egyptian Hijri date immediately.
 
 ## Free operation and privacy
@@ -103,7 +104,8 @@ Build a polished native iPhone personal-finance app with wallet, bank/SMS transa
 
 ## Acceptance criteria
 - User can create/edit/delete bank accounts, cash, mobile wallets, debit and credit cards, savings, investments, loans and instalment records.
-- User can share or paste a bank SMS; supported formats are parsed into a review screen, and no transaction is posted without confirmation.
+- User can configure an iOS Shortcuts message automation to pass selected bank SMS messages into the app; supported formats are parsed into a review screen, and no transaction is posted without confirmation by default.
+- Manual share/paste remains available when an automation trigger or bank format is unsupported.
 - Duplicate SMS imports are detected; transfers between owned accounts do not inflate income or expenses.
 - Card numbers are masked and sensitive authentication data is never retained.
 - User can add/edit/delete cash, currency, gold and silver holdings.
