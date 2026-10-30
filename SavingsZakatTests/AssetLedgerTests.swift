@@ -140,6 +140,15 @@ final class AssetLedgerTests: XCTestCase {
         }
     }
 
+
+    func testNormalizesAssetCurrencyCodesToUppercase() throws {
+        var item = cash()
+        item.currency = "usd"
+        var ledger = AssetLedger()
+        try ledger.add(item, asOf: today)
+        XCTAssertEqual(ledger.holdings.first?.currency, "USD")
+    }
+
     private func cash() -> Holding {
         Holding(id: UUID(), kind: .cash, amount: 1_000, currency: "EGP", grams: nil, carat: nil,
                 acquiredDate: acquired, hawlStartDate: acquired, purpose: .investment)
