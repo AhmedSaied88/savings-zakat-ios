@@ -145,8 +145,10 @@ final class FinanceAppUITests: XCTestCase {
         category.typeText("Online shopping")
 
         app.buttons["Save"].tap()
-        XCTAssertTrue(app.staticTexts["marketplace"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Online shopping"].exists)
+        let savedRule = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "marketplace", "Online shopping")
+        ).firstMatch
+        XCTAssertTrue(savedRule.waitForExistence(timeout: 5), "Saved parser rule should expose its keyword and category")
     }
 
     func testBackupScreenRequiresPassphraseConfirmation() throws {
@@ -201,8 +203,8 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(scrollTo(hawlCalendar, in: app), "Hawl calendar link should be reachable by scrolling the Zakat list")
         hawlCalendar.tap()
         XCTAssertTrue(app.staticTexts["No Hawl dates"].waitForExistence(timeout: 5))
-        let scheduleButton = app.buttons["schedule-hawl-reminders"]
-        XCTAssertTrue(scheduleButton.exists)
+        let scheduleButton = app.descendants(matching: .any)["schedule-hawl-reminders"]
+        XCTAssertTrue(scheduleButton.waitForExistence(timeout: 3), "Reminder scheduling control should remain discoverable when disabled")
         XCTAssertFalse(scheduleButton.isEnabled, "Reminder scheduling should be disabled until an asset has a Hawl date")
         XCTAssertFalse(app.staticTexts["Notifications are not permitted."].exists)
     }
