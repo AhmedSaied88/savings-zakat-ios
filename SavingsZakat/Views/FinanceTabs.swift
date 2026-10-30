@@ -831,8 +831,10 @@ private struct HoldingEditorSheet: View {
                           "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
                           "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
         let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \\(hijri.hijriMonth)"
-        let confidence = hijri.status == .officiallyConfirmed ? "Confirmed" : "Estimated"
-        return "Egyptian Hijri equivalent: \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) · \\(confidence)"
+        if hijri.status == .officiallyConfirmed {
+            return "Egyptian Hijri date: \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) · Confirmed"
+        }
+        return "Hijri estimate: \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) · Not an official Egyptian date"
     }
 
     var body: some View {
