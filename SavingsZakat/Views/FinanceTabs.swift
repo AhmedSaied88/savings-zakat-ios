@@ -1318,3 +1318,86 @@ private struct ZakatCalculationContent: View {
         }
     }
 }
+
+
+private struct WalletSummaryContent: View {
+    let summary: MoneySummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Net worth · accounts and debts").font(.subheadline).foregroundStyle(.secondary)
+            Text(summary.netWorth, format: .currency(code: "EGP"))
+                .font(.largeTitle.bold()).monospacedDigit()
+                .accessibilityLabel("Net worth \\(summary.netWorth) Egyptian pounds")
+            HStack(spacing: 18) {
+                metric("Assets", summary.totalAssets, color: .blue)
+                metric("Debts", summary.totalLiabilities, color: .orange)
+            }
+            Text("This first summary excludes unvalued gold and silver holdings.")
+                .font(.caption).foregroundStyle(.secondary)
+            if summary.isProvisional {
+                Label("Some currencies need exchange rates", systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption).foregroundStyle(.orange)
+            }
+        }
+        .padding(.vertical, 8)
+        .listRowBackground(Color.blue.opacity(0.06))
+    }
+
+    private func metric(_ title: String, _ value: Decimal, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(value, format: .currency(code: "EGP"))
+                .font(.subheadline.bold()).foregroundStyle(color)
+        }
+    }
+}
+
+private struct WalletAccountsContent: View {
+    let accounts: [FinanceAccount]
+    let ledger: FinanceLedger
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if accounts.isEmpty {
+                ContentUnavailableView("No accounts yet", systemImage: "building.columns",
+                                       description: Text("Add a bank, cash or savings account from Accounts."))
+            } else {
+                ForEach(accounts) { account in
+                    WalletAccountRow(account: account, balance: (try? ledger.balance(for: account.id)) ?? 0)
+                }
+            }
+        }
+    }
+}
+
+private struct WalletAccountRow: View {
+    let account: FinanceAccount
+    let balance: Decimal
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon(for: account.kind))
+                .font(.title3).foregroundStyle(.blue).frame(width: 34, height: 34)
+                .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(account.name).font(.headline)
+                Text(account.institution ?? account.kind.rawValue.capitalized)
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(balance, format: .currency(code: account.currency))
+                .font(.subheadline.weight(.semibold)).monospacedDigit()
+        }
+        .padding(.vertical, 3)
+    }
+
+    private func icon(for kind: FinanceAccountKind) -> String {
+        switch kind {
+        case .bank: return "building.columns"
+        case .cash: return "banknote"
+        case .savings: return "safe"
+        case .wallet: return "wallet.bifold"
+        }
+    }
+}
