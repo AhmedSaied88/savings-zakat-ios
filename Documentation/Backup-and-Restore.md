@@ -14,7 +14,7 @@ Use a unique passphrase of at least 12 characters. The app does not store it. Ke
 
 ## Export
 
-1. Open the **Settings** tab and choose **Backup & Restore**.
+1. Open **Wallet → Settings & backup → Backup & Restore**.
 2. Enter a strong passphrase and confirm it.
 3. Tap **Export encrypted backup**.
 4. Save the resulting JSON file in Files or another location you control.
@@ -22,7 +22,7 @@ Use a unique passphrase of at least 12 characters. The app does not store it. Ke
 
 ## Restore
 
-1. Open **Settings → Backup & Restore**.
+1. Open **Wallet → Settings & backup → Backup & Restore**.
 2. Enter the passphrase used when the backup was created.
 3. Choose the encrypted backup file.
 4. Wait for authentication and schema validation.
