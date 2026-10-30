@@ -1,5 +1,11 @@
 import SwiftUI
 
+private struct HawlCalendarEntry: Identifiable {
+    let holding: Holding
+    let due: HawlDueDate
+    var id: UUID { holding.id }
+}
+
 struct HawlCalendarView: View {
     let holdings: [Holding]
 
@@ -8,10 +14,10 @@ struct HawlCalendarView: View {
 
     private let scheduler = HawlNotificationScheduler()
 
-    private var upcoming: [(holding: Holding, due: HawlDueDate)] {
+    private var upcoming: [HawlCalendarEntry] {
         holdings.compactMap { holding in
             guard let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) else { return nil }
-            return (holding, due)
+            return HawlCalendarEntry(holding: holding, due: due)
         }
         .sorted { $0.due.date < $1.due.date }
     }
@@ -23,7 +29,7 @@ struct HawlCalendarView: View {
                     ContentUnavailableView("No Hawl dates", systemImage: "calendar",
                                            description: Text("Add an asset with a Gregorian Hawl start date to see its anniversary here."))
                 }
-                ForEach(upcoming, id: \.holding.id) { item in
+                ForEach(upcoming) { item in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(assetName(item.holding)).font(.headline)
                         Text("Hawl start: \(item.holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
