@@ -113,6 +113,31 @@ final class MessageImportCoordinatorTests: XCTestCase {
         XCTAssertEqual(try second.loadMessages().first?.state, .needsReview)
     }
 
+
+    func testRejectsMissingSenderIdentifier() throws {
+        let url = temporaryQueueURL()
+        let coordinator = MessageImportCoordinator(queueURL: url)
+
+        XCTAssertThrowsError(try coordinator.importMessage(
+            text: "Purchase EGP 10.00",
+            senderIdentifier: "   ",
+            receivedAt: Date(timeIntervalSince1970: 1_760_000_000)
+        ))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    }
+
+    func testRejectsOversizedPayload() throws {
+        let url = temporaryQueueURL()
+        let coordinator = MessageImportCoordinator(queueURL: url)
+
+        XCTAssertThrowsError(try coordinator.importMessage(
+            text: String(repeating: "A", count: 10_001),
+            senderIdentifier: "BANK",
+            receivedAt: Date(timeIntervalSince1970: 1_760_000_000)
+        ))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    }
+
     private func temporaryQueueURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("MessageImportTests-\(UUID().uuidString).json")
