@@ -67,7 +67,8 @@ enum BankMessageParser {
 
     private static func extractAmountAndCurrency(from text: String) -> (Decimal, String)? {
         let range = NSRange(text.startIndex..<text.endIndex, in: text)
-        guard let match = amountRegex.firstMatch(in: text, range: range) else { return nil }
+        guard amountRegex.numberOfMatches(in: text, range: range) == 1,
+              let match = amountRegex.firstMatch(in: text, range: range) else { return nil }
 
         let currencyRange = match.range(at: 1).location != NSNotFound ? match.range(at: 1) : match.range(at: 4)
         let amountRange = match.range(at: 2).location != NSNotFound ? match.range(at: 2) : match.range(at: 3)
@@ -91,7 +92,7 @@ enum BankMessageParser {
         let fee = containsAny(["fee", "commission", "charge", "رسوم", "عمولة"], in: lower)
         let atm = containsAny(["atm", "cash withdrawal", "withdrawal", "سحب نقدي", "سحب"], in: lower)
         let purchase = containsAny(["purchase", "pos", "spent", "شراء", "نقطة بيع"], in: lower)
-        let income = containsAny(["received", "credited", "deposit", "salary", "تم إيداع", "تم استلام", "إضافة"], in: lower)
+        let income = containsAny(["received", "credited", "credit", "deposit", "salary", "تم إيداع", "تم استلام", "إضافة"], in: lower)
         let debit = containsAny(["debit", "deducted", "خصم"], in: lower)
 
         if transfer {
