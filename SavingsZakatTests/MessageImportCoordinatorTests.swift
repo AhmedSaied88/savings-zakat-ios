@@ -184,6 +184,27 @@ final class MessageImportCoordinatorTests: XCTestCase {
         XCTAssertEqual(try MessageImportCoordinator(queueURL: url).loadMessages().count, 1)
     }
 
+
+    func testCoordinatorUsesCustomParserRulesAndKeepsMessageInReview() throws {
+        let coordinator = MessageImportCoordinator(queueURL: temporaryQueueURL())
+        let rule = BankMessageRule(keyword: "marketplace", direction: .expense, category: "Online shopping")
+
+        let outcome = try coordinator.importMessage(
+            text: "Marketplace EGP 90.00",
+            senderIdentifier: "BANK",
+            receivedAt: Date(timeIntervalSince1970: 1_760_000_000),
+            customRules: [rule]
+        )
+
+        guard case .imported(let message) = outcome else {
+            return XCTFail("Expected custom-rule message to import")
+        }
+        XCTAssertEqual(message.category, "Online shopping")
+        XCTAssertEqual(message.direction, .expense)
+        XCTAssertEqual(message.confidence, .medium)
+        XCTAssertEqual(message.state, .needsReview)
+    }
+
     private func temporaryQueueURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("MessageImportTests-\(UUID().uuidString).json")
