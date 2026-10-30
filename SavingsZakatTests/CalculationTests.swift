@@ -145,6 +145,55 @@ final class ZakatCalculatorTests: XCTestCase {
         XCTAssertTrue(HawlCalculator.hasCompletedHawl(startDate: start, asOf: due))
     }
 
+
+    func testUnmaturedAssetRemainsValuedButIsExcludedFromEligibleWealth() throws {
+        let recent = Holding(
+            id: UUID(), kind: .cash, amount: 200, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2026-07-15"), hawlStartDate: date("2026-07-15"),
+            purpose: .investment
+        )
+        let result = ZakatCalculator.calculate(
+            holdings: [recent], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: [:], silverPricePerGramEGP: nil,
+            nisabEGP: 100, asOf: date("2026-10-29")
+        )
+        XCTAssertEqual(result.totalValuedWealthEGP, 200, accuracy: 0.01)
+        XCTAssertEqual(result.maturedEligibleWealthEGP, 0, accuracy: 0.01)
+        XCTAssertNotNil(result.nextDueDate)
+        XCTAssertEqual(result.breakdown.first?.status, .waitingForHawl)
+    }
+
+    func testInvalidNisabProducesProvisionalZeroCalculation() {
+        let cash = Holding(
+            id: UUID(), kind: .cash, amount: 5_000, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment
+        )
+        let result = ZakatCalculator.calculate(
+            holdings: [cash], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: [:], silverPricePerGramEGP: nil,
+            nisabEGP: 0, asOf: date("2026-10-29")
+        )
+        XCTAssertTrue(result.isProvisional)
+        XCTAssertEqual(result.zakatDueEGP, 0, accuracy: 0.01)
+        XCTAssertTrue(result.warnings.contains { $0.contains("valid nisab") })
+    }
+
+    func testUnsupportedGoldCaratIsNotValued() {
+        let gold = Holding(
+            id: UUID(), kind: .gold, amount: 5, currency: nil, grams: 5, carat: 20,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment
+        )
+        let result = ZakatCalculator.calculate(
+            holdings: [gold], ratesToEGP: [:],
+            goldPricesPerGramEGP: ["20": 5_000], silverPricePerGramEGP: nil,
+            nisabEGP: 1, asOf: date("2026-10-29")
+        )
+        XCTAssertEqual(result.totalValuedWealthEGP, 0, accuracy: 0.01)
+        XCTAssertTrue(result.warnings.contains { $0.contains("Unsupported gold carat") })
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
