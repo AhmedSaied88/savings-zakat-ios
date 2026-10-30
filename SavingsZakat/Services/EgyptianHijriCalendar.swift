@@ -27,6 +27,7 @@ struct EgyptianHijriDate: Equatable {
     var hijriDay: Int
     var status: HijriDateStatus
     var sourceURL: String?
+    var calculationNote: String? = nil
 }
 
 struct EgyptianHijriCalendar {
