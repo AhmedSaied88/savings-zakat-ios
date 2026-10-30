@@ -23,8 +23,10 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 
 ## Data safety
 - Store only card brand/label and last four digits. Never store full PAN, CVV, PIN, OTP, bank password or authentication secret.
-- Imported SMS is redacted before persistence. Parsed transactions remain pending until the user confirms them.
-- Deduplicate repeated Shortcut deliveries using a stable fingerprint of redacted message content, sender and received timestamp window.
+- Imported SMS is redacted before persistence. `ImportedMessage` stores only the redacted excerpt, parsed fields, confidence, fingerprint and a default `needsReview` state; the original message is not retained.
+- `SensitiveTextRedactor` removes OTP, CVV, CVC, PIN, password/passcode tokens and long card-like digit sequences before any source excerpt is retained.
+- `BankMessageParser` recognizes a deliberately limited set of English/Arabic transaction keywords and amount/currency formats. It rejects unknown, conflicting and multi-amount messages rather than guessing.
+- The parser's SHA-256 fingerprint is based on normalized redacted message content. The later Shortcut coordinator must combine it with sender identity and a received-time window for practical duplicate detection; identical content alone is not a sufficient real-world deduplication key.
 - A transfer is one ledger transaction with a source and destination account. It decreases one account and increases the other by the same amount; it is never counted as income or expense.
 - Local backup is user-initiated and encrypted. No automatic upload or cloud dependency.
 
