@@ -4,7 +4,7 @@ import Combine
 struct ContentView: View {
     @State private var snapshot = FinanceSnapshot()
     @State private var importedMessages: [ImportedMessage] = []
-    @State private var rates: [String: Double] = ["EGP": 1]
+    @State private var preferences = FinancePreferences()
     @State private var storageError: String?
 
     private let store: FinanceStore
@@ -24,7 +24,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            WalletDashboardTab(snapshot: snapshot, rates: rates)
+            WalletDashboardTab(snapshot: snapshot, rates: preferences.exchangeRatesToEGP)
                 .tabItem { Label("Wallet", systemImage: "wallet.bifold") }
             AccountsCardsTab(snapshot: $snapshot, onSave: save)
                 .tabItem { Label("Accounts", systemImage: "building.columns") }
@@ -39,7 +39,7 @@ struct ContentView: View {
                 .tabItem { Label("Activity", systemImage: "arrow.left.arrow.right") }
             DebtsTab(snapshot: $snapshot, onSave: save)
                 .tabItem { Label("Debts", systemImage: "doc.text") }
-            AssetsZakatTab(snapshot: $snapshot, rates: $rates, onSave: save)
+            AssetsZakatTab(snapshot: $snapshot, preferences: $preferences, onSave: save)
                 .tabItem { Label("Zakat", systemImage: "sparkles") }
             BackupSettingsView(snapshot: $snapshot, onRestore: restoreSnapshot)
                 .tabItem { Label("Settings", systemImage: "gearshape") }
@@ -68,6 +68,7 @@ struct ContentView: View {
         }
         do {
             snapshot = try store.load()
+            preferences = snapshot.preferences ?? FinancePreferences()
             storageError = nil
             loadImportedMessages()
         } catch {
@@ -85,8 +86,11 @@ struct ContentView: View {
 
     private func restoreSnapshot(_ restored: FinanceSnapshot) -> Bool {
         do {
-            try store.save(restored)
-            snapshot = restored
+            var snapshotToRestore = restored
+            snapshotToRestore.preferences = restored.preferences ?? FinancePreferences()
+            try store.save(snapshotToRestore)
+            snapshot = snapshotToRestore
+            preferences = snapshotToRestore.preferences ?? FinancePreferences()
             storageError = nil
             return true
         } catch {
@@ -97,6 +101,7 @@ struct ContentView: View {
 
     private func saveConfirmedTransaction() -> Bool {
         do {
+            snapshot.preferences = preferences
             try store.save(snapshot)
             storageError = nil
             return true
@@ -117,6 +122,7 @@ struct ContentView: View {
 
     private func save() {
         do {
+            snapshot.preferences = preferences
             try store.save(snapshot)
             storageError = nil
         } catch {
