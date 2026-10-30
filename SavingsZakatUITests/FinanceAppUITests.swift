@@ -113,8 +113,13 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(dueDateToggle.isHittable,
                       "The due-date toggle should be hittable after scrolling")
         if dueDateToggle.value as? String != "1" {
-            dueDateToggle.tap()
+            // The switch is trailing-aligned in the Form row. Tap its control area,
+            // not the center of the full accessibility frame (which can hit the label).
+            dueDateToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
+        let dueDateEnabled = NSPredicate(format: "value == %@", "1")
+        expectation(for: dueDateEnabled, evaluatedWith: dueDateToggle)
+        waitForExpectations(timeout: 3)
         XCTAssertEqual(dueDateToggle.value as? String, "1",
                        "The payment due-date option should be enabled before saving")
         let dueDatePicker = app.descendants(matching: .any)["card-payment-due-date-picker"]
@@ -248,8 +253,9 @@ final class FinanceAppUITests: XCTestCase {
     func testZakatCalculationControlsRemainVisible() throws {
         let app = launchCleanApp()
         app.tabBars.buttons["Zakat"].tap()
-        let calculateButton = app.buttons["Calculate Zakat"]
-        XCTAssertTrue(scrollTo(calculateButton, in: app), "Zakat calculation should be reachable by scrolling the Zakat list")
+        let calculateButton = app.buttons["zakat-calculate-button"]
+        XCTAssertTrue(scrollTo(calculateButton, in: app, maxSwipes: 20),
+                      "Zakat calculation should be reachable by scrolling the Zakat list")
         XCTAssertTrue(calculateButton.isHittable)
         let nisabLabel = app.staticTexts["Nisab (EGP)"]
         XCTAssertTrue(nisabLabel.exists && nisabLabel.isHittable)
