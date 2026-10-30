@@ -205,10 +205,10 @@ struct AccountsCardsTab: View {
                 CardEntrySheet(
                     card: card,
                     accounts: snapshot.accounts,
-                    currentOutstandingBalance: (try? ledger.creditCardOutstanding(for: card.id)) ?? 0,
                     currencyLocked: snapshot.transactions.contains {
                         $0.cardID == card.id || $0.destinationCardID == card.id
-                    }
+                    },
+                    currentOutstandingBalance: (try? ledger.creditCardOutstanding(for: card.id)) ?? 0
                 ) { updated in
                     guard let index = snapshot.cards.firstIndex(where: { $0.id == updated.id }) else { return }
                     let hasActivity = snapshot.transactions.contains {
@@ -792,6 +792,19 @@ struct DebtsTab: View {
 
     private var ledger: FinanceLedger { FinanceLedger(snapshot: snapshot) }
 
+    private func linkableCards(for liability: FinanceLiability) -> [FinanceCard] {
+        snapshot.cards.filter { card in
+            guard card.kind == .credit else { return false }
+            let currency = card.currency
+                ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency
+                ?? "EGP"
+            let alreadyLinked = snapshot.liabilities.contains {
+                $0.linkedCardID == card.id && $0.id != liability.id
+            }
+            return currency == liability.currency && !alreadyLinked
+        }
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -855,9 +868,7 @@ struct DebtsTab: View {
                                       systemImage: "calendar").font(.caption).foregroundStyle(.orange)
                             }
                             if item.kind == .creditCard {
-                                let linkableCards = snapshot.cards.filter { card in
-                                    card.kind == .credit && (card.currency ?? snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP") == item.currency && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id && $0.id != item.id })
-                                }
+                                let linkableCards = linkableCards(for: item)
                                 if !linkableCards.isEmpty {
                                     Menu("Link to credit card") {
                                         ForEach(linkableCards) { card in
@@ -1444,8 +1455,11 @@ private struct TransactionEditorSheet: View {
     }
     private var eligiblePaymentCards: [FinanceCard] {
         guard let selectedAccount else { return [] }
-        return creditCards.filter {
-            (card.currency ?? accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP") == selectedAccount.currency
+        return creditCards.filter { candidate in
+            let currency = candidate.currency
+                ?? accounts.first(where: { $0.id == candidate.linkedAccountID })?.currency
+                ?? "EGP"
+            return currency == selectedAccount.currency
         }
     }
 
