@@ -35,25 +35,28 @@ struct WalletDashboardTab: View {
                     .listRowBackground(Color.blue.opacity(0.06))
                 }
                 Section {
-                    if snapshot.accounts.isEmpty {
-                        ContentUnavailableView("No accounts yet", systemImage: "building.columns",
-                                               description: Text("Add a bank, cash or savings account from Accounts."))
-                    }
-                    ForEach(snapshot.accounts) { account in
-                        HStack(spacing: 12) {
-                            Image(systemName: icon(for: account.kind))
-                                .font(.title3).foregroundStyle(.blue).frame(width: 34, height: 34)
-                                .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(account.name).font(.headline)
-                                Text(account.institution ?? account.kind.rawValue.capitalized)
-                                    .font(.caption).foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 12) {
+                        if snapshot.accounts.isEmpty {
+                            ContentUnavailableView("No accounts yet", systemImage: "building.columns",
+                                                   description: Text("Add a bank, cash or savings account from Accounts."))
+                        } else {
+                            ForEach(snapshot.accounts) { account in
+                                HStack(spacing: 12) {
+                                    Image(systemName: icon(for: account.kind))
+                                        .font(.title3).foregroundStyle(.blue).frame(width: 34, height: 34)
+                                        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(account.name).font(.headline)
+                                        Text(account.institution ?? account.kind.rawValue.capitalized)
+                                            .font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    Text((try? ledger.balance(for: account.id)) ?? 0, format: .currency(code: account.currency))
+                                        .font(.subheadline.weight(.semibold)).monospacedDigit()
+                                }
+                                .padding(.vertical, 3)
                             }
-                            Spacer()
-                            Text((try? ledger.balance(for: account.id)) ?? 0, format: .currency(code: account.currency))
-                                .font(.subheadline.weight(.semibold)).monospacedDigit()
                         }
-                        .padding(.vertical, 3)
                     }
                 } header: {
                     Text("Accounts")
@@ -806,54 +809,15 @@ struct AssetsZakatTab: View {
 
     private var zakatCalculationSection: some View {
         Section("Combined Zakat calculation") {
-            HStack {
-                Text("Nisab (EGP)")
-                TextField("Nisab", value: Binding(
-                    get: { preferences.nisabEGP },
-                    set: { preferences.nisabEGP = $0; onSave() }
-                ), format: .number)
-                    .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-            }
-            Toggle("Include personal-use gold", isOn: Binding(
-                get: { preferences.includePersonalGold },
-                set: { preferences.includePersonalGold = $0; onSave() }
-            ))
-            Button("Calculate Zakat") { calculate() }.buttonStyle(.borderedProminent)
-            if let result {
-                valueRow("Total valued assets", result.totalValuedWealthEGP)
-                valueRow("Completed-Hawl wealth", result.maturedEligibleWealthEGP)
-                valueRow("Excluded personal-use gold", result.excludedWealthEGP)
-                valueRow("Estimated Zakat", result.zakatDueEGP)
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Asset calculation breakdown").font(.headline)
-                    ForEach(result.breakdown) { item in
-                        VStack(alignment: .leading, spacing: 3) {
-                            HStack {
-                                Text(item.label).font(.subheadline.weight(.semibold))
-                                Spacer()
-                                if let value = item.valueEGP {
-                                    Text(value, format: .currency(code: "EGP"))
-                                        .font(.subheadline.monospacedDigit())
-                                } else {
-                                    Text("Not valued").font(.caption).foregroundStyle(.orange)
-                                }
-                            }
-                            Text(breakdownTitle(item.status) + " · " + item.explanation)
-                                .font(.caption).foregroundStyle(item.status == .included ? .secondary : .orange)
-                        }
-                    }
-                }
-                if result.isProvisional {
-                    ForEach(result.warnings, id: \.self) {
-                        Text($0).font(.footnote).foregroundStyle(.orange)
-                    }
-                }
-            }
-            Text("Confirm all prices, rates and religious calculation settings before relying on the result.")
-                .font(.footnote).foregroundStyle(.secondary)
+            ZakatCalculationContent(
+                preferences: $preferences,
+                onSave: onSave,
+                result: result,
+                onCalculate: calculate,
+                breakdownTitle: breakdownTitle
+            )
         }
     }
-
 
     private var valuationRatesSection: some View {
         Section("Manual valuation rates") {
