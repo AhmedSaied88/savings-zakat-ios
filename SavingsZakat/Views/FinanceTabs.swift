@@ -1401,3 +1401,48 @@ private struct WalletAccountRow: View {
         }
     }
 }
+
+
+private struct WalletRecentActivityContent: View {
+    let transactions: [FinanceTransaction]
+    let accountName: (UUID?) -> String?
+
+    var body: some View {
+        Group {
+            if transactions.isEmpty {
+                Text("Your confirmed income, expenses and transfers will appear here.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(transactions.sorted { $0.date > $1.date }.prefix(5)) { transaction in
+                    TransactionRow(transaction: transaction, accountName: accountName(transaction.accountID))
+                }
+            }
+        }
+    }
+}
+
+private struct WalletQuickOverviewContent: View {
+    @Binding var snapshot: FinanceSnapshot
+    @Binding var preferences: FinancePreferences
+    let onSave: () -> Void
+    let onRestore: (FinanceSnapshot) -> Bool
+
+    var body: some View {
+        Group {
+            Label("\\(snapshot.cards.count) cards", systemImage: "creditcard")
+            Label("\\(snapshot.liabilities.count) loans and debts", systemImage: "doc.text")
+            Label("\\(snapshot.holdings.count) savings and Zakat assets", systemImage: "sparkles")
+            NavigationLink {
+                FinanceInsightsView(snapshot: snapshot)
+            } label: {
+                Label("Monthly income & expenses", systemImage: "chart.bar")
+            }
+            NavigationLink {
+                SettingsHomeView(snapshot: $snapshot, preferences: $preferences,
+                                 onSave: onSave, onRestore: onRestore)
+            } label: {
+                Label("Settings & backup", systemImage: "gearshape")
+            }
+        }
+    }
+}
