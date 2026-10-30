@@ -16,8 +16,10 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Writes use Foundation's atomic file-write option. A missing file currently loads as an empty snapshot.
 - The current store has no sequential schema migration pipeline yet. Future schema changes must add explicit, ordered migrations (N → N+1), preserve IDs and financial values, and write the migrated snapshot atomically only after successful decoding and validation.
 - A failed decode, failed validation, or unsupported future version must not replace the original file. Recovery must be explicit and must never silently reset financial records.
-- The earlier prototype used `@AppStorage("testHoldingsJSON")`; automatic import of that legacy key has not been implemented or verified. Do not claim legacy records are migrated. Before a release that could contain user-created records, add a tested one-time import path or clearly require a user-controlled export/import.
-- Persistence tests currently cover snapshot save/load, first-launch empty state and last-four-only card data. Corrupt-file recovery, schema migration and write-failure behavior remain follow-up coverage.
+- The earlier prototype used `@AppStorage("testHoldingsJSON")`. When no new snapshot file exists, the store now decodes that key as the legacy `[Holding]` JSON array, writes a version-1 `FinanceSnapshot` atomically, and removes the legacy key only after the write succeeds.
+- Malformed legacy JSON is surfaced as a decoding error and retained in `UserDefaults`. If the new snapshot cannot be written, the legacy value is also retained. An existing snapshot takes precedence; the store does not merge a leftover legacy key into an existing snapshot.
+- Current persistence tests cover save/reload, first launch, legacy migration, malformed legacy preservation, failed-migration preservation, corrupt-file preservation, unsupported schema rejection, atomic snapshot replacement, and record create/update/delete persistence.
+- Sequential migrations between future schema versions (N → N+1) remain unimplemented. Do not change the schema version until an explicit migration path and tests are added.
 
 ## Data safety
 - Store only card brand/label and last four digits. Never store full PAN, CVV, PIN, OTP, bank password or authentication secret.
