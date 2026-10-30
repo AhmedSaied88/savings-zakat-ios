@@ -782,7 +782,7 @@ struct AssetsZakatTab: View {
     private func estimatedValueEGP(for holding: Holding) -> Double? {
         switch holding.kind {
         case .cash, .investment:
-            guard let currency = holding.currency, let rate = preferences.exchangeRatesToEGP[currency], rate.isFinite, rate > 0 else { return nil }
+            guard let currency = holding.currency?.uppercased(), let rate = preferences.exchangeRatesToEGP[currency], rate.isFinite, rate > 0 else { return nil }
             return holding.amount * rate
         case .gold:
             guard let price = preferences.goldPricesPerGramEGP[String(holding.carat ?? 24)], price.isFinite, price > 0 else { return nil }
