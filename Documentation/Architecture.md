@@ -54,6 +54,7 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Credit-card purchases are expense transactions linked to a credit card, with no bank-account source. They increase the card's outstanding balance and appear in expense reporting, but do not reduce a bank account.
 - Credit-card repayments are transfer transactions from a bank/cash account to a credit card. They reduce the paying account and the card balance by the same amount; they are not recorded as expenses.
 - Only credit cards can receive purchases or repayments. Card and paying-account currencies must match. Repayments larger than the current outstanding balance are rejected; fees, interest and overpayments must be entered separately or addressed in a later workflow.
+- Imported bank-message review can confirm a message as an account transaction, a credit-card purchase or a card repayment. The selected card/account is validated against the message currency, and the imported-message ID remains the duplicate-protection key.
 - A credit card can carry an opening outstanding balance. An existing manually recorded credit-card liability can be linked to the card and is then treated as its opening balance, not added a second time. Standalone liabilities remain separate. Existing liabilities should be linked when they represent a card already tracked in Accounts.
 - Card records retain only last four digits and optional limit/due details; no full PAN, CVV, PIN or OTP is stored. Cards with linked transactions or opening liabilities cannot be deleted.
 
