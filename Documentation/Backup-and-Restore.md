@@ -4,7 +4,7 @@
 
 The native app exports a versioned JSON envelope containing encrypted finance snapshot bytes. The envelope includes the backup version, KDF identifier and parameters, random salt, AES-GCM nonce, ciphertext and authentication tag. Account names, balances, transactions and other finance records are not exposed as plaintext in the envelope.
 
-- Passphrase key derivation: PBKDF2-HMAC-SHA256, 210,000 iterations, 16-byte random salt.
+- Passphrase key derivation: PBKDF2-HMAC-SHA256, 600,000 iterations, 16-byte random salt.
 - Encryption and authentication: AES-256-GCM with a 12-byte nonce and authenticated context.
 - The archive validates its version, KDF parameters, nonce/tag/salt sizes and finance schema before accepting data.
 - A modified archive or incorrect passphrase fails authentication.
