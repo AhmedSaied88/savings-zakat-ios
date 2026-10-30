@@ -48,6 +48,7 @@ struct HawlCalendarView: View {
                     }
                 }
                 .disabled(isUpdatingReminders || holdings.isEmpty)
+                .accessibilityIdentifier("schedule-hawl-reminders")
                 Button(role: .destructive) {
                     Task {
                         await scheduler.cancelAll()
