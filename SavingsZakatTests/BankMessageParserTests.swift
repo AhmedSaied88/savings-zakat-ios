@@ -91,6 +91,29 @@ final class BankMessageParserTests: XCTestCase {
         XCTAssertEqual(first.redactedSourceText, second.redactedSourceText)
     }
 
+    func testImportedMessagePersistsOnlyRedactedSourceAndNeedsReviewState() throws {
+        let parsed = try XCTUnwrap(BankMessageParser.parse("Purchase EGP 90.00 OTP 123456"))
+        let imported = ImportedMessage(
+            senderIdentifier: "BANK",
+            receivedAt: Date(timeIntervalSince1970: 1_760_000_000),
+            parsed: parsed
+        )
+        let data = try JSONEncoder().encode(imported)
+        let json = String(decoding: data, as: UTF8.self)
+        let decoded = try JSONDecoder().decode(ImportedMessage.self, from: data)
+
+        XCTAssertEqual(imported.state, .needsReview)
+        XCTAssertFalse(json.contains("123456"))
+        XCTAssertTrue(json.contains("[REDACTED]"))
+        XCTAssertEqual(decoded, imported)
+    }
+
+    func testRedactsAlphanumericBankingPassword() {
+        let safe = SensitiveTextRedactor.redact("Banking password: A1B2C3D4")
+        XCTAssertFalse(safe.contains("A1B2C3D4"))
+        XCTAssertTrue(safe.contains("[REDACTED]"))
+    }
+
     func testAmbiguousMessageIsNotGuessed() {
         XCTAssertNil(BankMessageParser.parse("You received and debited EGP 100.00"))
         XCTAssertNil(BankMessageParser.parse("Your account has an update."))
