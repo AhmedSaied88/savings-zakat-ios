@@ -3,7 +3,7 @@ import XCTest
 
 final class FinancePreferencesTests: XCTestCase {
     func testEGPExchangeRateIsAlwaysNormalizedToOne() {
-        let preferences = FinancePreferences(exchangeRatesToEGP: ["EGP": 0, "USD": 50])
+        let preferences = FinancePreferences(exchangeRatesToEGP: ["EGP": 0, "usd": 50])
         XCTAssertEqual(preferences.exchangeRatesToEGP["EGP"], 1)
         XCTAssertEqual(preferences.exchangeRatesToEGP["USD"], 50)
     }
