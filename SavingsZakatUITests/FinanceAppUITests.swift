@@ -107,11 +107,11 @@ final class FinanceAppUITests: XCTestCase {
 
         app.buttons["Save"].tap()
 
-        let paymentDue = app.staticTexts["card-payment-due-UI Test Credit"]
-        XCTAssertTrue(scrollTo(paymentDue, in: app),
-                      "The saved credit card should display its payment due date")
-        XCTAssertTrue(paymentDue.label.contains("Payment due"),
-                      "The saved credit card due-date label should be accessible")
+        let creditCardRow = app.buttons["card-row-UI Test Credit"]
+        XCTAssertTrue(scrollTo(creditCardRow, in: app),
+                      "The saved credit card row should be accessible")
+        XCTAssertTrue(creditCardRow.label.contains("Payment due"),
+                      "The saved credit card row should expose its payment due date")
     }
 
 
