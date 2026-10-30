@@ -92,8 +92,10 @@ struct FinanceTransaction: Identifiable, Codable, Equatable {
     var category: String?
     var notes: String?
     var importedMessageID: UUID?
+    var recurringRuleID: UUID?
+    var recurrenceOccurrenceDate: Date?
 
-    init(id: UUID = UUID(), title: String, amount: Decimal, currency: String, direction: TransactionDirection, date: Date, accountID: UUID? = nil, destinationAccountID: UUID? = nil, source: TransactionSource = .manual, reviewStatus: TransactionReviewStatus = .confirmed, category: String? = nil, notes: String? = nil, importedMessageID: UUID? = nil) {
+    init(id: UUID = UUID(), title: String, amount: Decimal, currency: String, direction: TransactionDirection, date: Date, accountID: UUID? = nil, destinationAccountID: UUID? = nil, source: TransactionSource = .manual, reviewStatus: TransactionReviewStatus = .confirmed, category: String? = nil, notes: String? = nil, importedMessageID: UUID? = nil, recurringRuleID: UUID? = nil, recurrenceOccurrenceDate: Date? = nil) {
         self.id = id
         self.title = title
         self.amount = amount
@@ -107,6 +109,8 @@ struct FinanceTransaction: Identifiable, Codable, Equatable {
         self.category = category
         self.notes = notes
         self.importedMessageID = importedMessageID
+        self.recurringRuleID = recurringRuleID
+        self.recurrenceOccurrenceDate = recurrenceOccurrenceDate
     }
 }
 
@@ -135,6 +139,57 @@ struct FinanceLiability: Identifiable, Codable, Equatable {
     }
 }
 
+
+enum RecurringFrequency: String, Codable, CaseIterable {
+    case daily
+    case weekly
+    case monthly
+    case yearly
+
+    func nextDate(after date: Date, interval: Int, calendar: Calendar) -> Date? {
+        guard interval > 0 else { return nil }
+        let component: Calendar.Component
+        switch self {
+        case .daily: component = .day
+        case .weekly: component = .weekOfYear
+        case .monthly: component = .month
+        case .yearly: component = .year
+        }
+        return calendar.date(byAdding: component, value: interval, to: date)
+    }
+}
+
+/// A user-defined income or expense template. It does not affect balances until an occurrence is generated.
+struct RecurringTransaction: Identifiable, Codable, Equatable {
+    var id: UUID
+    var title: String
+    var amount: Decimal
+    var currency: String
+    var direction: TransactionDirection
+    var accountID: UUID
+    var category: String?
+    var frequency: RecurringFrequency
+    var interval: Int
+    var nextDueDate: Date
+    var isEnabled: Bool
+
+    init(id: UUID = UUID(), title: String, amount: Decimal, currency: String, direction: TransactionDirection,
+         accountID: UUID, category: String? = nil, frequency: RecurringFrequency, interval: Int = 1,
+         nextDueDate: Date, isEnabled: Bool = true) {
+        self.id = id
+        self.title = title
+        self.amount = amount
+        self.currency = currency.uppercased()
+        self.direction = direction
+        self.accountID = accountID
+        self.category = category
+        self.frequency = frequency
+        self.interval = interval
+        self.nextDueDate = nextDueDate
+        self.isEnabled = isEnabled
+    }
+}
+
 struct FinanceSnapshot: Codable, Equatable {
     static let currentSchemaVersion = 1
 
@@ -145,8 +200,10 @@ struct FinanceSnapshot: Codable, Equatable {
     var liabilities: [FinanceLiability]
     var holdings: [Holding]
     var preferences: FinancePreferences?
+    /// Optional for backward-compatible decoding of existing version-1 snapshots.
+    var recurringTransactions: [RecurringTransaction]?
 
-    init(schemaVersion: Int = currentSchemaVersion, accounts: [FinanceAccount] = [], cards: [FinanceCard] = [], transactions: [FinanceTransaction] = [], liabilities: [FinanceLiability] = [], holdings: [Holding] = [], preferences: FinancePreferences? = nil) {
+    init(schemaVersion: Int = currentSchemaVersion, accounts: [FinanceAccount] = [], cards: [FinanceCard] = [], transactions: [FinanceTransaction] = [], liabilities: [FinanceLiability] = [], holdings: [Holding] = [], preferences: FinancePreferences? = nil, recurringTransactions: [RecurringTransaction]? = nil) {
         self.schemaVersion = schemaVersion
         self.accounts = accounts
         self.cards = cards
@@ -154,5 +211,6 @@ struct FinanceSnapshot: Codable, Equatable {
         self.liabilities = liabilities
         self.holdings = holdings
         self.preferences = preferences
+        self.recurringTransactions = recurringTransactions
     }
 }
