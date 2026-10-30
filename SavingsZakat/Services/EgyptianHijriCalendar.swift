@@ -76,7 +76,14 @@ struct EgyptianHijriCalendar {
         estimate.timeZone = timeZone
         let components = estimate.dateComponents([.day, .month, .year], from: target)
         guard let day = components.day, let month = components.month, let year = components.year else { return nil }
-        return EgyptianHijriDate(hijriYear: year, hijriMonth: month, hijriDay: day, status: .estimated, sourceURL: nil)
+        return EgyptianHijriDate(
+            hijriYear: year,
+            hijriMonth: month,
+            hijriDay: day,
+            status: .estimated,
+            sourceURL: nil,
+            calculationNote: "Foundation Islamic-civil arithmetic fallback; not an official Egyptian announcement or an Egypt-specific astronomical visibility calculation."
+        )
     }
     /// Returns the same Hijri month/day in the following year only when both
     /// official month boundaries are present in the source-backed dataset.
