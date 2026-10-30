@@ -11,7 +11,7 @@ Latest confirmed full Xcode test run for the ledger work:
 - Commit: `f91e86e287da0da6a0f7acbd4ab7f7abb02872cc`
 - Workflow run: [Native iOS build and tests #41020025055](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41020025055)
 - Result: **33 XCTest tests passed, 0 failures** on macOS 15 / Xcode 16.4 / iPhone 16 simulator.
-- All subsequent changes after the ledger baseline—including UI, SMS import, assets, Egyptian date seed, Hawl/Zakat, reminders, backup, preferences and insights—are not yet Xcode-verified: recent GitHub Actions jobs failed before a runner was assigned (runner ID 0, no steps executed). The parser/redactor logic separately passed 15 targeted checks in a local Swift 6.2.1 harness.
+- All subsequent changes after the ledger baseline—including UI, SMS import, assets, Egyptian date seed, Hawl/Zakat, reminders, backup, preferences and insights—are not yet Xcode-verified: recent GitHub Actions jobs failed before a runner was assigned (runner ID 0, no steps executed). An earlier parser/redactor baseline passed 15 targeted checks in a local Swift 6.2.1 harness; subsequent custom-rule and alphanumeric-secret redaction changes have not been re-run locally.
 
 ## Repository layout
 
