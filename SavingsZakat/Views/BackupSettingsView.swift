@@ -37,8 +37,7 @@ struct BackupSettingsView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        NavigationStack {
-            Form {
+        Form {
                 Section("Encrypted local backup") {
                     SecureField("Backup passphrase", text: $passphrase)
                         .textContentType(.newPassword)
@@ -126,8 +125,6 @@ struct BackupSettingsView: View {
                 Button("OK", role: .cancel) { errorMessage = nil }
             } message: {
                 Text(errorMessage ?? "An unknown backup error occurred.")
-            }
-        }
     }
 
     private func createBackup() {
