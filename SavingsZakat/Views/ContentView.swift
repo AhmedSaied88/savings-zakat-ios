@@ -1,11 +1,14 @@
 import SwiftUI
+import Combine
 
 struct ContentView: View {
     @State private var snapshot = FinanceSnapshot()
+    @State private var importedMessages: [ImportedMessage] = []
     @State private var rates: [String: Double] = ["EGP": 1]
     @State private var storageError: String?
 
     private let store: FinanceStore
+    private let importCoordinator: MessageImportCoordinator
     private let uiTestDirectory: URL?
 
     init() {
@@ -15,6 +18,8 @@ struct ContentView: View {
             : nil
         self.uiTestDirectory = directory
         self.store = FinanceStore(directoryURL: directory)
+        let queueURL = directory?.appendingPathComponent("imported-messages.json")
+        self.importCoordinator = MessageImportCoordinator(queueURL: queueURL)
     }
 
     var body: some View {
@@ -23,7 +28,13 @@ struct ContentView: View {
                 .tabItem { Label("Wallet", systemImage: "wallet.bifold") }
             AccountsCardsTab(snapshot: $snapshot, onSave: save)
                 .tabItem { Label("Accounts", systemImage: "building.columns") }
-            TransactionsTab(snapshot: $snapshot, onSave: save)
+            TransactionsTab(
+                snapshot: $snapshot,
+                importedMessages: $importedMessages,
+                onSave: save,
+                onSaveImports: saveImportedMessages,
+                onRefreshImports: loadImportedMessages
+            )
                 .tabItem { Label("Activity", systemImage: "arrow.left.arrow.right") }
             DebtsTab(snapshot: $snapshot, onSave: save)
                 .tabItem { Label("Debts", systemImage: "doc.text") }
@@ -32,6 +43,9 @@ struct ContentView: View {
         }
         .tint(Color(red: 0.12, green: 0.34, blue: 0.78))
         .task { load() }
+        .onReceive(NotificationCenter.default.publisher(for: .bankMessageImportDidChange)) { _ in
+            loadImportedMessages()
+        }
         .alert("Local storage", isPresented: Binding(
             get: { storageError != nil },
             set: { if !$0 { storageError = nil } }
@@ -46,13 +60,32 @@ struct ContentView: View {
         if ProcessInfo.processInfo.arguments.contains("-ui-testing-reset"),
            let uiTestDirectory {
             try? FileManager.default.removeItem(at: uiTestDirectory.appendingPathComponent("finance-data.json"))
+            try? FileManager.default.removeItem(at: uiTestDirectory.appendingPathComponent("imported-messages.json"))
             UserDefaults.standard.removeObject(forKey: "testHoldingsJSON")
         }
         do {
             snapshot = try store.load()
             storageError = nil
+            loadImportedMessages()
         } catch {
             storageError = "Could not read saved finance data: \(error.localizedDescription)"
+        }
+    }
+
+    private func loadImportedMessages() {
+        do {
+            importedMessages = try importCoordinator.loadMessages()
+        } catch {
+            storageError = "Could not read imported bank messages: \(error.localizedDescription)"
+        }
+    }
+
+    private func saveImportedMessages() {
+        do {
+            try importCoordinator.saveMessages(importedMessages)
+            storageError = nil
+        } catch {
+            storageError = "Could not save imported bank messages: \(error.localizedDescription)"
         }
     }
 
