@@ -1332,7 +1332,7 @@ private struct ZakatCalculationContent: View {
         HStack {
             Text(title)
             Spacer()
-            Text("EGP \\(value, format: .number.precision(.fractionLength(2)))").bold()
+            Text("EGP \(value, format: .number.precision(.fractionLength(2)))").bold()
         }
     }
 
