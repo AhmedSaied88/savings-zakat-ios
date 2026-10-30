@@ -552,11 +552,7 @@ struct DebtsTab: View {
 struct AssetsZakatTab: View {
     @Binding var snapshot: FinanceSnapshot
     let onSave: () -> Void
-    @Binding var rates: [String: Double]
-    @State private var goldPrices: [String: Double] = [:]
-    @State private var silverPrice: Double?
-    @State private var nisab = 0.0
-    @State private var includePersonalGold = false
+    @Binding var preferences: FinancePreferences
     @State private var result: ZakatResult?
     @State private var editingHolding: Holding?
     @State private var editorKind: HoldingKind = .cash
@@ -639,10 +635,16 @@ struct AssetsZakatTab: View {
                 Section("Combined Zakat calculation") {
                     HStack {
                         Text("Nisab (EGP)")
-                        TextField("Nisab", value: $nisab, format: .number)
+                        TextField("Nisab", value: Binding(
+                            get: { preferences.nisabEGP },
+                            set: { preferences.nisabEGP = $0; onSave() }
+                        ), format: .number)
                             .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                     }
-                    Toggle("Include personal-use gold", isOn: $includePersonalGold)
+                    Toggle("Include personal-use gold", isOn: Binding(
+                        get: { preferences.includePersonalGold },
+                        set: { preferences.includePersonalGold = $0; onSave() }
+                    ))
                     Button("Calculate Zakat") { calculate() }.buttonStyle(.borderedProminent)
                     if let result {
                         valueRow("Total valued assets", result.totalValuedWealthEGP)
@@ -681,20 +683,29 @@ struct AssetsZakatTab: View {
                     ForEach(["SAR", "USD", "AED", "EUR", "GBP"], id: \.self) { code in
                         HStack {
                             Text("1 \(code) = EGP")
-                            TextField("Rate", value: Binding(get: { rates[code] ?? 0 }, set: { rates[code] = $0 }),
+                            TextField("Rate", value: Binding(
+                                get: { preferences.exchangeRatesToEGP[code] ?? 0 },
+                                set: { preferences.exchangeRatesToEGP[code] = $0; onSave() }
+                            ),
                                       format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                         }
                     }
                     ForEach(["24", "22", "21", "18", "14"], id: \.self) { carat in
                         HStack {
                             Text("Gold \(carat)K / gram")
-                            TextField("EGP", value: Binding(get: { goldPrices[carat] ?? 0 }, set: { goldPrices[carat] = $0 }),
+                            TextField("EGP", value: Binding(
+                                get: { preferences.goldPricesPerGramEGP[carat] ?? 0 },
+                                set: { preferences.goldPricesPerGramEGP[carat] = $0; onSave() }
+                            ),
                                       format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                         }
                     }
                     HStack {
                         Text("Silver / gram (999)")
-                        TextField("EGP", value: Binding(get: { silverPrice ?? 0 }, set: { silverPrice = $0 }),
+                        TextField("EGP", value: Binding(
+                            get: { preferences.silverPricePerGramEGP ?? 0 },
+                            set: { preferences.silverPricePerGramEGP = $0; onSave() }
+                        ),
                                   format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                     }
                 }
@@ -711,7 +722,7 @@ struct AssetsZakatTab: View {
                         }
                         snapshot.holdings = ledger.holdings
                         assetError = nil
-                        if holding != nil {
+                        if editingHolding != nil {
                             Task { await HawlNotificationScheduler().cancel(holdingID: updated.id) }
                         }
                         onSave()
@@ -758,13 +769,13 @@ struct AssetsZakatTab: View {
     private func estimatedValueEGP(for holding: Holding) -> Double? {
         switch holding.kind {
         case .cash, .investment:
-            guard let currency = holding.currency, let rate = rates[currency], rate.isFinite, rate > 0 else { return nil }
+            guard let currency = holding.currency, let rate = preferences.exchangeRatesToEGP[currency], rate.isFinite, rate > 0 else { return nil }
             return holding.amount * rate
         case .gold:
-            guard let price = goldPrices[String(holding.carat ?? 24)], price.isFinite, price > 0 else { return nil }
+            guard let price = preferences.goldPricesPerGramEGP[String(holding.carat ?? 24)], price.isFinite, price > 0 else { return nil }
             return (holding.grams ?? holding.amount) * price
         case .silver:
-            guard let price = silverPrice, price.isFinite, price > 0 else { return nil }
+            guard let price = preferences.silverPricePerGramEGP, price.isFinite, price > 0 else { return nil }
             return (holding.grams ?? holding.amount) * price * Double(holding.purity ?? 999) / 1000
         }
     }
@@ -837,10 +848,10 @@ struct AssetsZakatTab: View {
     }
 
     private func calculate() {
-        result = ZakatCalculator.calculate(holdings: snapshot.holdings, ratesToEGP: rates,
-                                           goldPricesPerGramEGP: goldPrices, silverPricePerGramEGP: silverPrice,
-                                           nisabEGP: nisab, asOf: Date(),
-                                           includePersonalGold: includePersonalGold)
+        result = ZakatCalculator.calculate(holdings: snapshot.holdings, ratesToEGP: preferences.exchangeRatesToEGP,
+                                           goldPricesPerGramEGP: preferences.goldPricesPerGramEGP, silverPricePerGramEGP: preferences.silverPricePerGramEGP,
+                                           nisabEGP: preferences.nisabEGP, asOf: Date(),
+                                           includePersonalGold: preferences.includePersonalGold)
     }
 }
 
