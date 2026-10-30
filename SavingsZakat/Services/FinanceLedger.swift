@@ -14,6 +14,7 @@ struct FinanceLedger {
         case invalidAmount
         case accountNotFound(UUID)
         case duplicateTransaction(UUID)
+        case duplicateImportedMessage(UUID)
         case transactionNeedsReview
         case invalidTransactionAccounts
         case currencyMismatch
@@ -60,6 +61,10 @@ struct FinanceLedger {
         guard transaction.reviewStatus == .confirmed else { throw LedgerError.transactionNeedsReview }
         guard !snapshot.transactions.contains(where: { $0.id == transaction.id }) else {
             throw LedgerError.duplicateTransaction(transaction.id)
+        }
+        if let importedMessageID = transaction.importedMessageID,
+           snapshot.transactions.contains(where: { $0.importedMessageID == importedMessageID }) {
+            throw LedgerError.duplicateImportedMessage(importedMessageID)
         }
 
         guard let sourceID = transaction.accountID,
