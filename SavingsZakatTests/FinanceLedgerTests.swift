@@ -152,6 +152,55 @@ final class FinanceLedgerTests: XCTestCase {
         XCTAssertEqual(try ledger.balance(for: account.id), 75)
     }
 
+
+    func testRecurringMonthlyExpenseGeneratesDueOccurrencesAndAdvancesSchedule() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let account = FinanceAccount(name: "Main", kind: .bank, currency: "EGP", openingBalance: 1_000)
+        let start = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1))!
+        let asOf = calendar.date(from: DateComponents(year: 2026, month: 3, day: 1))!
+        let rule = RecurringTransaction(title: "Rent", amount: 200, currency: "EGP", direction: .expense,
+                                        accountID: account.id, category: "Housing", frequency: .monthly,
+                                        nextDueDate: start)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [account]))
+        try ledger.addRecurringRule(rule)
+
+        XCTAssertEqual(try ledger.generateDueRecurringTransactions(asOf: asOf, calendar: calendar), 3)
+        XCTAssertEqual(try ledger.balance(for: account.id), 400)
+        XCTAssertEqual(ledger.snapshot.transactions.filter { $0.recurringRuleID == rule.id }.count, 3)
+        XCTAssertEqual(ledger.snapshot.recurringTransactions?.first?.nextDueDate,
+                       calendar.date(from: DateComponents(year: 2026, month: 4, day: 1)))
+    }
+
+    func testRecurringGenerationIsIdempotentWhenOccurrenceAlreadyExists() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let account = FinanceAccount(name: "Main", kind: .bank, currency: "EGP", openingBalance: 500)
+        let due = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1))!
+        let rule = RecurringTransaction(title: "Internet", amount: 50, currency: "EGP", direction: .expense,
+                                        accountID: account.id, frequency: .monthly, nextDueDate: due)
+        let existing = FinanceTransaction(title: "Internet", amount: 50, currency: "EGP", direction: .expense,
+                                          date: due, accountID: account.id, recurringRuleID: rule.id,
+                                          recurrenceOccurrenceDate: due)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [account], transactions: [existing],
+                                                              recurringTransactions: [rule]))
+
+        XCTAssertEqual(try ledger.generateDueRecurringTransactions(asOf: due, calendar: calendar), 0)
+        XCTAssertEqual(try ledger.balance(for: account.id), 450)
+        XCTAssertEqual(ledger.snapshot.transactions.count, 1)
+    }
+
+    func testRecurringRuleRejectsTransfersAndCurrencyMismatch() throws {
+        let account = FinanceAccount(name: "Main", kind: .bank, currency: "EGP")
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [account]))
+        let transfer = RecurringTransaction(title: "Transfer", amount: 10, currency: "EGP", direction: .transfer,
+                                             accountID: account.id, frequency: .weekly, nextDueDate: today)
+        XCTAssertThrowsError(try ledger.addRecurringRule(transfer))
+        let mismatch = RecurringTransaction(title: "USD", amount: 10, currency: "USD", direction: .expense,
+                                             accountID: account.id, frequency: .weekly, nextDueDate: today)
+        XCTAssertThrowsError(try ledger.addRecurringRule(mismatch))
+    }
+
     private func transaction(_ title: String, _ amount: Decimal, _ direction: TransactionDirection, account: UUID) -> FinanceTransaction {
         FinanceTransaction(title: title, amount: amount, currency: "EGP", direction: direction,
                            date: today, accountID: account)
