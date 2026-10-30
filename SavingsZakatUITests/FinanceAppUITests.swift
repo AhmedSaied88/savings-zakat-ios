@@ -107,9 +107,11 @@ final class FinanceAppUITests: XCTestCase {
 
         app.buttons["Save"].tap()
 
-        XCTAssertTrue(app.staticTexts.matching(
+        let paymentDue = app.staticTexts.matching(
             NSPredicate(format: "label CONTAINS %@", "Payment due")
-        ).firstMatch.waitForExistence(timeout: 5))
+        ).firstMatch
+        XCTAssertTrue(scrollTo(paymentDue, in: app),
+                      "The saved credit card should display its payment due date")
     }
 
 
