@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct WalletDashboardTab: View {
-    let snapshot: FinanceSnapshot
-    let rates: [String: Double]
+    @Binding var snapshot: FinanceSnapshot
+    @Binding var preferences: FinancePreferences
+    let onSave: () -> Void
+    let onRestore: (FinanceSnapshot) -> Bool
 
     private var ledger: FinanceLedger { FinanceLedger(snapshot: snapshot) }
     private var summary: MoneySummary {
-        ledger.netWorth(in: "EGP", rates: rates.mapValues { Decimal($0) })
+        ledger.netWorth(in: "EGP", rates: preferences.exchangeRatesToEGP.mapValues { Decimal($0) })
     }
 
     var body: some View {
@@ -71,6 +73,12 @@ struct WalletDashboardTab: View {
                         FinanceInsightsView(snapshot: snapshot)
                     } label: {
                         Label("Monthly income & expenses", systemImage: "chart.bar")
+                    }
+                    NavigationLink {
+                        SettingsHomeView(snapshot: $snapshot, preferences: $preferences,
+                                         onSave: onSave, onRestore: onRestore)
+                    } label: {
+                        Label("Settings & backup", systemImage: "gearshape")
                     }
                 }
             }
