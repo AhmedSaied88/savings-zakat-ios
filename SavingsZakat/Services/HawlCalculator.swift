@@ -10,7 +10,7 @@ enum HawlCalculator {
     /// Without a complete official month interval, the anniversary is explicitly estimated.
     static func dueDateResult(
         startDate: Date,
-        egyptianCalendar: EgyptianHijriCalendar = EgyptianHijriCalendar(officialMonthStarts: []),
+        egyptianCalendar: EgyptianHijriCalendar = EgyptianCalendarRepository.makeCalendar(),
         fallbackTimeZone: TimeZone = TimeZone(identifier: "Africa/Cairo") ?? .current
     ) -> HawlDueDate? {
         egyptianCalendar.anniversary(of: startDate)
