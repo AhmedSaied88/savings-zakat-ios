@@ -34,7 +34,23 @@
 - [ ] Confirm an own-account transfer requires a distinct same-currency destination account.
 - [ ] Confirm an external bank transfer is entered as an expense/income, not as an own-account transfer.
 
-## 3. Hawl reminders
+## 3. Credit-card purchases and repayments
+
+- [ ] Create a fictional credit card in EGP with a fictional opening outstanding balance of EGP 200 and link it to a fictional EGP settlement account.
+- [ ] Record a fictional EGP 100 credit-card purchase; confirm the bank account balance does not change and the card outstanding balance becomes EGP 300.
+- [ ] Record a fictional EGP 50 repayment from the linked bank account; confirm the bank balance decreases by EGP 50 and the card outstanding balance becomes EGP 250.
+- [ ] Confirm the repayment appears as a transfer and is not counted as a second expense in monthly insights.
+- [ ] Confirm the card purchase is counted as an expense.
+- [ ] Add an existing standalone credit-card liability and link it to the matching card; confirm the amount is included once, not twice.
+- [ ] Confirm a repayment larger than the outstanding balance is rejected without changing either balance.
+- [ ] Confirm a card purchase or repayment in a different currency is rejected.
+- [ ] Confirm a card with purchases, repayments or outstanding opening debt cannot be deleted.
+- [ ] Import a fictional credit-card purchase message and confirm it as a card purchase; verify the bank balance is unchanged.
+- [ ] Import a fictional card repayment message and confirm it as a repayment; verify both balances update once.
+- [ ] Re-import the same fixture; confirm the imported-message ID prevents a duplicate ledger entry.
+- [ ] Confirm no full card number, CVV, PIN or OTP is retained in the app or backup.
+
+## 4. Hawl reminders
 
 - [ ] Enable local notification permission when prompted from **Hawl calendar**.
 - [ ] Schedule reminders for a fictional asset with a future Hawl date.
@@ -47,7 +63,7 @@
 - [ ] Confirm estimated Hawl dates remain labelled Estimated in the app.
 - [ ] If more than 64 reminders are planned, confirm the app reports the omitted count.
 
-## 4. Zakat and offline valuation
+## 5. Zakat and offline valuation
 
 - [ ] Enter fictional cash, gold, silver and manual-investment holdings.
 - [ ] Enter fictional exchange rates, gold/silver prices and Nisab.
@@ -59,7 +75,7 @@
 - [ ] Confirm the displayed per-asset breakdown explains included, waiting, excluded, missing and invalid items.
 - [ ] Confirm the app continues to calculate while offline.
 
-## 5. Encrypted backup and restore
+## 6. Encrypted backup and restore
 
 - [ ] Export a backup using a new passphrase of at least 12 characters.
 - [ ] Save the file to Files; confirm the app does not upload it.
@@ -71,7 +87,7 @@
 - [ ] Confirm pending bank-message review items and notification schedules are not included and must be recreated.
 - [ ] Keep the passphrase separate from the backup file; do not send it to support or ChatGPT.
 
-## 6. Accessibility and appearance
+## 7. Accessibility and appearance
 
 - [ ] Test Light Mode and Dark Mode on device.
 - [ ] Test the largest practical Dynamic Type setting.
@@ -81,7 +97,7 @@
 - [ ] Verify color is not the only way Confirmed/Estimated/Warning states are communicated.
 - [ ] Verify charts have meaningful accessibility summaries or an equivalent readable data list.
 
-## 7. Sign-off
+## 8. Sign-off
 
 - [ ] Record all failures with fictional data only.
 - [ ] Record iOS version and device model for each Shortcuts/notification limitation.
