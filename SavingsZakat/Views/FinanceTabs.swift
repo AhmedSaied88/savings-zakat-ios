@@ -67,6 +67,11 @@ struct WalletDashboardTab: View {
                     Label("\(snapshot.cards.count) cards", systemImage: "creditcard")
                     Label("\(snapshot.liabilities.count) loans and debts", systemImage: "doc.text")
                     Label("\(snapshot.holdings.count) savings and Zakat assets", systemImage: "sparkles")
+                    NavigationLink {
+                        FinanceInsightsView(snapshot: snapshot)
+                    } label: {
+                        Label("Monthly income & expenses", systemImage: "chart.bar")
+                    }
                 }
             }
             .navigationTitle("Wallet")
