@@ -91,8 +91,9 @@ struct FinanceTransaction: Identifiable, Codable, Equatable {
     var reviewStatus: TransactionReviewStatus
     var category: String?
     var notes: String?
+    var importedMessageID: UUID?
 
-    init(id: UUID = UUID(), title: String, amount: Decimal, currency: String, direction: TransactionDirection, date: Date, accountID: UUID? = nil, destinationAccountID: UUID? = nil, source: TransactionSource = .manual, reviewStatus: TransactionReviewStatus = .confirmed, category: String? = nil, notes: String? = nil) {
+    init(id: UUID = UUID(), title: String, amount: Decimal, currency: String, direction: TransactionDirection, date: Date, accountID: UUID? = nil, destinationAccountID: UUID? = nil, source: TransactionSource = .manual, reviewStatus: TransactionReviewStatus = .confirmed, category: String? = nil, notes: String? = nil, importedMessageID: UUID? = nil) {
         self.id = id
         self.title = title
         self.amount = amount
@@ -105,6 +106,7 @@ struct FinanceTransaction: Identifiable, Codable, Equatable {
         self.reviewStatus = reviewStatus
         self.category = category
         self.notes = notes
+        self.importedMessageID = importedMessageID
     }
 }
 
