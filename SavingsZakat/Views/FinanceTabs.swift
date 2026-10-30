@@ -677,7 +677,7 @@ struct DebtsTab: View {
                             Text(total, format: .currency(code: currency)).font(.headline).monospacedDigit()
                         }
                     }
-                    Text("A linked opening card balance is included in its card total above, not counted again here.")
+                    Text("If a standalone credit-card liability is the opening balance of a listed card, link it to that card to prevent double counting.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Loans, instalments and standalone debts") {
@@ -698,6 +698,26 @@ struct DebtsTab: View {
                             if let due = item.dueDate {
                                 Label("Due \(due.formatted(date: .abbreviated, time: .omitted))",
                                       systemImage: "calendar").font(.caption).foregroundStyle(.orange)
+                            }
+                            if item.kind == .creditCard {
+                                let linkableCards = snapshot.cards.filter { card in
+                                    card.kind == .credit && !snapshot.liabilities.contains(where: { $0.linkedCardID == card.id && $0.id != item.id })
+                                }
+                                if !linkableCards.isEmpty {
+                                    Menu("Link to credit card") {
+                                        ForEach(linkableCards) { card in
+                                            Button(card.name) {
+                                                var updatedLedger = FinanceLedger(snapshot: snapshot)
+                                                do {
+                                                    try updatedLedger.linkOpeningLiability(item.id, to: card.id)
+                                                    snapshot = updatedLedger.snapshot
+                                                    onSave()
+                                                } catch { }
+                                            }
+                                        }
+                                    }
+                                    .font(.caption)
+                                }
                             }
                         }.padding(.vertical, 4)
                     }
