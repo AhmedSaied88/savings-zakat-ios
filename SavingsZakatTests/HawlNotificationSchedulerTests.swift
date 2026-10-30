@@ -68,8 +68,10 @@ final class HawlNotificationSchedulerTests: XCTestCase {
         let original = notification(holdingID: holdingID, offset: 7, fireDate: date("2026-02-01"))
         let corrected = notification(holdingID: holdingID, offset: 7, fireDate: date("2026-02-03"))
 
-        XCTAssertEqual(try await scheduler.schedule([original]), .scheduled(count: 1))
-        XCTAssertEqual(try await scheduler.schedule([corrected]), .scheduled(count: 1))
+        let firstResult = try await scheduler.schedule([original])
+        let correctedResult = try await scheduler.schedule([corrected])
+        XCTAssertEqual(firstResult, .scheduled(count: 1))
+        XCTAssertEqual(correctedResult, .scheduled(count: 1))
 
         XCTAssertEqual(center.notifications.count, 1)
         XCTAssertEqual(center.notifications[corrected.identifier]?.fireDate, corrected.fireDate)
