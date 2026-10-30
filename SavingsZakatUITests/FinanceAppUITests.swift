@@ -225,6 +225,38 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Total valued assets"].waitForExistence(timeout: 5))
     }
 
+
+    func testCanCreateRecurringExpenseRule() throws {
+        let app = launchCleanApp()
+        app.tabBars.buttons["Accounts"].tap()
+        app.buttons["Add account"].tap()
+        let accountName = app.textFields["Account name"]
+        XCTAssertTrue(accountName.waitForExistence(timeout: 3))
+        accountName.tap()
+        accountName.typeText("Recurring Test Account")
+        app.buttons["Save"].tap()
+
+        app.tabBars.buttons["Activity"].tap()
+        let addRecurring = app.buttons["add-recurring-transaction"]
+        XCTAssertTrue(scrollTo(addRecurring, in: app), "Recurring transaction action should be reachable")
+        addRecurring.tap()
+
+        let description = app.textFields["Description"]
+        XCTAssertTrue(description.waitForExistence(timeout: 3))
+        description.tap()
+        description.typeText("Monthly rent")
+        let amount = app.textFields["Amount"]
+        amount.tap()
+        amount.typeText("2500")
+
+        app.buttons["Save"].tap()
+        let savedRule = app.staticTexts["Monthly rent"]
+        XCTAssertTrue(savedRule.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "monthly")
+        ).firstMatch.exists)
+    }
+
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
         let scrollView = app.scrollViews.firstMatch
