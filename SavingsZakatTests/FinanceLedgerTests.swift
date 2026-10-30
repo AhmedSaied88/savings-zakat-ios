@@ -207,7 +207,7 @@ final class FinanceLedgerTests: XCTestCase {
         let card = FinanceCard(name: "Credit", kind: .credit, linkedAccountID: bank.id, currency: "EGP")
         var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [bank], cards: [card]))
         let purchase = FinanceTransaction(title: "Groceries", amount: 450, currency: "EGP", direction: .expense,
-                                          date: today, cardID: card.id, category: "Card purchase")
+                                          date: today, category: "Card purchase", cardID: card.id)
         try ledger.post(purchase)
 
         XCTAssertEqual(try ledger.balance(for: bank.id), 5_000)
@@ -224,8 +224,8 @@ final class FinanceLedgerTests: XCTestCase {
                                openingOutstandingBalance: 1_000)
         var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [bank], cards: [card]))
         let payment = FinanceTransaction(title: "Card payment", amount: 400, currency: "EGP", direction: .transfer,
-                                         date: today, accountID: bank.id, destinationCardID: card.id,
-                                         category: "Card repayment")
+                                         date: today, accountID: bank.id, category: "Card repayment",
+                                         destinationCardID: card.id)
         try ledger.post(payment)
 
         XCTAssertEqual(try ledger.balance(for: bank.id), 4_600)
