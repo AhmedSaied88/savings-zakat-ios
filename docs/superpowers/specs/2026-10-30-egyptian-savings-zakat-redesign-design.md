@@ -4,7 +4,7 @@ Date: 2026-10-30
 Status: Proposed for user approval; no implementation authorized by this document alone.
 
 ## Intent
-Build a simple, polished native iPhone app for recording Zakat-relevant holdings, tracking each holding's Hawl, and calculating combined eligible wealth. The app is isolated from the existing Savings & Zakat PWA and must remain free to operate without subscriptions or paid APIs.
+Build a polished native iPhone personal-finance app with wallet, bank/SMS transaction capture, debit and credit cards, cash, savings, mobile wallets, assets, debts, instalments, and an integrated Egyptian-calendar Savings & Zakat module. The app is isolated from the existing Savings & Zakat PWA and must remain free to operate without subscriptions or paid APIs.
 
 ## Confirmed user decisions
 - Separate native iOS project/repository: `AhmedSaied88/savings-zakat-ios`.
@@ -17,6 +17,14 @@ Build a simple, polished native iPhone app for recording Zakat-relevant holdings
 
 ## Scope
 ### Included
+- Wallet overview with net worth, spendable balance, savings, assets, and amounts owed.
+- Bank accounts with manually maintained balances and transaction history.
+- Bank SMS transaction capture by user sharing/pasting message text into the app; parse supported bank formats into proposed transactions, show the original message and parsed fields, and require user confirmation before posting. Provide editable bank-format rules and manual fallback.
+- Debit cards linked to bank accounts, with masked card details only; never store PIN, CVV, full card number, or online-banking credentials.
+- Credit cards with issuer/name, masked last four digits, credit limit, current balance, statement date, payment due date, minimum due, and payment tracking.
+- Cash accounts, mobile wallets, prepaid cards, savings pots, and manual investments.
+- Loans, instalments/Buy Now Pay Later, and other liabilities with outstanding balance, due dates, and payment history.
+- Transaction categorization, transfers between owned accounts, income/expense tracking, search and filters, and monthly summaries.
 - Cash and foreign-currency holdings.
 - Gold lots (weight, carat, purpose).
 - Silver holdings (weight/purity).
@@ -28,9 +36,11 @@ Build a simple, polished native iPhone app for recording Zakat-relevant holdings
 - Local durable storage and export/import backup.
 - Offline operation; manual exchange rates and metal prices when free reliable data is unavailable.
 
-### Excluded from this release
-- Bank SMS reading or automatic bank-account aggregation.
-- Credit cards, loans, instalments, money circles, recurring expenses, budgets, or general expense tracking.
+### Platform limitations and exclusions
+- Unrestricted background reading of the iPhone SMS inbox is not available to ordinary iOS apps. Do not claim automatic full-inbox access. Use iOS share/paste/import flows for user-selected messages; consider an Android version separately if full SMS inbox automation is essential.
+- No direct bank-account API aggregation unless a genuinely free, supported provider is verified; default to manual accounts and user-shared SMS.
+- No storing card PINs, CVVs, full PANs, banking passwords, or OTPs. Detect and discard/redact sensitive authentication data from imported messages.
+- No paid subscription, paid API, paid cloud database, or paid notification provider.
 - Paid APIs, subscriptions, paid cloud database, or paid notification provider.
 - Sync with or migration from the existing PWA.
 - Automatic claims that an estimated lunar date is an official Egyptian date.
@@ -59,20 +69,25 @@ Build a simple, polished native iPhone app for recording Zakat-relevant holdings
 - Palette from Design 3: clean white and pale-blue backgrounds, royal-blue primary actions, restrained violet secondary accents, gold asset accents, semantic status colors.
 - Avoid dense card stacks; use clear hierarchy, compact rows, readable totals, and generous touch targets.
 - Screens:
-  1. Home / overview: eligible wealth, Nisab status, asset breakdown, upcoming Hawl, quick add actions.
-  2. Assets: unified searchable/filterable list and holding detail/edit.
-  3. Add holding: choose Cash, Currency, Gold, or Silver; concise type-specific form.
-  4. Zakat: transparent combined calculation and warnings.
-  5. Hawl calendar: upcoming anniversaries, Hijri/Gregorian dates and confirmation status.
-  6. Settings: manual rates/prices, calendar-data status, reminder permission, backup/restore.
+  1. Home / Wallet: net worth, spendable, savings, assets, owed, quick actions and recent activity.
+  2. Accounts & Cards: bank accounts, debit cards, credit cards, cash, mobile wallets and prepaid cards.
+  3. Transactions: SMS-import inbox, parsed transaction review, categories, transfers, recurring items, search and monthly summaries.
+  4. Add Account: simple category tiles inspired by the supplied reference, with concise forms.
+  5. Assets: unified cash/currency/gold/silver/investment list and holding detail/edit.
+  6. Debts: loans, instalments, credit-card liabilities and payment due dates.
+  7. Zakat: transparent combined calculation and warnings.
+  8. Hawl calendar: upcoming anniversaries, Hijri/Gregorian dates and confirmation status.
+  9. Settings: bank message parsing rules, manual rates/prices, calendar-data status, reminder permission, privacy and backup/restore.
 - Date fields use native Gregorian date pickers. After selection, show the calculated Egyptian Hijri date immediately.
 
 ## Free operation and privacy
-- All calculations, storage, date conversion, and reminders run on device.
+- All calculations, storage, date conversion, SMS parsing, and reminders run on device.
 - No account registration, paid API, subscription, or required cloud backend.
 - Local notifications only; delivery depends on iOS permission and device settings.
 - Backup/restore is user-controlled local file export/import.
 - Never upload financial records without separate explicit consent.
+- Imported SMS content is processed locally; redact OTPs, PINs, CVVs and other authentication secrets immediately. Store only the confirmed transaction fields and a minimal redacted source excerpt if the user opts in.
+- Use masked card references only. No payment processing or bank credential collection.
 
 ## Approaches considered
 1. **Egyptian official-date hybrid (selected):** locally bundled official Egyptian month-start records where verified; Egypt-calibrated astronomical estimates for uncovered dates; clear status labels and manual correction. Best balance of Egyptian relevance, offline operation and honesty about uncertainty.
@@ -87,6 +102,10 @@ Build a simple, polished native iPhone app for recording Zakat-relevant holdings
 - Native iPhone installation with Xcode and a free Apple account may be possible for testing, but App Store distribution requires Apple's paid developer membership; no paid distribution is included.
 
 ## Acceptance criteria
+- User can create/edit/delete bank accounts, cash, mobile wallets, debit and credit cards, savings, investments, loans and instalment records.
+- User can share or paste a bank SMS; supported formats are parsed into a review screen, and no transaction is posted without confirmation.
+- Duplicate SMS imports are detected; transfers between owned accounts do not inflate income or expenses.
+- Card numbers are masked and sensitive authentication data is never retained.
 - User can add/edit/delete cash, currency, gold and silver holdings.
 - Every date is entered in Gregorian format and an Egyptian Hijri equivalent appears immediately.
 - Every Hijri result is labelled Officially confirmed or Estimated with no false certainty.
