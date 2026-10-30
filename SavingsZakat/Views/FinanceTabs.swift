@@ -585,7 +585,7 @@ struct AssetsZakatTab: View {
                                 Text("Acquired: \(holding.acquiredDate.formatted(date: .abbreviated, time: .omitted)) · Hawl starts: \(holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
                                     .font(.caption).foregroundStyle(.secondary)
                                 if let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
-                                    let days = Calendar(identifier: .gregorian).dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: due.date)).day ?? 0
+                                    let days = cairoDayDifference(from: Date(), to: due.date)
                                     HStack(spacing: 6) {
                                         Text((due.status == .officiallyConfirmed ? "Confirmed" : "Estimated") + " Hawl: " + due.date.formatted(date: .abbreviated, time: .omitted))
                                         Text(days >= 0 ? "· \(days) days left" : "· Matured")
@@ -735,6 +735,13 @@ struct AssetsZakatTab: View {
         }
     }
 
+    private func cairoDayDifference(from start: Date, to end: Date) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Africa/Cairo") ?? .current
+        return calendar.dateComponents([.day], from: calendar.startOfDay(for: start),
+                                       to: calendar.startOfDay(for: end)).day ?? 0
+    }
+
     private func hijriLabel(for date: Date, status: HijriDateStatus) -> String {
         guard let hijri = EgyptianCalendarRepository.makeCalendar().convert(date) else {
             return "Hijri equivalent unavailable"
@@ -743,8 +750,10 @@ struct AssetsZakatTab: View {
                           "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
                           "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
         let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \\(hijri.hijriMonth)"
-        let confidence = status == .officiallyConfirmed && hijri.status == .officiallyConfirmed ? "Confirmed" : "Estimated"
-        return "Hijri \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) (\\(confidence))"
+        if status == .officiallyConfirmed && hijri.status == .officiallyConfirmed {
+            return "Egyptian Hijri \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) (Confirmed)"
+        }
+        return "Hijri estimate \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) (not official Egyptian date)"
     }
 
     private func valueRow(_ title: String, _ value: Double) -> some View {
