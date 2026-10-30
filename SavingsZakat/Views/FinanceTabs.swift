@@ -981,6 +981,24 @@ struct AssetsZakatTab: View {
         }
     }
 
+    private func assetIcon(for kind: HoldingKind) -> String {
+        switch kind {
+        case .cash: return "banknote"
+        case .gold: return "circle.lefthalf.filled"
+        case .silver: return "circle"
+        case .investment: return "chart.line.uptrend.xyaxis"
+        }
+    }
+
+    private func assetColor(for kind: HoldingKind) -> Color {
+        switch kind {
+        case .cash: return FinancePalette.royalBlue
+        case .gold: return FinancePalette.gold
+        case .silver: return .secondary
+        case .investment: return FinancePalette.violet
+        }
+    }
+
     private func label(_ holding: Holding) -> String {
         switch holding.kind {
         case .cash:
@@ -1107,10 +1125,18 @@ struct AssetsZakatTab: View {
                     showHoldingEditor = true
                 } label: {
                     VStack(alignment: .leading, spacing: 5) {
-                        HStack {
+                        HStack(spacing: 10) {
+                            Image(systemName: assetIcon(for: holding.kind))
+                                .font(.headline)
+                                .foregroundStyle(assetColor(for: holding.kind))
+                                .frame(width: 34, height: 34)
+                                .background(assetColor(for: holding.kind).opacity(0.10),
+                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .accessibilityHidden(true)
                             Text(label(holding)).font(.headline).foregroundStyle(.primary)
                             Spacer()
                             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
                         }
                         Text("Acquired: \(holding.acquiredDate.formatted(date: .abbreviated, time: .omitted)) · Hawl starts: \(holding.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption).foregroundStyle(.secondary)
