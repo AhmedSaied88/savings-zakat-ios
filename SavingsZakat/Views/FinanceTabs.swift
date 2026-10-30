@@ -813,7 +813,7 @@ struct DebtsTab: View {
         snapshot.liabilities.filter { $0.linkedCardID == nil }
     }
 
-    private var body: some View {
+    var body: some View {
         NavigationStack {
             List {
                 creditCardSection
@@ -847,9 +847,9 @@ struct DebtsTab: View {
     }
 
     private var debtSummarySection: some View {
-        let groups = Dictionary(grouping: standaloneLiabilities, by: \\.currency)
+        let groups = Dictionary(grouping: standaloneLiabilities, by: \.currency)
         return Section("Other recorded debt by currency") {
-            ForEach(groups.keys.sorted(), id: \\.self) { currency in
+            ForEach(groups.keys.sorted(), id: \.self) { currency in
                 let total = groups[currency, default: []].reduce(Decimal.zero) { partial, item in
                     partial + item.outstandingAmount
                 }
@@ -1953,10 +1953,10 @@ private struct CreditCardDebtRow: View {
                 Spacer()
                 Text(outstanding, format: .currency(code: currency))
                     .font(.subheadline.bold()).monospacedDigit()
-                    .accessibilityIdentifier("debt-card-outstanding-\\(card.name)")
+                    .accessibilityIdentifier("debt-card-outstanding-\(card.name)")
             }
             if let due = card.paymentDueDate {
-                Label("Due \\(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
+                Label("Due \(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
                     .font(.caption).foregroundStyle(.orange)
             }
         }
@@ -1980,7 +1980,7 @@ private struct LiabilityDebtRow: View {
             }
             .font(.caption)
             if let due = item.dueDate {
-                Label("Due \\(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
+                Label("Due \(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
                     .font(.caption).foregroundStyle(.orange)
             }
             if item.kind == .creditCard && !linkableCards.isEmpty {
