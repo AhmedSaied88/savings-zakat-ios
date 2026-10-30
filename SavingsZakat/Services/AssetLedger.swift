@@ -49,7 +49,8 @@ struct AssetLedger {
         switch holding.kind {
         case .cash, .investment:
             guard let currency = holding.currency?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !currency.isEmpty, currency.count == 3 else {
+                  currency.count == 3,
+                  currency.unicodeScalars.allSatisfy({ $0.value >= 65 && $0.value <= 90 || $0.value >= 97 && $0.value <= 122 }) else {
                 throw AssetError.invalidCurrency
             }
             if holding.kind == .investment,
