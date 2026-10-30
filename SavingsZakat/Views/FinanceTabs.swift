@@ -145,6 +145,7 @@ struct AccountsCardsTab: View {
                         Text("Store card labels and masked digits only.").foregroundStyle(.secondary)
                     }
                     ForEach(snapshot.cards) { card in
+                        let cardCurrency = snapshot.accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
                         VStack(alignment: .leading, spacing: 5) {
                             HStack {
                                 Label(card.name, systemImage: card.kind == .credit ? "creditcard.fill" : "creditcard")
@@ -157,10 +158,10 @@ struct AccountsCardsTab: View {
                             if card.kind == .credit {
                                 HStack(spacing: 12) {
                                     if let limit = card.creditLimit {
-                                        Text("Limit: \(limit, format: .currency(code: "EGP"))")
+                                        Text("Limit: \(limit, format: .currency(code: cardCurrency))")
                                     }
                                     if let minimum = card.minimumDue {
-                                        Text("Minimum: \(minimum, format: .currency(code: "EGP"))")
+                                        Text("Minimum: \(minimum, format: .currency(code: cardCurrency))")
                                     }
                                 }.font(.caption).foregroundStyle(.secondary)
                                 if let due = card.paymentDueDate {
@@ -564,8 +565,11 @@ private struct TransactionEditorSheet: View {
     init(accounts: [FinanceAccount], onSave: @escaping (FinanceTransaction) -> Void) {
         self.accounts = accounts
         self.onSave = onSave
-        _accountID = State(initialValue: accounts.first?.id)
-        _destinationAccountID = State(initialValue: accounts.dropFirst().first?.id)
+        let firstAccount = accounts.first
+        _accountID = State(initialValue: firstAccount?.id)
+        _destinationAccountID = State(initialValue: accounts.first(where: {
+            $0.id != firstAccount?.id && $0.currency == firstAccount?.currency
+        })?.id)
     }
 
     private var selectedAccount: FinanceAccount? {
@@ -588,7 +592,9 @@ private struct TransactionEditorSheet: View {
                     }
                     if direction == .transfer {
                         Picker("To account", selection: $destinationAccountID) {
-                            ForEach(accounts.filter { $0.id != accountID }) { Text($0.name).tag(Optional($0.id)) }
+                            ForEach(accounts.filter { $0.id != accountID && $0.currency == selectedAccount?.currency }) {
+                            Text($0.name).tag(Optional($0.id))
+                        }
                         }
                     } else {
                         Picker("Category", selection: $category) {
@@ -627,8 +633,12 @@ private struct TransactionEditorSheet: View {
                 }
             }
             .onChange(of: accountID) { _, newValue in
-                if destinationAccountID == newValue {
-                    destinationAccountID = accounts.first(where: { $0.id != newValue })?.id
+                let newCurrency = accounts.first(where: { $0.id == newValue })?.currency
+                if destinationAccountID == newValue ||
+                    accounts.first(where: { $0.id == destinationAccountID })?.currency != newCurrency {
+                    destinationAccountID = accounts.first(where: {
+                        $0.id != newValue && $0.currency == newCurrency
+                    })?.id
                 }
             }
         }
