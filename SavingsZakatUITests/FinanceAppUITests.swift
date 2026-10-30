@@ -67,7 +67,9 @@ final class FinanceAppUITests: XCTestCase {
 
         app.buttons["Save"].tap()
 
-        XCTAssertTrue(app.staticTexts["•••• 3456"].waitForExistence(timeout: 5))
+        let maskedDigits = app.staticTexts["card-last-four"]
+        XCTAssertTrue(maskedDigits.waitForExistence(timeout: 5))
+        XCTAssertEqual(maskedDigits.label, "•••• 3456")
     }
 
     func testCreditCardEntryShowsPaymentDueDate() throws {
@@ -199,7 +201,9 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(scrollTo(hawlCalendar, in: app), "Hawl calendar link should be reachable by scrolling the Zakat list")
         hawlCalendar.tap()
         XCTAssertTrue(app.staticTexts["No Hawl dates"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["Schedule / refresh reminders"].exists)
+        let scheduleButton = app.buttons["schedule-hawl-reminders"]
+        XCTAssertTrue(scheduleButton.exists)
+        XCTAssertFalse(scheduleButton.isEnabled, "Reminder scheduling should be disabled until an asset has a Hawl date")
         XCTAssertFalse(app.staticTexts["Notifications are not permitted."].exists)
     }
 
@@ -219,9 +223,20 @@ final class FinanceAppUITests: XCTestCase {
 
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
+        let scrollView = app.scrollViews.firstMatch
+        let table = app.tables.firstMatch
+        let collection = app.collectionViews.firstMatch
         for _ in 0..<maxSwipes {
             if element.exists && element.isHittable { return true }
-            app.swipeUp()
+            if scrollView.exists {
+                scrollView.swipeUp()
+            } else if table.exists {
+                table.swipeUp()
+            } else if collection.exists {
+                collection.swipeUp()
+            } else {
+                app.swipeUp()
+            }
         }
         return element.exists && element.isHittable
     }
