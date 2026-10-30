@@ -627,9 +627,9 @@ struct AssetsZakatTab: View {
                           "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
         let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \(hijri.hijriMonth)"
         if status == .officiallyConfirmed && hijri.status == .officiallyConfirmed {
-            return "Egyptian Hijri \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) (Confirmed)"
+            return "Egyptian Hijri \(hijri.hijriDay) \(month) \(hijri.hijriYear) (Confirmed)"
         }
-        return "Hijri estimate \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) (not official Egyptian date)"
+        return "Hijri estimate \(hijri.hijriDay) \(month) \(hijri.hijriYear) (not official Egyptian date)"
     }
 
     private func valueRow(_ title: String, _ value: Double) -> some View {
@@ -853,9 +853,9 @@ private struct HoldingEditorSheet: View {
                           "Ramadan", "Shawwal", "Dhu al-Qi'dah", "Dhu al-Hijjah"]
         let month = (1...12).contains(hijri.hijriMonth) ? monthNames[hijri.hijriMonth] : "Month \(hijri.hijriMonth)"
         if hijri.status == .officiallyConfirmed {
-            return "Egyptian Hijri date: \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) · Confirmed"
+            return "Egyptian Hijri date: \(hijri.hijriDay) \(month) \(hijri.hijriYear) · Confirmed"
         }
-        return "Hijri estimate: \\(hijri.hijriDay) \\(month) \\(hijri.hijriYear) · Not an official Egyptian date"
+        return "Hijri estimate: \(hijri.hijriDay) \(month) \(hijri.hijriYear) · Not an official Egyptian date"
     }
 
     var body: some View {
@@ -1328,7 +1328,7 @@ private struct WalletSummaryContent: View {
             Text("Net worth · accounts and debts").font(.subheadline).foregroundStyle(.secondary)
             Text(summary.netWorth, format: .currency(code: "EGP"))
                 .font(.largeTitle.bold()).monospacedDigit()
-                .accessibilityLabel("Net worth \\(summary.netWorth) Egyptian pounds")
+                .accessibilityLabel("Net worth \(summary.netWorth) Egyptian pounds")
             HStack(spacing: 18) {
                 metric("Assets", summary.totalAssets, color: .blue)
                 metric("Debts", summary.totalLiabilities, color: .orange)
@@ -1429,9 +1429,9 @@ private struct WalletQuickOverviewContent: View {
 
     var body: some View {
         Group {
-            Label("\\(snapshot.cards.count) cards", systemImage: "creditcard")
-            Label("\\(snapshot.liabilities.count) loans and debts", systemImage: "doc.text")
-            Label("\\(snapshot.holdings.count) savings and Zakat assets", systemImage: "sparkles")
+            Label("\(snapshot.cards.count) cards", systemImage: "creditcard")
+            Label("\(snapshot.liabilities.count) loans and debts", systemImage: "doc.text")
+            Label("\(snapshot.holdings.count) savings and Zakat assets", systemImage: "sparkles")
             NavigationLink {
                 FinanceInsightsView(snapshot: snapshot)
             } label: {
