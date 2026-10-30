@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct CardEntrySheet: View {
+    var card: FinanceCard? = nil
     var accounts: [FinanceAccount]
+    var openingBalanceLocked: Bool = false
     var onSave: (FinanceCard) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
@@ -15,6 +17,7 @@ struct CardEntrySheet: View {
     @State private var openingOutstandingBalance = ""
     @State private var statementDate = Date()
     @State private var paymentDueDate = Date()
+    @State private var hasPaymentDueDate = false
 
     var body: some View {
         NavigationStack {
@@ -42,27 +45,63 @@ struct CardEntrySheet: View {
                             ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) { Text($0).tag($0) }
                         }
                         .disabled(linkedAccountID != nil)
-                        TextField("Opening outstanding balance (optional)", text: $openingOutstandingBalance).keyboardType(.decimalPad)
+                        TextField(openingBalanceLocked ? "Opening balance managed by linked debt" : "Opening outstanding balance (optional)", text: $openingOutstandingBalance)
+                            .keyboardType(.decimalPad)
+                            .disabled(openingBalanceLocked)
                         TextField("Credit limit (optional)", text: $creditLimit).keyboardType(.decimalPad)
                         TextField("Minimum payment (optional)", text: $minimumDue).keyboardType(.decimalPad)
-                        DatePicker("Statement date", selection: $statementDate, displayedComponents: .date)
-                        DatePicker("Payment due date", selection: $paymentDueDate, displayedComponents: .date)
+                        Toggle("Set payment due date", isOn: $hasPaymentDueDate)
+                        if hasPaymentDueDate {
+                            DatePicker("Payment due date", selection: $paymentDueDate, displayedComponents: .date)
+                        }
                     }
                 }
                 Text("Never enter the full card number, CVV, PIN or OTP.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            .navigationTitle("New card")
+            .navigationTitle(card == nil ? "New card" : "Edit card")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        onSave(FinanceCard(name: name.trimmingCharacters(in: .whitespacesAndNewlines), issuer: issuer.isEmpty ? nil : issuer, kind: kind, lastFour: lastFour, linkedAccountID: linkedAccountID, creditLimit: Decimal(string: creditLimit), statementDate: kind == .credit ? statementDate : nil, paymentDueDate: kind == .credit ? paymentDueDate : nil, minimumDue: Decimal(string: minimumDue), currency: currency, openingOutstandingBalance: kind == .credit ? (Decimal(string: openingOutstandingBalance) ?? 0) : nil))
+                        onSave(FinanceCard(
+                            id: card?.id ?? UUID(),
+                            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                            issuer: issuer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : issuer,
+                            kind: kind,
+                            lastFour: lastFour,
+                            linkedAccountID: linkedAccountID,
+                            creditLimit: Decimal(string: creditLimit),
+                            statementDate: card?.statementDate,
+                            paymentDueDate: kind == .credit && hasPaymentDueDate ? paymentDueDate : nil,
+                            minimumDue: Decimal(string: minimumDue),
+                            currency: currency,
+                            openingOutstandingBalance: kind == .credit
+                                ? (openingBalanceLocked ? card?.openingOutstandingBalance : (Decimal(string: openingOutstandingBalance) ?? 0))
+                                : nil
+                        ))
                         dismiss()
                     }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                               (kind == .credit && (!(Decimal(string: openingOutstandingBalance).map { $0 >= 0 } ?? true) ||
                                 !(Decimal(string: creditLimit).map { $0 >= 0 } ?? true) ||
                                 !(Decimal(string: minimumDue).map { $0 >= 0 } ?? true))))
+                }
+            }
+            .onAppear {
+                guard let card else { return }
+                name = card.name
+                issuer = card.issuer ?? ""
+                kind = card.kind
+                lastFour = card.lastFour ?? ""
+                linkedAccountID = card.linkedAccountID
+                creditLimit = card.creditLimit.map(String.init(describing:)) ?? ""
+                minimumDue = card.minimumDue.map(String.init(describing:)) ?? ""
+                currency = card.currency ?? accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
+                openingOutstandingBalance = card.openingOutstandingBalance.map(String.init(describing:)) ?? ""
+                statementDate = card.statementDate ?? Date()
+                if let due = card.paymentDueDate {
+                    paymentDueDate = due
+                    hasPaymentDueDate = true
                 }
             }
             .onChange(of: linkedAccountID) { _, newValue in
