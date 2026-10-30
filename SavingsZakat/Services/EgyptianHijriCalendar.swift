@@ -45,19 +45,30 @@ struct EgyptianHijriCalendar {
 
         for index in officialMonthStarts.indices {
             let current = officialMonthStarts[index]
-            guard index + 1 < officialMonthStarts.count else { continue }
-            let next = officialMonthStarts[index + 1]
             let start = gregorian.startOfDay(for: current.gregorianStart)
-            let end = gregorian.startOfDay(for: next.gregorianStart)
-            guard target >= start && target < end else { continue }
-            let day = gregorian.dateComponents([.day], from: start, to: target).day ?? 0
-            return EgyptianHijriDate(
-                hijriYear: current.hijriYear,
-                hijriMonth: current.hijriMonth,
-                hijriDay: day + 1,
-                status: .officiallyConfirmed,
-                sourceURL: current.sourceURL
-            )
+            if index + 1 < officialMonthStarts.count {
+                let next = officialMonthStarts[index + 1]
+                let end = gregorian.startOfDay(for: next.gregorianStart)
+                guard target >= start && target < end else { continue }
+                let day = gregorian.dateComponents([.day], from: start, to: target).day ?? 0
+                return EgyptianHijriDate(
+                    hijriYear: current.hijriYear,
+                    hijriMonth: current.hijriMonth,
+                    hijriDay: day + 1,
+                    status: .officiallyConfirmed,
+                    sourceURL: current.sourceURL
+                )
+            } else if target == start {
+                // The announced first day is confirmed even before the following
+                // month's announcement is available. Later days remain estimated.
+                return EgyptianHijriDate(
+                    hijriYear: current.hijriYear,
+                    hijriMonth: current.hijriMonth,
+                    hijriDay: 1,
+                    status: .officiallyConfirmed,
+                    sourceURL: current.sourceURL
+                )
+            }
         }
 
         var estimate = Calendar(identifier: .islamicCivil)
