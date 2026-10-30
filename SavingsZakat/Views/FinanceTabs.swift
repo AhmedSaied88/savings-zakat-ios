@@ -181,8 +181,15 @@ struct AccountsCardsTab: View {
             }
             .sheet(isPresented: $showNewCard) {
                 CardEntrySheet(accounts: snapshot.accounts) { card in
-                    snapshot.cards.append(card)
-                    onSave()
+                    var updatedLedger = FinanceLedger(snapshot: snapshot)
+                    do {
+                        try updatedLedger.addCard(card)
+                        snapshot = updatedLedger.snapshot
+                        errorMessage = nil
+                        onSave()
+                    } catch {
+                        errorMessage = "Could not save card. Check its currency, opening balance and account link."
+                    }
                 }
             }
         }
@@ -703,7 +710,7 @@ struct DebtsTab: View {
             }
             .navigationTitle("Debts")
             .sheet(isPresented: $showAdd) {
-                LiabilityEntrySheet(cards: snapshot.cards) { liability in
+                LiabilityEntrySheet(cards: snapshot.cards, accounts: snapshot.accounts) { liability in
                     var ledger = FinanceLedger(snapshot: snapshot)
                     do {
                         try ledger.addLiability(liability)
@@ -1258,7 +1265,7 @@ private struct TransactionEditorSheet: View {
     private var eligiblePaymentCards: [FinanceCard] {
         guard let selectedAccount else { return [] }
         return creditCards.filter {
-            ($0.currency ?? accounts.first(where: { $0.id == $0.linkedAccountID })?.currency ?? "EGP") == selectedAccount.currency
+            (card.currency ?? accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP") == selectedAccount.currency
         }
     }
 
