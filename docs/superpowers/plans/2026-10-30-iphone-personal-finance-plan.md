@@ -131,10 +131,12 @@
 ## Workstream D — Backup, Settings and Release
 
 ### Task 11: Backup and restore
-**Files:** Create `BackupService.swift` and tests.
-- [ ] Test export/import round-trip, invalid archive, schema mismatch and encrypted archive authentication.
-- [ ] Implement user-controlled local export/import with encryption and user-held passphrase.
-- [ ] Never upload financial records automatically.
+**Files:** Create `BackupService.swift`, backup settings UI and tests.
+- [x] Add tests for encrypted round-trip, malformed archive, unsupported version/schema, authentication failure, unsafe KDF parameters and tampering (Xcode execution pending).
+- [x] Implement user-controlled local export/import with PBKDF2-HMAC-SHA256, AES-256-GCM and user-held passphrase.
+- [x] Never upload financial records automatically; export uses the iOS document picker and restore requires explicit replacement confirmation.
+
+**Task 11 implementation note (2026-10-30):** Added a versioned encrypted backup envelope, 210,000-iteration PBKDF2-HMAC-SHA256 key derivation with random salt, AES-256-GCM authenticated encryption, archive/KDF/schema validation and atomic local file writing. Added a Settings tab with export, import and explicit replace confirmation. The first version backs up the FinanceSnapshot (accounts, cards, transactions, liabilities and holdings); pending SMS review items, manual valuation assumptions, Nisab and notification schedules are explicitly excluded. Eight backup tests are authored; Xcode execution is pending due runner allocation failures.
 
 ### Task 12: Settings, insights and UI tests
 **Files:** Create Settings and Insights views plus `SavingsZakatUITests/FinanceAppUITests.swift`.
