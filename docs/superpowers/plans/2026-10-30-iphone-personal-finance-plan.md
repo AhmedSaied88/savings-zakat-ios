@@ -77,10 +77,12 @@
 ### Task 5: SMS parser and privacy layer
 **Files:** Create `BankSMSParser.swift`, `SensitiveTextRedactor.swift`, `ImportedMessage.swift` and `BankSMSParserTests.swift`.
 **Interfaces:** `BankSMSParser.parse(_ text: String, receivedAt: Date) -> ParsedBankMessage`; `SensitiveTextRedactor.redact(_ text: String) -> String`; parsed messages carry confidence.
-- [ ] Add fixture tests for fictional Egyptian bank debit, credit, ATM, POS, transfer, fee, reversal and card-payment messages.
-- [ ] Test duplicate fingerprints and OTP/PIN/CVV/credential redaction.
-- [ ] Implement confidence-aware parsing with safe unparsed fallback.
-- [ ] Require confirmation before posting imported transactions.
+- [x] Add fixture tests for English/Arabic debit, credit, ATM, POS, transfer, fee, reversal and card-payment messages.
+- [x] Test duplicate fingerprints and OTP/PIN/CVV/password/card-number redaction.
+- [x] Implement confidence-aware parsing with safe unparsed fallback; ambiguous and multi-amount messages remain unparsed.
+- [x] Require confirmation before posting imported transactions through a default `needsReview` imported-message state.
+
+**Task 5 implementation note:** Expanded `BankMessageParser`, extracted `SensitiveTextRedactor`, and added a Codable `ImportedMessage` model. The parser recognizes common English/Arabic transaction types, currency-before/after-amount formats, Arabic-Indic digits and EGP labels. It assigns a confidence level, computes a stable SHA-256 fingerprint from redacted normalized text, and rejects ambiguous or multi-amount messages. Only redacted source text is retained; imported records start in `needsReview`. Sender/time-window deduplication and Shortcut handoff belong to Task 6. The new tests are written but await a successful macOS/Xcode run because the current GitHub Actions jobs are failing before any runner is assigned.
 
 ### Task 6: Shortcuts handoff
 **Files:** Create `ImportBankMessageIntent.swift`, `MessageImportCoordinator.swift`, `Documentation/Apple-Shortcuts-SMS-Setup.md` and coordinator tests.
