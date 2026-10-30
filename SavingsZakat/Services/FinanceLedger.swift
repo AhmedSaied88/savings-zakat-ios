@@ -207,7 +207,7 @@ struct FinanceLedger {
             $0.cardID == id || $0.destinationCardID == id
         }
         let hasLiability = snapshot.liabilities.contains { $0.linkedCardID == id }
-        let hasOpeningDebt = (try? creditCardOutstanding(for: id)) ?? 0 > 0
+        let hasOpeningDebt = ((try? creditCardOutstanding(for: id)) ?? 0) > 0
         guard !hasTransactions && !hasLiability && !hasOpeningDebt else { throw LedgerError.cardHasActivity(id) }
         snapshot.cards.removeAll { $0.id == id }
     }
