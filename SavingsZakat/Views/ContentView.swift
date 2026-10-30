@@ -39,7 +39,7 @@ struct ContentView: View {
                 .tabItem { Label("Activity", systemImage: "arrow.left.arrow.right") }
             DebtsTab(snapshot: $snapshot, onSave: save)
                 .tabItem { Label("Debts", systemImage: "doc.text") }
-            AssetsZakatTab(snapshot: $snapshot, preferences: $preferences, onSave: save)
+            AssetsZakatTab(snapshot: $snapshot, onSave: save, preferences: $preferences)
                 .tabItem { Label("Zakat", systemImage: "sparkles") }
         }
         .tint(Color(red: 0.12, green: 0.34, blue: 0.78))
