@@ -144,8 +144,8 @@ struct FinancePreferencesView: View {
                         .frame(minHeight: 44)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel("\(rule.keyword), \(rule.category)")
+                    .accessibilityIdentifier("custom-bank-rule-row")
                     .swipeActions {
                         Button(role: .destructive) {
                             preferences.bankMessageRules.removeAll { $0.id == rule.id }
