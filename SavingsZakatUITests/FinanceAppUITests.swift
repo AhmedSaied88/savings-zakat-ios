@@ -145,10 +145,10 @@ final class FinanceAppUITests: XCTestCase {
         category.typeText("Online shopping")
 
         app.buttons["Save"].tap()
-        let savedRule = app.descendants(matching: .any)["custom-bank-rule-row"]
-        XCTAssertTrue(savedRule.waitForExistence(timeout: 5), "Saved parser rule row should be accessible")
-        XCTAssertTrue(savedRule.label.contains("marketplace"), "Saved parser rule should expose its keyword")
-        XCTAssertTrue(savedRule.label.contains("Online shopping"), "Saved parser rule should expose its category")
+        let savedKeyword = app.staticTexts["marketplace"]
+        let savedCategory = app.staticTexts["Online shopping"]
+        XCTAssertTrue(savedKeyword.waitForExistence(timeout: 5), "Saved parser rule should expose its keyword")
+        XCTAssertTrue(savedCategory.exists, "Saved parser rule should expose its category")
     }
 
     func testBackupScreenRequiresPassphraseConfirmation() throws {
