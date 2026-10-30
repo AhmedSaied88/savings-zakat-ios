@@ -180,6 +180,34 @@ final class FinanceStoreTests: XCTestCase {
         XCTAssertNil(decoded.transactions.first?.category)
     }
 
+
+    func testVersionOneSnapshotWithoutImportedMessageIDStillLoads() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        let account = FinanceAccount(name: "Main", kind: .bank, currency: "EGP", openingBalance: 100)
+        let transaction = FinanceTransaction(
+            title: "Old transaction",
+            amount: 10,
+            currency: "EGP",
+            direction: .expense,
+            date: Date(),
+            accountID: account.id
+        )
+        let encoded = try JSONEncoder().encode(FinanceSnapshot(accounts: [account], transactions: [transaction]))
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        var transactions = try XCTUnwrap(object["transactions"] as? [[String: Any]])
+        transactions[0].removeValue(forKey: "importedMessageID")
+        object["transactions"] = transactions
+        let oldSchemaData = try JSONSerialization.data(withJSONObject: object)
+        try oldSchemaData.write(to: directory.appendingPathComponent("finance-data.json"))
+
+        let loaded = try FinanceStore(directoryURL: directory).load()
+        XCTAssertNil(loaded.transactions.first?.importedMessageID)
+        XCTAssertEqual(loaded.transactions.first?.title, "Old transaction")
+    }
+
     private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
         let suiteName = "FinanceStoreTests." + UUID().uuidString
         return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
