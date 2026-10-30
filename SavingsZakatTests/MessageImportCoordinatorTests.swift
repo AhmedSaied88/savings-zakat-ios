@@ -138,6 +138,23 @@ final class MessageImportCoordinatorTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
     }
 
+
+    func testUntrustedSenderTextIsNotPersistedAsSenderMetadata() throws {
+        let coordinator = MessageImportCoordinator(queueURL: temporaryQueueURL())
+
+        let outcome = try coordinator.importMessage(
+            text: "Purchase EGP 10.00",
+            senderIdentifier: "BANK OTP: 123456",
+            receivedAt: Date(timeIntervalSince1970: 1_760_000_000)
+        )
+
+        guard case .imported(let message) = outcome else {
+            return XCTFail("Expected message to be imported")
+        }
+        XCTAssertEqual(message.senderIdentifier, "Unknown")
+        XCTAssertFalse(message.senderIdentifier.contains("123456"))
+    }
+
     private func temporaryQueueURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("MessageImportTests-\(UUID().uuidString).json")
