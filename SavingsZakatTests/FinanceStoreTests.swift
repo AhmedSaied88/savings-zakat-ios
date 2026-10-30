@@ -209,6 +209,47 @@ final class FinanceStoreTests: XCTestCase {
         XCTAssertEqual(loaded.transactions.first?.title, "Old transaction")
     }
 
+
+    func testPersistsSilverPurityAndNamedManualInvestments() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FinanceStore(directoryURL: directory)
+        let silver = Holding(
+            id: UUID(), kind: .silver, amount: 50, currency: nil, grams: 50, carat: nil,
+            acquiredDate: date("2025-01-01"), hawlStartDate: date("2025-01-01"),
+            purpose: .investment, name: "Silver bar", purity: 925
+        )
+        let investment = Holding(
+            id: UUID(), kind: .investment, amount: 250, currency: "USD", grams: nil, carat: nil,
+            acquiredDate: date("2025-02-01"), hawlStartDate: date("2025-02-01"),
+            purpose: .investment, name: "Brokerage account"
+        )
+        let expected = FinanceSnapshot(holdings: [silver, investment])
+
+        try store.save(expected)
+
+        XCTAssertEqual(try store.load(), expected)
+    }
+
+    func testOlderHoldingsDecodeWithoutOptionalNameAndPurityFields() throws {
+        let cash = Holding(
+            id: UUID(), kind: .cash, amount: 100, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2025-01-01"), hawlStartDate: date("2025-01-01"), purpose: .investment
+        )
+        let encoded = try JSONEncoder().encode(FinanceSnapshot(holdings: [cash]))
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        var holdings = try XCTUnwrap(object["holdings"] as? [[String: Any]])
+        holdings[0].removeValue(forKey: "name")
+        holdings[0].removeValue(forKey: "purity")
+        object["holdings"] = holdings
+        let oldData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(FinanceSnapshot.self, from: oldData)
+
+        XCTAssertNil(decoded.holdings.first?.name)
+        XCTAssertNil(decoded.holdings.first?.purity)
+    }
+
     private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
         let suiteName = "FinanceStoreTests." + UUID().uuidString
         return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
