@@ -12,7 +12,7 @@
 
 ## Global Constraints
 - iPhone only; native SwiftUI and iOS navigation.
-- No subscriptions, paid APIs, paid backend, paid notification provider, or required cloud account.
+- No subscriptions, paid APIs, paid backend, or required cloud account.
 - Financial data, SMS parsing, calculations, date conversion and reminders run locally.
 - Existing PWA, its production deployment and its data remain untouched.
 - SMS inbox access is not direct: user-configured Shortcuts is the bridge; manual share/paste is the fallback.
@@ -49,11 +49,12 @@
 - [x] Test first launch, save/reload, legacy migration, corrupt-file recovery, unsupported schema rejection and atomic snapshot replacement.
 - [x] Implement versioned local persistence and safe migration from prototype holdings JSON.
 - [x] Verify create/update/delete changes survive save/reload in tests.
+- [x] Run the complete macOS/Xcode GitHub Actions build and XCTest workflow on the final branch head.
 
-**Task 2 verification note:** The new legacy-migration test was first run against the old store and failed because the loaded snapshot contained no migrated holdings and the legacy `testHoldingsJSON` key remained. The store now imports the legacy holdings array only when no snapshot exists, writes the new snapshot atomically, and removes the old key only after the write succeeds. Malformed legacy JSON and failed writes leave the legacy value intact. A local Swift 6.2 XCTest harness ran all 10 `FinanceStoreTests` successfully. The full macOS/Xcode GitHub Actions run for the final branch head is still pending; do not mark Task 2 complete until that run passes.
+**Task 2 verification (2026-10-30):** Final branch head `02c364d455793d5c6372fdb5e382bf991de664e2`; GitHub Actions run `41019006776` passed on macOS with Xcode and iPhone simulator. XCTest: 23 tests, 0 failures (4 bank parser, 5 Egyptian Hijri calendar, 10 FinanceStore, 2 Hawl, 2 Zakat). The separate Swift 6.2 local persistence harness also passed 10/10. Legacy `testHoldingsJSON` is imported only when no snapshot exists; the new snapshot is written atomically and the old key is removed only after a successful write. Malformed legacy JSON and failed writes preserve the legacy value; corrupt snapshots and unsupported schema versions are not overwritten. Sequential future schema migrations remain unimplemented and must be added before a later schema bump.
 
 ### Task 3: Accounts, cards, liabilities and ledger
-**Files:** Create `Account.swift`, `PaymentCard.swift`, `Transaction.swift`, `Liability.swift`, `FinanceLedger.swift` and `FinanceLedgerTests.swift` under Models/Services/Tests.
+**Files:** Inspect existing `FinanceModels.swift` first; extend/create account, payment card, transaction, liability and ledger types only where absent. Add `FinanceLedgerTests.swift` under `SavingsZakatTests/`.
 **Interfaces:** `FinanceLedger.netWorth(in:rates:) -> MoneySummary`; `FinanceLedger.post(_ transaction: Transaction) throws`; `FinanceLedger.transfer(amount:from:to:date:) throws`. Card display stores last four digits only.
 - [ ] Test balance changes, income/expense, paired transfers, credit-card liability, loans/instalments and currency conversion.
 - [ ] Implement ledger validation and duplicate transaction protection.
