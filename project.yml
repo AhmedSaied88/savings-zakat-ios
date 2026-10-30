@@ -49,6 +49,7 @@ schemes:
       targets:
         SavingsZakat: all
         SavingsZakatTests: [test]
+        SavingsZakatUITests: [test]
     test:
       targets:
         - SavingsZakatTests
