@@ -26,6 +26,9 @@ final class FinanceAppUITests: XCTestCase {
         ).firstMatch
         XCTAssertTrue(accountRow.waitForExistence(timeout: 5))
 
+        app.tabBars.buttons["Wallet"].tap()
+        XCTAssertTrue(app.staticTexts["UI Test Main"].waitForExistence(timeout: 5))
+
         app.tabBars.buttons["Activity"].tap()
         app.buttons["Add transaction"].tap()
 
@@ -186,6 +189,8 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Nisab (EGP)"].exists)
         XCTAssertTrue(app.switches["Include personal-use gold"].exists)
         XCTAssertTrue(app.buttons["Calculate Zakat"].exists)
+        app.buttons["Calculate Zakat"].tap()
+        XCTAssertTrue(app.staticTexts["Total valued assets"].waitForExistence(timeout: 5))
     }
 
     private func launchCleanApp() -> XCUIApplication {
