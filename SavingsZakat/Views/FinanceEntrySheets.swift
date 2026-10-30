@@ -70,6 +70,7 @@ struct CardEntrySheet: View {
 
 struct LiabilityEntrySheet: View {
     var cards: [FinanceCard] = []
+    var accounts: [FinanceAccount] = []
     var onSave: (FinanceLiability) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
@@ -81,7 +82,9 @@ struct LiabilityEntrySheet: View {
     @State private var linkedCardID: UUID?
 
     private var linkedCard: FinanceCard? { cards.first(where: { $0.id == linkedCardID }) }
-    private var linkedCardCurrency: String? { linkedCard?.currency ?? "EGP" }
+    private var linkedCardCurrency: String? {
+        linkedCard?.currency ?? accounts.first(where: { $0.id == linkedCard?.linkedAccountID })?.currency ?? "EGP"
+    }
 
     var body: some View {
         NavigationStack {
