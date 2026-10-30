@@ -26,14 +26,14 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Imported SMS is redacted before persistence. `ImportedMessage` stores only the redacted excerpt, parsed fields, confidence, fingerprint and a default `needsReview` state; the original message is not retained.
 - `SensitiveTextRedactor` removes OTP, CVV, CVC, PIN, password/passcode tokens and long card-like digit sequences before any source excerpt is retained.
 - `BankMessageParser` recognizes a deliberately limited set of English/Arabic transaction keywords and amount/currency formats. It rejects unknown, conflicting and multi-amount messages rather than guessing.
-- The parser's SHA-256 fingerprint is based on normalized redacted message content. The later Shortcut coordinator must combine it with sender identity and a received-time window for practical duplicate detection; identical content alone is not a sufficient real-world deduplication key.
+- The parser's SHA-256 fingerprint is based on normalized redacted message content. The local Shortcut coordinator combines it with normalized sender identity and a five-minute received-time window; identical content alone is not a sufficient real-world deduplication key.
 - A transfer is one ledger transaction with a source and destination account. It decreases one account and increases the other by the same amount; it is never counted as income or expense.
 - Local backup is user-initiated and encrypted. No automatic upload or cloud dependency.
 
 ## Calendar and Zakat
 - Gregorian dates are the only user input dates.
-- Egyptian Hijri conversion uses a versioned, bundled table of month starts confirmed by Egypt's Dar al-Ifta announcements. Dar al-Ifta describes its nationwide religious/scientific crescent-sighting committees as the authority for all lunar months. NRIAG astronomical calendars are retained as estimate/reference material, not silently promoted to official sightings.
-- Dates outside verified official coverage use a clearly labelled estimate; do not extrapolate an official status from an astronomical forecast. Record the source URL, announcement date, Hijri month/year, and Gregorian start date for every official table entry.
+- Egyptian Hijri conversion uses a versioned, bundled seed of five month starts confirmed by Egypt's Dar al-Ifta announcements. Dar al-Ifta describes its nationwide religious/scientific crescent-sighting committees as the authority for all lunar months. NRIAG astronomical calendars may be consulted as estimates/reference material, not silently promoted to official sightings.
+- Dates outside verified official coverage use Foundation's Islamic-civil arithmetic fallback, clearly labelled as an estimate; this is not an Egypt-specific astronomical prediction. Do not extrapolate an official status from a forecast. Record the source URL, announcement date, Hijri month/year, and Gregorian start date for every official table entry.
 - Calendar table updates are reviewed/versioned app data; no paid API or mandatory network request is required at runtime.
 - Every displayed Hijri date includes provenance status: Officially confirmed or Estimated.
 - Hawl is evaluated per holding against the Egyptian calendar mapping; eligible matured holdings are combined according to the selected test method.
@@ -53,7 +53,7 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Card records contain only last four digits plus optional credit limit, statement date, payment due date and minimum due. Transaction category is optional for older snapshots and newly entered transactions can assign a category.
 
 ## UI direction
-The first tab-based SwiftUI pass provides Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat. It uses system list/form surfaces, pale-blue summary surfaces, royal-blue actions, semantic orange/green status colors, native navigation and sheets. The Wallet net-worth headline currently covers account balances and recorded liabilities only; it explicitly excludes gold/silver holdings until their valuations are incorporated. UI automation has been added, but Xcode CI and accessibility/Dynamic Type/Dark Mode validation remain pending.
+The five primary SwiftUI tabs provide Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat. Settings, monthly insights, the Hawl calendar and encrypted backup are reachable from Wallet. The Wallet net-worth headline currently covers account balances and recorded liabilities only; it explicitly excludes gold/silver holdings until their valuations are incorporated. UI automation has been added, but Xcode CI and accessibility/Dynamic Type/Dark Mode validation remain pending.
 
 ## Free operation
 No subscriptions, paid APIs, paid backend, paid notification provider or mandatory cloud account. Manual rates/prices and user-controlled local backup are available offline.
