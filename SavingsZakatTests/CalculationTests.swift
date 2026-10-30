@@ -28,6 +28,97 @@ final class HawlCalculatorTests: XCTestCase {
         XCTAssertTrue(HawlCalculator.hasCompletedHawl(startDate: start, asOf: due))
     }
 
+
+    func testPersonalUseGoldIsValuedButExcludedUnlessSettingIsEnabled() {
+        let gold = Holding(
+            id: UUID(), kind: .gold, amount: 10, currency: nil, grams: 10, carat: 21,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .personalUse
+        )
+        let excluded = ZakatCalculator.calculate(
+            holdings: [gold], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: ["21": 5_000], silverPricePerGramEGP: nil,
+            nisabEGP: 1_000, asOf: date("2026-10-29")
+        )
+        XCTAssertEqual(excluded.totalValuedWealthEGP, 50_000, accuracy: 0.01)
+        XCTAssertEqual(excluded.excludedWealthEGP, 50_000, accuracy: 0.01)
+        XCTAssertEqual(excluded.maturedEligibleWealthEGP, 0, accuracy: 0.01)
+        XCTAssertEqual(excluded.zakatDueEGP, 0, accuracy: 0.01)
+        XCTAssertEqual(excluded.breakdown.first?.status, .excludedPersonalUse)
+
+        let included = ZakatCalculator.calculate(
+            holdings: [gold], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: ["21": 5_000], silverPricePerGramEGP: nil,
+            nisabEGP: 1_000, asOf: date("2026-10-29"), includePersonalGold: true
+        )
+        XCTAssertEqual(included.excludedWealthEGP, 0, accuracy: 0.01)
+        XCTAssertEqual(included.maturedEligibleWealthEGP, 50_000, accuracy: 0.01)
+        XCTAssertEqual(included.zakatDueEGP, 1_250, accuracy: 0.01)
+        XCTAssertEqual(included.breakdown.first?.status, .included)
+    }
+
+    func testNisabBoundaryIsInclusiveAndCalculatesTwoPointFivePercent() {
+        let cash = Holding(
+            id: UUID(), kind: .cash, amount: 1_000, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment
+        )
+        let result = ZakatCalculator.calculate(
+            holdings: [cash], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: [:], silverPricePerGramEGP: nil,
+            nisabEGP: 1_000, asOf: date("2026-10-29")
+        )
+        XCTAssertEqual(result.maturedEligibleWealthEGP, 1_000, accuracy: 0.01)
+        XCTAssertEqual(result.zakatDueEGP, 25, accuracy: 0.01)
+    }
+
+    func testMissingMetalPricesAreVisibleInPerAssetBreakdown() {
+        let gold = Holding(
+            id: UUID(), kind: .gold, amount: 5, currency: nil, grams: 5, carat: 21,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment
+        )
+        let silver = Holding(
+            id: UUID(), kind: .silver, amount: 20, currency: nil, grams: 20, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment, name: "Silver", purity: 925
+        )
+        let result = ZakatCalculator.calculate(
+            holdings: [gold, silver], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: [:], silverPricePerGramEGP: nil,
+            nisabEGP: 1, asOf: date("2026-10-29")
+        )
+        XCTAssertTrue(result.isProvisional)
+        XCTAssertEqual(result.breakdown.map(\.status), [.missingValuation, .missingValuation])
+        XCTAssertEqual(result.totalValuedWealthEGP, 0, accuracy: 0.01)
+        XCTAssertTrue(result.warnings.contains { $0.contains("gold resale price") })
+        XCTAssertTrue(result.warnings.contains { $0.contains("silver price") })
+    }
+
+    func testInvalidHoldingAmountIsNotSilentlyTreatedAsZero() {
+        let invalid = Holding(
+            id: UUID(), kind: .cash, amount: -10, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment
+        )
+        let result = ZakatCalculator.calculate(
+            holdings: [invalid], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: [:], silverPricePerGramEGP: nil,
+            nisabEGP: 1, asOf: date("2026-10-29")
+        )
+        XCTAssertTrue(result.isProvisional)
+        XCTAssertEqual(result.breakdown.first?.status, .invalid)
+        XCTAssertTrue(result.warnings.contains { $0.contains("Invalid amount") })
+    }
+
+    func testAsOfDateUsesCairoCivilDayBoundary() throws {
+        let start = date("2026-07-15")
+        let due = try XCTUnwrap(HawlCalculator.dueDate(startDate: start))
+        let previousCairoDay = due.addingTimeInterval(-4 * 60 * 60)
+        XCTAssertFalse(HawlCalculator.hasCompletedHawl(startDate: start, asOf: previousCairoDay))
+        XCTAssertTrue(HawlCalculator.hasCompletedHawl(startDate: start, asOf: due))
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
