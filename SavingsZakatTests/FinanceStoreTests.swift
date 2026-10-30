@@ -99,7 +99,7 @@ final class FinanceStoreTests: XCTestCase {
     }
 
     private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
-        let suiteName = "FinanceStoreTests.\\(UUID().uuidString)"
+        let suiteName = "FinanceStoreTests." + UUID().uuidString
         return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
     }
 
