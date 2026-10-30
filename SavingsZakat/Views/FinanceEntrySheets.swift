@@ -106,6 +106,8 @@ struct LiabilityEntrySheet: View {
                 }
                 if let linkedCardCurrency {
                     LabeledContent("Currency", value: linkedCardCurrency)
+                    Text("The linked liability becomes the card opening balance; it replaces any opening amount already stored on the card.")
+                        .font(.footnote).foregroundStyle(.secondary)
                 } else {
                     Picker("Currency", selection: $currency) {
                         ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) { Text($0).tag($0) }
