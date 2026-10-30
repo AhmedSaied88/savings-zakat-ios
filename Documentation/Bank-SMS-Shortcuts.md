@@ -10,7 +10,7 @@ Savings & Zakat does not read the iPhone Messages inbox. iOS does not provide or
 
 1. Open Shortcuts and create a Personal Automation for Message.
 2. Choose the bank sender or sender filter if the bank uses a stable sender ID.
-3. Add an action to pass the message body to the Savings & Zakat import flow (use the app's supported App Intent / shortcut action when available).
+3. Add the Savings & Zakat **Import Bank Message** App Intent and pass the message body and sender identifier when the Message trigger exposes them.
 4. Review the parsed amount, currency and direction inside the app.
 5. Confirm the transaction before it affects the user's ledger.
 
