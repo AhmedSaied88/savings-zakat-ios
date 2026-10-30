@@ -87,7 +87,10 @@ struct LiabilityEntrySheet: View {
 
     private var linkedCard: FinanceCard? { cards.first(where: { $0.id == linkedCardID }) }
     private var linkedCardCurrency: String? {
-        linkedCard?.currency ?? accounts.first(where: { $0.id == linkedCard?.linkedAccountID })?.currency ?? "EGP"
+        guard let linkedCard else { return nil }
+        return linkedCard.currency
+            ?? accounts.first(where: { $0.id == linkedCard.linkedAccountID })?.currency
+            ?? "EGP"
     }
 
     var body: some View {
