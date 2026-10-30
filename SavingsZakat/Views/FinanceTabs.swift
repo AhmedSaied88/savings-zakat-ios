@@ -342,7 +342,7 @@ struct DebtsTab: View {
 struct AssetsZakatTab: View {
     @Binding var snapshot: FinanceSnapshot
     let onSave: () -> Void
-    @State private var rates: [String: Double] = ["EGP": 1]
+    @Binding var rates: [String: Double]
     @State private var goldPrices: [String: Double] = [:]
     @State private var silverPrice: Double?
     @State private var nisab = 0.0
