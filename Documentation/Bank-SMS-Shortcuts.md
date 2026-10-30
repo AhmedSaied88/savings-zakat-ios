@@ -1,6 +1,6 @@
 # Bank SMS import with Apple Shortcuts
 
-## iOS limitation
+See also the implementation-specific setup guide: [Apple Shortcuts SMS Setup](Apple-Shortcuts-SMS-Setup.md).\n\n## iOS limitation
 
 Savings & Zakat does not read the iPhone Messages inbox. iOS does not provide ordinary third-party apps with unrestricted access to SMS history. The supported workflow is user-controlled: a user-created Shortcuts automation can pass the text of a selected bank message to the app, or the user can copy/paste a message manually.
 
