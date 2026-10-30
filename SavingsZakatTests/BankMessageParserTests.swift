@@ -14,9 +14,9 @@ final class BankMessageParserTests: XCTestCase {
 
     func testParsesCreditMessageAsIncome() throws {
         let result = try XCTUnwrap(BankMessageParser.parse("Your salary was credited EGP 2,500.00"))
-        XCTAssertEqual(result.direction, .transfer)
+        XCTAssertEqual(result.direction, .income)
         XCTAssertEqual(result.amount, Decimal(string: "2500.00"))
-        XCTAssertEqual(result.category, "Transfer")
+        XCTAssertEqual(result.category, "Income")
     }
 
     func testParsesOutgoingTransferAsTransfer() throws {
