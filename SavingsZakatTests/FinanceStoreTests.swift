@@ -137,6 +137,49 @@ final class FinanceStoreTests: XCTestCase {
         XCTAssertEqual(try store.load(), expected)
     }
 
+    func testCreditCardDetailsAndTransactionCategoryPersist() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FinanceStore(directoryURL: directory)
+        let statement = date("2026-10-20")
+        let due = date("2026-11-05")
+        let card = FinanceCard(name: "Everyday credit", kind: .credit, lastFour: "4321",
+                               creditLimit: 50_000, statementDate: statement,
+                               paymentDueDate: due, minimumDue: 1_500)
+        let transaction = FinanceTransaction(title: "Groceries", amount: 450, currency: "EGP",
+                                             direction: .expense, date: statement,
+                                             category: "Food")
+        let snapshot = FinanceSnapshot(cards: [card], transactions: [transaction])
+
+        try store.save(snapshot)
+
+        XCTAssertEqual(try store.load(), snapshot)
+    }
+
+    func testOlderSnapshotDecodesWithoutOptionalCardAndCategoryFields() throws {
+        let card = FinanceCard(name: "Old card", kind: .debit, lastFour: "1234")
+        let transaction = FinanceTransaction(title: "Old item", amount: 10, currency: "EGP",
+                                             direction: .expense, date: date("2026-01-01"))
+        let encoded = try JSONEncoder().encode(FinanceSnapshot(cards: [card], transactions: [transaction]))
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        var cards = try XCTUnwrap(object["cards"] as? [[String: Any]])
+        cards[0].removeValue(forKey: "creditLimit")
+        cards[0].removeValue(forKey: "statementDate")
+        cards[0].removeValue(forKey: "paymentDueDate")
+        cards[0].removeValue(forKey: "minimumDue")
+        object["cards"] = cards
+        var transactions = try XCTUnwrap(object["transactions"] as? [[String: Any]])
+        transactions[0].removeValue(forKey: "category")
+        object["transactions"] = transactions
+        let oldData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(FinanceSnapshot.self, from: oldData)
+
+        XCTAssertNil(decoded.cards.first?.creditLimit)
+        XCTAssertNil(decoded.cards.first?.paymentDueDate)
+        XCTAssertNil(decoded.transactions.first?.category)
+    }
+
     private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
         let suiteName = "FinanceStoreTests." + UUID().uuidString
         return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
