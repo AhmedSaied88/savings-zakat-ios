@@ -11,7 +11,6 @@ final class FinanceStoreTests: XCTestCase {
         let transaction = FinanceTransaction(title: "Groceries", amount: 250, currency: "EGP", direction: .expense, date: Date(), accountID: account.id, source: .manual, reviewStatus: .confirmed)
         let liability = FinanceLiability(name: "Installment", kind: .installment, outstandingAmount: 2_000, currency: "EGP")
         let snapshot = FinanceSnapshot(accounts: [account], cards: [card], transactions: [transaction], liabilities: [liability])
-
         try store.save(snapshot)
         XCTAssertEqual(try store.load(), snapshot)
     }
@@ -30,37 +29,19 @@ final class FinanceStoreTests: XCTestCase {
     func testMigratesLegacyPrototypeHoldingsJSONOnFirstLoad() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
+        let (defaults, suiteName) = try makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
 
-        let key = "testHoldingsJSON"
-        let defaults = UserDefaults.standard
-        let previousValue = defaults.object(forKey: key)
-        defer {
-            if let previousValue {
-                defaults.set(previousValue, forKey: key)
-            } else {
-                defaults.removeObject(forKey: key)
-            }
-        }
-
-        let holding = Holding(
-            id: UUID(),
-            kind: .cash,
-            amount: 123.45,
-            currency: "EGP",
-            grams: nil,
-            carat: nil,
-            acquiredDate: date("2025-01-10"),
-            hawlStartDate: date("2025-01-10"),
-            purpose: .investment
-        )
+        let holding = Holding(id: UUID(), kind: .cash, amount: 123.45, currency: "EGP", grams: nil, carat: nil,
+                              acquiredDate: date("2025-01-10"), hawlStartDate: date("2025-01-10"), purpose: .investment)
         let legacyData = try JSONEncoder().encode([holding])
-        defaults.set(String(decoding: legacyData, as: UTF8.self), forKey: key)
+        defaults.set(String(decoding: legacyData, as: UTF8.self), forKey: "testHoldingsJSON")
 
-        let store = FinanceStore(directoryURL: directory)
+        let store = FinanceStore(directoryURL: directory, userDefaults: defaults)
         let migrated = try store.load()
 
         XCTAssertEqual(migrated.holdings, [holding])
-        XCTAssertNil(defaults.object(forKey: key))
+        XCTAssertNil(defaults.object(forKey: "testHoldingsJSON"))
         XCTAssertEqual(try store.load(), migrated)
     }
 
@@ -88,6 +69,38 @@ final class FinanceStoreTests: XCTestCase {
             XCTAssertEqual(error as? FinanceStore.StoreError, .unsupportedSchemaVersion(99))
         }
         XCTAssertEqual(try Data(contentsOf: file), unsupportedData)
+    }
+
+    func testInvalidLegacyJSONIsPreservedAndNotMigrated() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let (defaults, suiteName) = try makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("{invalid", forKey: "testHoldingsJSON")
+
+        XCTAssertThrowsError(try FinanceStore(directoryURL: directory, userDefaults: defaults).load())
+        XCTAssertNotNil(defaults.object(forKey: "testHoldingsJSON"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("finance-data.json").path))
+    }
+
+    func testLegacyDataRemainsWhenMigrationCannotBeWritten() throws {
+        let blocker = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: false)
+        defer { try? FileManager.default.removeItem(at: blocker) }
+        try Data("not-a-directory".utf8).write(to: blocker)
+        let (defaults, suiteName) = try makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let holding = Holding(id: UUID(), kind: .cash, amount: 10, currency: "EGP", grams: nil, carat: nil,
+                              acquiredDate: date("2025-01-10"), hawlStartDate: date("2025-01-10"), purpose: .investment)
+        let legacyData = try JSONEncoder().encode([holding])
+        defaults.set(String(decoding: legacyData, as: UTF8.self), forKey: "testHoldingsJSON")
+
+        XCTAssertThrowsError(try FinanceStore(directoryURL: blocker, userDefaults: defaults).load())
+        XCTAssertNotNil(defaults.object(forKey: "testHoldingsJSON"))
+    }
+
+    private func makeIsolatedDefaults() throws -> (UserDefaults, String) {
+        let suiteName = "FinanceStoreTests.\\(UUID().uuidString)"
+        return (try XCTUnwrap(UserDefaults(suiteName: suiteName)), suiteName)
     }
 
     private func date(_ value: String) -> Date {
