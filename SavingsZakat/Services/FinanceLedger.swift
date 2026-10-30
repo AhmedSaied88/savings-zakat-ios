@@ -190,7 +190,6 @@ struct FinanceLedger {
         }
         guard snapshot.liabilities[liabilityIndex].kind == .creditCard,
               snapshot.liabilities[liabilityIndex].currency == cardCurrency(for: card),
-              (card.openingOutstandingBalance ?? 0) == 0,
               snapshot.liabilities[liabilityIndex].linkedCardID == nil || snapshot.liabilities[liabilityIndex].linkedCardID == cardID else {
             throw LedgerError.invalidCardTransaction
         }
@@ -198,6 +197,10 @@ struct FinanceLedger {
             throw LedgerError.duplicateCardLiability(cardID)
         }
         snapshot.liabilities[liabilityIndex].linkedCardID = cardID
+        if let cardIndex = snapshot.cards.firstIndex(where: { $0.id == cardID }) {
+            // The linked liability replaces the card field as the single opening-balance source.
+            snapshot.cards[cardIndex].openingOutstandingBalance = nil
+        }
     }
 
     mutating func removeCard(id: UUID) throws {
@@ -313,11 +316,15 @@ struct FinanceLedger {
             guard liability.kind == .creditCard,
                   let card = snapshot.cards.first(where: { $0.id == cardID }),
                   card.kind == .credit,
-                  (card.openingOutstandingBalance ?? 0) == 0,
                   cardCurrency(for: card) == liability.currency,
                   !snapshot.liabilities.contains(where: { $0.linkedCardID == cardID }) else {
                 throw LedgerError.duplicateCardLiability(cardID)
             }
+        }
+        if let cardID = liability.linkedCardID,
+           let cardIndex = snapshot.cards.firstIndex(where: { $0.id == cardID }) {
+            // The linked liability becomes the card opening balance; never add both opening sources.
+            snapshot.cards[cardIndex].openingOutstandingBalance = nil
         }
         snapshot.liabilities.append(liability)
     }
