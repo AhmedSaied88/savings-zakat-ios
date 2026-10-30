@@ -63,11 +63,14 @@
 **Task 3 verification (2026-10-30):** Added `FinanceLedger.swift` and 10 `FinanceLedgerTests`. GitHub Actions run `41020025055` passed on the native iOS branch with 33 XCTest tests and 0 failures. Tests cover income/expense balances, paired own-account transfers without inflating combined assets, card/loan/instalment liabilities, currency conversion and missing-rate warnings, review gating, duplicate transaction rejection, invalid values, currency mismatch and account deletion constraints. The ledger is a value type over `FinanceSnapshot`; callers persist its updated snapshot through `FinanceStore` after successful operations.
 
 ### Task 4: Wallet and account/card UI
-**Files:** Refactor `ContentView.swift`; create Wallet, Accounts, Cards, Transactions and Liabilities SwiftUI views under `SavingsZakat/Views/`.
+**Files:** Refactor `ContentView.swift`; create `SavingsZakat/Views/FinanceTabs.swift`; extend `FinanceEntrySheets.swift`.
 - [ ] Add UI tests for account CRUD, card masking, credit-card due dates and transaction categories.
-- [ ] Implement Design 4 composition with Design 3 blue palette: white/pale-blue surfaces, royal-blue actions, violet accents and gold asset highlights.
-- [ ] Build Wallet, Accounts & Cards, Transactions, Add Account and Debts sections with native navigation/sheets.
+- [x] Implement the tab-based native navigation structure for Wallet, Accounts & Cards, Transactions, Debts and Savings & Zakat.
+- [x] Build account editing, masked card entry, credit-card statement/payment details, transaction categories and validated ledger-backed posting.
+- [ ] Refine Design 4 composition with Design 3 blue palette: white/pale-blue surfaces, royal-blue actions, violet accents and gold asset highlights.
 - [ ] Verify accessibility labels, Dynamic Type, Dark Mode and 44pt touch targets.
+
+**Task 4 implementation note:** The first UI pass is on the isolated feature branch. The wallet summary uses the ledger's computed balances and net-worth result; account deletion is blocked when cards or transactions are linked; transaction creation is routed through `FinanceLedger.post`, including paired-transfer validation. Credit-card records now support optional limit, statement date, payment due date and minimum due. UI automation and full Xcode verification are still pending.
 
 ## Workstream B — Bank SMS via Shortcuts
 
