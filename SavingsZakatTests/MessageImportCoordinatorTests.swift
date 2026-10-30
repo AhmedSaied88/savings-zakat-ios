@@ -155,6 +155,35 @@ final class MessageImportCoordinatorTests: XCTestCase {
         XCTAssertFalse(message.senderIdentifier.contains("123456"))
     }
 
+
+    func testConcurrentRepeatedDeliveriesCreateOnlyOneQueueEntry() throws {
+        let url = temporaryQueueURL()
+        let receivedAt = Date(timeIntervalSince1970: 1_760_000_000)
+        let resultsLock = NSLock()
+        var outcomes: [MessageImportCoordinator.ImportOutcome] = []
+
+        DispatchQueue.concurrentPerform(iterations: 10) { _ in
+            let coordinator = MessageImportCoordinator(queueURL: url)
+            let outcome = try? coordinator.importMessage(
+                text: "Purchase EGP 90.00",
+                senderIdentifier: "BANK",
+                receivedAt: receivedAt
+            )
+            if let outcome {
+                resultsLock.lock()
+                outcomes.append(outcome)
+                resultsLock.unlock()
+            }
+        }
+
+        XCTAssertEqual(outcomes.count, 10)
+        XCTAssertEqual(outcomes.filter {
+            if case .imported = $0 { return true }
+            return false
+        }.count, 1)
+        XCTAssertEqual(try MessageImportCoordinator(queueURL: url).loadMessages().count, 1)
+    }
+
     private func temporaryQueueURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("MessageImportTests-\(UUID().uuidString).json")
