@@ -140,7 +140,7 @@
 - [x] Implement user-controlled local export/import with PBKDF2-HMAC-SHA256, AES-256-GCM and user-held passphrase.
 - [x] Never upload financial records automatically; export uses the iOS document picker and restore requires explicit replacement confirmation.
 
-**Task 11 implementation note (2026-10-30):** Added a versioned encrypted backup envelope, 210,000-iteration PBKDF2-HMAC-SHA256 key derivation with random salt, AES-256-GCM authenticated encryption, archive/KDF/schema validation and atomic local file writing. Added a Settings entry from Wallet with export, import and explicit replace confirmation. The encrypted FinanceSnapshot includes accounts, cards, transactions, liabilities, holdings and persisted finance preferences (rates, metal prices, Nisab and parser rules); pending SMS review items and notification schedules are excluded. Nine backup tests are authored; Xcode execution is pending due runner allocation failures.
+**Task 11 implementation note (2026-10-30):** Added a versioned encrypted backup envelope, 600,000-iteration PBKDF2-HMAC-SHA256 key derivation with random salt, AES-256-GCM authenticated encryption, archive/KDF/schema validation and atomic local file writing. Added a Settings entry from Wallet with export, import and explicit replace confirmation. The encrypted FinanceSnapshot includes accounts, cards, transactions, liabilities, holdings and persisted finance preferences (rates, metal prices, Nisab and parser rules); pending SMS review items and notification schedules are excluded. Nine backup tests are authored; Xcode execution is pending due runner allocation failures.
 
 ### Task 12: Settings, insights and UI tests
 **Files:** Create Settings and Insights views, preferences model and UI tests.
