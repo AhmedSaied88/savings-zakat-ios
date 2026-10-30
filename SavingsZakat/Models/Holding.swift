@@ -1,7 +1,16 @@
 import Foundation
 
-enum HoldingKind: String, Codable { case cash, gold, silver }
-enum HoldingPurpose: String, Codable { case investment, personalUse }
+enum HoldingKind: String, Codable, CaseIterable {
+    case cash
+    case gold
+    case silver
+    case investment
+}
+
+enum HoldingPurpose: String, Codable, CaseIterable {
+    case investment
+    case personalUse
+}
 
 struct Holding: Identifiable, Codable, Equatable {
     var id: UUID
@@ -13,6 +22,8 @@ struct Holding: Identifiable, Codable, Equatable {
     var acquiredDate: Date
     var hawlStartDate: Date
     var purpose: HoldingPurpose
+    var name: String? = nil
+    var purity: Int? = nil
 }
 
 struct ZakatResult {
