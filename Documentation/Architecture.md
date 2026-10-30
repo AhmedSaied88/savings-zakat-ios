@@ -44,6 +44,12 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - Supporting astronomical reference: [National Research Institute of Astronomy and Geophysics (NRIAG)](https://www.nriag.sci.eg/), including its annual astronomical Hijri guides. These are estimates unless a corresponding Egyptian official announcement confirms the month start.
 - A third-party compilation may help discover announcements, but each date must be checked against an Egyptian official announcement before entering the confirmed table.
 
+## Recurring transactions
+- Recurring templates are stored in the local finance snapshot as an optional field so existing schema-version-1 snapshots without that field remain decodable.
+- Templates support income and expenses on daily, weekly, monthly or yearly intervals. Transfers are deliberately excluded because recurring transfer semantics need a separate review.
+- A user explicitly triggers due-entry creation from Activity. No background or automatic posting occurs. Each generated transaction stores its recurring rule ID and occurrence date; the ledger checks that pair to avoid posting the same occurrence twice.
+- Due entries are confirmed ledger transactions and affect balances only after the user chooses Create due entries. Generation is capped at 120 occurrences per rule per action to bound catch-up work. The UI supports adding, pausing, resuming and deleting rules.
+
 ## Finance ledger
 - `FinanceLedger` operates on a value-copy of `FinanceSnapshot`; successful mutations return the updated snapshot for the caller to persist through `FinanceStore`.
 - Only confirmed transactions affect account balances. Imported transactions marked `needsReview` are rejected by ledger posting until confirmed.
