@@ -107,18 +107,22 @@
 ### Task 8: Egypt-specific Hijri engine
 **Files:** Create `EgyptianHijriCalendar.swift`, `EgyptianMonthStart.swift`, `EgyptianCalendarRepository.swift`, tests and `Documentation/Egyptian-Calendar-Sources.md`.
 **Interfaces:** `EgyptianHijriCalendar.convert(gregorianDate: Date) -> EgyptianHijriDate`; each result has confirmed/estimated status and provenance.
-- [ ] Verify trustworthy Egyptian official month-start records and document provenance before labelling dates confirmed.
-- [ ] Test known published Egyptian dates, month transitions, leap years, time zones, future unannounced dates and manual overrides.
-- [ ] Implement a bundled versioned local date table and documented Egypt-calibrated estimates for uncovered dates.
-- [ ] Display Hijri date immediately after Gregorian selection, with Confirmed/Estimated status.
-- [ ] Do not use Umm al-Qura as Egypt's source of truth; no network requirement for conversion.
+- [x] Verify the official Egyptian authority/method and document five consecutive source-backed month starts (1448 AH, June–October 2026).
+- [x] Add tests for published month starts, month boundaries, coverage edges, source provenance and future/uncovered estimated status (Xcode execution pending).
+- [ ] Expand the bundled versioned table to broad historical coverage and implement a documented Egypt-calibrated astronomical estimate for uncovered dates.
+- [x] Display Hijri equivalent immediately beside Gregorian acquisition/Hawl date pickers, with Confirmed/Estimated wording.
+- [x] Keep Saudi Umm al-Qura out of the production source of truth; conversion remains offline.
+
+**Task 8 implementation note (2026-10-30):** Dar Al-Ifta's published guidance describes nationwide Egyptian crescent-sighting committees and says the new month is established by sighting; astronomical calculations are supporting evidence, not independent religious confirmation. Added a versioned local seed of five official 1448 AH starts (Muharram through Jumada al-Awwal) with source URLs and announcement dates. A date is confirmed only inside a fully bounded official interval; the latest announcement confirms only its first day until the next month is announced. Uncovered dates use Foundation's Islamic-civil arithmetic fallback, explicitly labelled as an estimate and **not** represented as an Egypt-specific astronomical prediction. UI date pickers show Hijri equivalents immediately. Official-date source coverage is intentionally limited; historical expansion and an Egypt-calibrated astronomical fallback remain open. Calendar tests are authored but not Xcode-verified due runner allocation failures.
 
 ### Task 9: Hawl and Zakat engine
 **Files:** Modify `HawlCalculator.swift`, `ZakatCalculator.swift`; add Egyptian Hawl and calculation tests.
-- [ ] Test one-lunar-year anniversary per holding against Egyptian date mapping and status.
-- [ ] Test combined eligible wealth, Nisab boundary, 2.5%, personal-use gold setting, missing rates/prices and date boundaries.
-- [ ] Replace Umm al-Qura dependency with Egyptian calendar service.
-- [ ] Ensure missing prices/rates never block calculation; show provisional warnings and included/excluded breakdown.
+- [x] Add tests for one-lunar-year anniversaries using Egyptian month mappings and estimated fallback (Xcode execution pending).
+- [x] Add tests for combined eligible wealth, inclusive Nisab boundary, 2.5%, personal-use gold, missing rates/prices, invalid inputs and Cairo day boundaries (Xcode execution pending).
+- [x] Route Hawl calculations through the Egyptian calendar service; remove Umm al-Qura from the production path and tests.
+- [x] Keep missing rates/prices non-blocking and expose provisional warnings plus per-asset included/excluded breakdown.
+
+**Task 9 implementation note (2026-10-30):** Reworked `HawlCalculator` to use `EgyptianHijriCalendar.anniversary` and return Confirmed/Estimated status; completion checks use Cairo civil-day boundaries. Expanded Zakat calculation to validate amounts and metal attributes, value manual investments and purity-adjusted silver, retain total valued assets separately from matured eligible wealth, show personal-use gold as a separately valued exclusion unless the user enables it, apply the inclusive Nisab threshold and 2.5%, and return a per-holding breakdown for included, waiting, excluded, missing-valuation and invalid assets. Added 13 calculation tests for the key arithmetic and boundary cases. Tests are authored but not Xcode-verified because GitHub Actions jobs continue to fail before runner assignment.
 
 ### Task 10: Hawl calendar and reminders
 **Files:** Create `HawlNotificationScheduler.swift`, `HawlCalendarView.swift` and scheduler tests.
@@ -126,7 +130,7 @@
 - [x] Implement local notifications with stable IDs, permission handling and no remote service.
 - [x] Show upcoming Hawl in Gregorian and Hijri dates with confidence status.
 
-**Task 10 implementation note (2026-10-30):** Added a pure reminder planner and an injected local-notification adapter. It creates stable per-asset reminders at 30, 7 and 1 day before, plus on the due date, at 9:00 AM local time for the Cairo civil date. Permission is requested only after the user taps Schedule/refresh; denied permission leaves the existing schedule intact. Refresh replaces this app's pending Hawl reminders, editing/deleting an asset cancels its old reminders, and cancellation is scoped to the `hawl.` identifier prefix. The Hawl calendar view displays Gregorian/Hijri dates and confidence, and provides schedule/refresh/cancel controls. Nine scheduler tests are authored; Xcode execution is pending due runner allocation failures.
+**Task 10 implementation note (2026-10-30):** Added a pure reminder planner and an injected local-notification adapter. It creates stable per-asset reminders at 30, 7 and 1 day before, plus on the due date, at 9:00 AM local time for the Cairo civil date. Permission is requested only after the user taps Schedule/refresh; denied permission leaves the existing schedule intact. Refresh replaces this app's pending Hawl reminders, editing/deleting an asset cancels its old reminders, and cancellation is scoped to the `hawl.` identifier prefix. The Hawl calendar view displays Gregorian/Hijri dates and confidence, and provides schedule/refresh/cancel controls. The scheduler caps pending requests at 64 and prioritizes the nearest fire times. Nine scheduler tests are authored; Xcode execution is pending due runner allocation failures.
 
 ## Workstream D — Backup, Settings and Release
 
@@ -136,13 +140,16 @@
 - [x] Implement user-controlled local export/import with PBKDF2-HMAC-SHA256, AES-256-GCM and user-held passphrase.
 - [x] Never upload financial records automatically; export uses the iOS document picker and restore requires explicit replacement confirmation.
 
-**Task 11 implementation note (2026-10-30):** Added a versioned encrypted backup envelope, 210,000-iteration PBKDF2-HMAC-SHA256 key derivation with random salt, AES-256-GCM authenticated encryption, archive/KDF/schema validation and atomic local file writing. Added a Settings tab with export, import and explicit replace confirmation. The first version backs up the FinanceSnapshot (accounts, cards, transactions, liabilities and holdings); pending SMS review items, manual valuation assumptions, Nisab and notification schedules are explicitly excluded. Nine backup tests are authored; Xcode execution is pending due runner allocation failures.
+**Task 11 implementation note (2026-10-30):** Added a versioned encrypted backup envelope, 210,000-iteration PBKDF2-HMAC-SHA256 key derivation with random salt, AES-256-GCM authenticated encryption, archive/KDF/schema validation and atomic local file writing. Added a Settings entry from Wallet with export, import and explicit replace confirmation. The encrypted FinanceSnapshot includes accounts, cards, transactions, liabilities, holdings and persisted finance preferences (rates, metal prices, Nisab and parser rules); pending SMS review items and notification schedules are excluded. Nine backup tests are authored; Xcode execution is pending due runner allocation failures.
 
 ### Task 12: Settings, insights and UI tests
-**Files:** Create Settings and Insights views plus `SavingsZakatUITests/FinanceAppUITests.swift`.
-- [ ] Test manual exchange rates/prices, parser rules, calendar status, privacy and reminders.
-- [ ] Add monthly income/expense summaries from confirmed ledger transactions.
-- [ ] Add UI tests for primary flows and large Dynamic Type.
+**Files:** Create Settings and Insights views, preferences model and UI tests.
+- [x] Add tests for preference persistence, custom parser rules, monthly summaries and settings/backup navigation (Xcode execution pending).
+- [x] Implement persisted exchange rates, metal prices, Nisab/personal-gold settings, editable parser rules, calendar coverage status, privacy notes and reminder navigation.
+- [x] Implement monthly summaries from confirmed income/expense transactions only; exclude transfers and pending imports and keep currencies separate.
+- [ ] Complete accessibility, Dynamic Type and Dark Mode review; run all unit/UI tests on Xcode.
+
+**Task 12 implementation note (2026-10-30):** Added optional, backward-compatible `FinancePreferences` to the local finance snapshot. Rates, metal prices, Nisab, personal-use gold setting and custom parser rules now persist and are included in encrypted backups. Custom bank rules are passed into the Shortcuts import parser; one match is medium-confidence and multiple matches are rejected for manual review. Added monthly income/expense summaries and charts grouped by currency, using confirmed transactions only (no transfers or pending imports). Settings are reachable from Wallet without adding a sixth tab; the screen includes parser rules, calendar data coverage, privacy notes, Hawl reminders and backup/restore. Added unit and UI tests including accessibility text-size navigation; none have been Xcode-verified yet.
 
 ### Task 13: Final verification and iPhone testing
 **Files:** Modify `README.md` and `.github/workflows/ios-test.yml`; create `Documentation/Device-Test-Checklist.md`.
