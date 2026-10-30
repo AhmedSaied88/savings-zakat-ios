@@ -541,9 +541,9 @@ private struct ImportedMessageConfirmationSheet: View {
         self.cards = cards
         self.onConfirm = onConfirm
         let initialAccount = accounts.first(where: { $0.currency == message.currency })
-        let initialCard = cards.first(where: {
-            $0.kind == .credit &&
-            ($0.currency ?? accounts.first(where: { $0.id == $0.linkedAccountID })?.currency ?? "EGP") == message.currency
+        let initialCard = cards.first(where: { card in
+            card.kind == .credit &&
+            (card.currency ?? accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP") == message.currency
         })
         _accountID = State(initialValue: initialAccount?.id)
         _destinationAccountID = State(initialValue: accounts.first(where: {
