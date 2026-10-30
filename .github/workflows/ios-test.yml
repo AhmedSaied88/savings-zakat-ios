@@ -15,6 +15,7 @@ on:
     paths:
       - 'SavingsZakat/**'
       - 'SavingsZakatTests/**'
+      - 'SavingsZakatUITests/**'
       - 'Documentation/**'
       - 'project.yml'
       - '.github/workflows/ios-test.yml'
