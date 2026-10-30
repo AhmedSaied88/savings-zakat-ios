@@ -14,7 +14,7 @@ struct WalletDashboardTab: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Total net worth").font(.subheadline).foregroundStyle(.secondary)
+                        Text("Net worth · accounts and debts").font(.subheadline).foregroundStyle(.secondary)
                         Text(summary.netWorth, format: .currency(code: "EGP"))
                             .font(.largeTitle.bold()).monospacedDigit()
                             .accessibilityLabel("Net worth \(summary.netWorth) Egyptian pounds")
@@ -22,6 +22,8 @@ struct WalletDashboardTab: View {
                             metric("Assets", summary.totalAssets, color: .blue)
                             metric("Debts", summary.totalLiabilities, color: .orange)
                         }
+                        Text("This first summary excludes unvalued gold and silver holdings.")
+                            .font(.caption).foregroundStyle(.secondary)
                         if summary.isProvisional {
                             Label("Some currencies need exchange rates", systemImage: "exclamationmark.triangle.fill")
                                 .font(.caption).foregroundStyle(.orange)
@@ -101,6 +103,8 @@ struct AccountsCardsTab: View {
     @State private var showNewCard = false
     @State private var errorMessage: String?
 
+    private var ledger: FinanceLedger { FinanceLedger(snapshot: snapshot) }
+
     var body: some View {
         NavigationStack {
             List {
@@ -118,7 +122,8 @@ struct AccountsCardsTab: View {
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text(account.openingBalance, format: .currency(code: account.currency))
+                                Text((try? ledger.balance(for: account.id)) ?? account.openingBalance,
+                                     format: .currency(code: account.currency))
                                     .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                             }
                             .frame(minHeight: 44)
@@ -185,7 +190,8 @@ struct AccountsCardsTab: View {
                 }
             }
             .sheet(item: $editingAccount) { account in
-                AccountEditorSheet(account: account) { updated in
+                AccountEditorSheet(account: account,
+                                   currencyLocked: snapshot.transactions.contains { $0.accountID == account.id || $0.destinationAccountID == account.id }) { updated in
                     if let index = snapshot.accounts.firstIndex(where: { $0.id == updated.id }) {
                         snapshot.accounts[index] = updated
                         onSave()
@@ -289,14 +295,18 @@ struct DebtsTab: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    let total = snapshot.liabilities.reduce(Decimal.zero) { $0 + $1.outstandingAmount }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Total recorded debt").font(.caption).foregroundStyle(.secondary)
-                        Text(total, format: .currency(code: "EGP")).font(.title2.bold())
-                        Text("Amounts are shown in their original currencies in the list below.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }.padding(.vertical, 5)
+                Section("Recorded debt by currency") {
+                    let groups = Dictionary(grouping: snapshot.liabilities, by: \\.currency)
+                    ForEach(groups.keys.sorted(), id: \\.self) { currency in
+                        let total = groups[currency, default: []].reduce(Decimal.zero) { $0 + $1.outstandingAmount }
+                        HStack {
+                            Text(currency)
+                            Spacer()
+                            Text(total, format: .currency(code: currency)).font(.headline).monospacedDigit()
+                        }
+                    }
+                    Text("Different currencies are kept separate; exchange rates are not assumed here.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Loans, instalments and card balances") {
                     if snapshot.liabilities.isEmpty {
@@ -485,6 +495,7 @@ private struct TransactionRow: View {
 
 private struct AccountEditorSheet: View {
     let account: FinanceAccount?
+    let currencyLocked: Bool
     let onSave: (FinanceAccount) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
@@ -493,8 +504,9 @@ private struct AccountEditorSheet: View {
     @State private var currency: String
     @State private var balance: String
 
-    init(account: FinanceAccount? = nil, onSave: @escaping (FinanceAccount) -> Void) {
+    init(account: FinanceAccount? = nil, currencyLocked: Bool = false, onSave: @escaping (FinanceAccount) -> Void) {
         self.account = account
+        self.currencyLocked = currencyLocked
         self.onSave = onSave
         _name = State(initialValue: account?.name ?? "")
         _institution = State(initialValue: account?.institution ?? "")
