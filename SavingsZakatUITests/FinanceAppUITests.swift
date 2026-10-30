@@ -147,8 +147,11 @@ final class FinanceAppUITests: XCTestCase {
         let settings = app.buttons["Settings & backup"]
         XCTAssertTrue(scrollTo(settings, in: app))
         settings.tap()
+        XCTAssertTrue(app.staticTexts["Financial records are stored locally on this iPhone."].waitForExistence(timeout: 5),
+                      "Settings destination should finish loading before opening finance preferences")
         let preferences = app.buttons["Valuation, parser & calendar"]
-        XCTAssertTrue(scrollTo(preferences, in: app))
+        XCTAssertTrue(preferences.waitForExistence(timeout: 5),
+                      "Finance preferences link should be available in Settings")
         preferences.tap()
         let addRule = app.buttons["add-custom-bank-rule"]
         XCTAssertTrue(scrollTo(addRule, in: app))
