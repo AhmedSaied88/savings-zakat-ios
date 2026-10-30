@@ -182,12 +182,17 @@ struct FinanceLedger {
     }
 
     mutating func linkOpeningLiability(_ liabilityID: UUID, to cardID: UUID) throws {
-        guard let liabilityIndex = snapshot.liabilities.firstIndex(where: { $0.id == liabilityID }),
-              let card = snapshot.cards.first(where: { $0.id == cardID }),
-              card.kind == .credit,
-              snapshot.liabilities[liabilityIndex].kind == .creditCard,
-              snapshot.liabilities[liabilityIndex].currency == cardCurrency(for: card),
-              !snapshot.liabilities.contains(where: { $0.linkedCardID == cardID && $0.id != liabilityID }) else {
+        guard let liabilityIndex = snapshot.liabilities.firstIndex(where: { $0.id == liabilityID }) else {
+            throw LedgerError.duplicateLiability(liabilityID)
+        }
+        guard let card = snapshot.cards.first(where: { $0.id == cardID }), card.kind == .credit else {
+            throw LedgerError.cardNotFound(cardID)
+        }
+        guard snapshot.liabilities[liabilityIndex].kind == .creditCard,
+              snapshot.liabilities[liabilityIndex].currency == cardCurrency(for: card) else {
+            throw LedgerError.invalidCardTransaction
+        }
+        guard !snapshot.liabilities.contains(where: { $0.linkedCardID == cardID && $0.id != liabilityID }) else {
             throw LedgerError.duplicateCardLiability(cardID)
         }
         snapshot.liabilities[liabilityIndex].linkedCardID = cardID
