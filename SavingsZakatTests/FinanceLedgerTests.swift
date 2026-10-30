@@ -301,6 +301,15 @@ final class FinanceLedgerTests: XCTestCase {
         XCTAssertEqual(ledger.snapshot.liabilities.first?.linkedCardID, card.id)
     }
 
+
+    func testCreditCardWithOpeningDebtCannotBeDeleted() throws {
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP", openingOutstandingBalance: 300)
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(cards: [card]))
+        XCTAssertThrowsError(try ledger.removeCard(id: card.id)) { error in
+            XCTAssertEqual(error as? FinanceLedger.LedgerError, .cardHasActivity(card.id))
+        }
+    }
+
     private func transaction(_ title: String, _ amount: Decimal, _ direction: TransactionDirection, account: UUID) -> FinanceTransaction {
         FinanceTransaction(title: title, amount: amount, currency: "EGP", direction: direction,
                            date: today, accountID: account)
