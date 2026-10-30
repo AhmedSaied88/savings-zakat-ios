@@ -55,6 +55,7 @@ struct CardEntrySheet: View {
                         Toggle("Set payment due date", isOn: $hasPaymentDueDate)
                         if hasPaymentDueDate {
                             DatePicker("Payment due date", selection: $paymentDueDate, displayedComponents: .date)
+                                .accessibilityIdentifier("card-payment-due-date-picker")
                         }
                     }
                 }
