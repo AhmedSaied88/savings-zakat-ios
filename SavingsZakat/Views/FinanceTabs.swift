@@ -205,7 +205,10 @@ struct AccountsCardsTab: View {
                 CardEntrySheet(
                     card: card,
                     accounts: snapshot.accounts,
-                    openingBalanceLocked: snapshot.liabilities.contains { $0.linkedCardID == card.id }
+                    openingBalanceLocked: snapshot.liabilities.contains { $0.linkedCardID == card.id },
+                    currencyLocked: snapshot.transactions.contains {
+                        $0.cardID == card.id || $0.destinationCardID == card.id
+                    }
                 ) { updated in
                     guard let index = snapshot.cards.firstIndex(where: { $0.id == updated.id }) else { return }
                     let hasActivity = snapshot.transactions.contains {
