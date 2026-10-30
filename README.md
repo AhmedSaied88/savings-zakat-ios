@@ -4,7 +4,7 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 ## Current status
 
-**Working prototype foundation — not release-ready or verified on a physical iPhone.** The isolated feature branch now includes the versioned local store, validated finance ledger, tab-based Wallet / Accounts / Activity / Debts / Zakat screens, account editing, transaction categories, masked cards, and credit-card statement/payment fields. Egyptian calendar, Zakat, and SMS parsing features remain subject to their documented verification limits. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
+**Working prototype foundation — not release-ready or verified on a physical iPhone.** The isolated feature branch now includes the versioned local store, validated finance ledger, tab-based Wallet / Accounts / Activity / Debts / Zakat screens, account editing, transaction categories, masked cards, credit-card statement/payment fields, and a Shortcuts-assisted bank-message import queue with explicit transaction confirmation. Egyptian calendar, Zakat, and SMS parsing features remain subject to their documented verification limits. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
 
 Latest confirmed full Xcode test run for the ledger work:
 - Branch: `chore/task-1-baseline-architecture`
@@ -53,6 +53,6 @@ Physical-device installation requires an Apple signing team/profile. The simulat
 - Hawl calculations, Zakat assumptions and all valuation inputs require further verification and transparent presentation.
 - UI automation has been added but still needs a successful Xcode run; accessibility, Dynamic Type, Dark Mode and physical-device validation remain outstanding.
 - The ledger currently validates income, expense, transfers, duplicate posting and liabilities; recurring transactions, full credit-card payment reconciliation and broader import deduplication remain future work.
-- SMS Shortcut handoff, reminders, encrypted backup/restore and release packaging remain incomplete.
+- The Shortcuts App Intent and local import/review queue are implemented but not yet Xcode-verified or tested on a physical iPhone; reminders, encrypted backup/restore and release packaging remain incomplete.
 - Prices and exchange rates are manual; missing values must be shown as provisional.
 - Use fictional test data until physical-device validation and explicit approval for any production-use step.
