@@ -205,7 +205,7 @@ struct AccountsCardsTab: View {
                 CardEntrySheet(
                     card: card,
                     accounts: snapshot.accounts,
-                    openingBalanceLocked: snapshot.liabilities.contains { $0.linkedCardID == card.id },
+                    currentOutstandingBalance: (try? ledger.creditCardOutstanding(for: card.id)) ?? 0,
                     currencyLocked: snapshot.transactions.contains {
                         $0.cardID == card.id || $0.destinationCardID == card.id
                     }
