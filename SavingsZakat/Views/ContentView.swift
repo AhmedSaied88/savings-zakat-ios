@@ -4,6 +4,7 @@ struct ContentView: View {
     @State private var snapshot = FinanceSnapshot()
     @State private var showCash = false
     @State private var showGold = false
+    @State private var showSilver = false
     @State private var showAccount = false
     @State private var showCard = false
     @State private var showLiability = false
@@ -112,6 +113,7 @@ struct ContentView: View {
                 Section("Savings & Zakat assets") {
                     Button("Add cash / currency") { showCash = true }
                     Button("Add gold purchase") { showGold = true }
+                    Button("Add silver purchase") { showSilver = true }
                     if holdings.isEmpty { Text("No savings assets recorded yet.").foregroundStyle(.secondary) }
                     ForEach(holdings) { h in
                         VStack(alignment: .leading, spacing: 5) {
@@ -183,6 +185,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showGold) {
                 GoldSheet { snapshot.holdings.append($0); save() }
+            }
+            .sheet(isPresented: $showSilver) {
+                SilverSheet { snapshot.holdings.append($0); save() }
             }
             .onAppear(perform: load)
         }
