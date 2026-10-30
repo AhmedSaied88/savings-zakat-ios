@@ -286,6 +286,21 @@ final class FinanceLedgerTests: XCTestCase {
         }
     }
 
+
+    func testExistingStandaloneCardLiabilityCanBeLinkedWithoutChangingNetWorth() throws {
+        let bank = FinanceAccount(name: "Bank", kind: .bank, currency: "EGP", openingBalance: 1_500)
+        let card = FinanceCard(name: "Credit", kind: .credit, currency: "EGP")
+        let oldLiability = FinanceLiability(name: "Old statement", kind: .creditCard,
+                                            outstandingAmount: 650, currency: "EGP")
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [bank], cards: [card], liabilities: [oldLiability]))
+        XCTAssertEqual(ledger.netWorth(in: "EGP", rates: [:]).totalLiabilities, 650)
+
+        try ledger.linkOpeningLiability(oldLiability.id, to: card.id)
+        XCTAssertEqual(try ledger.creditCardOutstanding(for: card.id), 650)
+        XCTAssertEqual(ledger.netWorth(in: "EGP", rates: [:]).totalLiabilities, 650)
+        XCTAssertEqual(ledger.snapshot.liabilities.first?.linkedCardID, card.id)
+    }
+
     private func transaction(_ title: String, _ amount: Decimal, _ direction: TransactionDirection, account: UUID) -> FinanceTransaction {
         FinanceTransaction(title: title, amount: amount, currency: "EGP", direction: direction,
                            date: today, accountID: account)
