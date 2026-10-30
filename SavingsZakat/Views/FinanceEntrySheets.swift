@@ -3,8 +3,8 @@ import SwiftUI
 struct CardEntrySheet: View {
     var card: FinanceCard? = nil
     var accounts: [FinanceAccount]
-    var openingBalanceLocked: Bool = false
     var currencyLocked: Bool = false
+    var currentOutstandingBalance: Decimal? = nil
     var onSave: (FinanceCard) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
@@ -15,7 +15,7 @@ struct CardEntrySheet: View {
     @State private var creditLimit = ""
     @State private var minimumDue = ""
     @State private var currency = "EGP"
-    @State private var openingOutstandingBalance = ""
+    @State private var currentOutstandingBalanceText = ""
     @State private var statementDate = Date()
     @State private var paymentDueDate = Date()
     @State private var hasPaymentDueDate = false
@@ -48,9 +48,8 @@ struct CardEntrySheet: View {
                             ForEach(["EGP", "USD", "SAR", "AED", "EUR", "GBP"], id: \.self) { Text($0).tag($0) }
                         }
                         .disabled(linkedAccountID != nil || currencyLocked)
-                        TextField(openingBalanceLocked ? "Opening balance managed by linked debt" : "Opening outstanding balance (optional)", text: $openingOutstandingBalance)
+                        TextField("Current outstanding balance", text: $currentOutstandingBalanceText)
                             .keyboardType(.decimalPad)
-                            .disabled(openingBalanceLocked)
                         TextField("Credit limit (optional)", text: $creditLimit).keyboardType(.decimalPad)
                         TextField("Minimum payment (optional)", text: $minimumDue).keyboardType(.decimalPad)
                         Toggle("Set payment due date", isOn: $hasPaymentDueDate)
@@ -80,12 +79,16 @@ struct CardEntrySheet: View {
                             minimumDue: Decimal(string: minimumDue),
                             currency: currency,
                             openingOutstandingBalance: kind == .credit
-                                ? (openingBalanceLocked ? card?.openingOutstandingBalance : (Decimal(string: openingOutstandingBalance) ?? 0))
+                                ? (card == nil ? (Decimal(string: currentOutstandingBalanceText) ?? 0) : card?.openingOutstandingBalance)
+                                : nil,
+                            balanceAdjustment: kind == .credit && card != nil
+                                ? ((Decimal(string: currentOutstandingBalanceText) ?? 0) -
+                                   ((currentOutstandingBalance ?? 0) - (card?.balanceAdjustment ?? 0)))
                                 : nil
                         ))
                         dismiss()
                     }.disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                              (kind == .credit && (!(Decimal(string: openingOutstandingBalance).map { $0 >= 0 } ?? true) ||
+                              (kind == .credit && (!(Decimal(string: currentOutstandingBalanceText).map { $0 >= 0 } ?? true) ||
                                 !(Decimal(string: creditLimit).map { $0 >= 0 } ?? true) ||
                                 !(Decimal(string: minimumDue).map { $0 >= 0 } ?? true))))
                 }
@@ -100,7 +103,9 @@ struct CardEntrySheet: View {
                 creditLimit = card.creditLimit.map(String.init(describing:)) ?? ""
                 minimumDue = card.minimumDue.map(String.init(describing:)) ?? ""
                 currency = card.currency ?? accounts.first(where: { $0.id == card.linkedAccountID })?.currency ?? "EGP"
-                openingOutstandingBalance = card.openingOutstandingBalance.map(String.init(describing:)) ?? ""
+                currentOutstandingBalanceText = currentOutstandingBalance.map(String.init(describing:))
+                    ?? card.openingOutstandingBalance.map(String.init(describing:))
+                    ?? "0"
                 statementDate = card.statementDate ?? Date()
                 if let due = card.paymentDueDate {
                     paymentDueDate = due
