@@ -19,10 +19,17 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 
 ## Calendar and Zakat
 - Gregorian dates are the only user input dates.
-- Egyptian Hijri conversion uses a versioned, bundled table of verified Egyptian official month starts. Dates outside verified coverage use a documented Egypt-calibrated estimate.
+- Egyptian Hijri conversion uses a versioned, bundled table of month starts confirmed by Egypt's Dar al-Ifta announcements. Dar al-Ifta describes its nationwide religious/scientific crescent-sighting committees as the authority for all lunar months. NRIAG astronomical calendars are retained as estimate/reference material, not silently promoted to official sightings.
+- Dates outside verified official coverage use a clearly labelled estimate; do not extrapolate an official status from an astronomical forecast. Record the source URL, announcement date, Hijri month/year, and Gregorian start date for every official table entry.
+- Calendar table updates are reviewed/versioned app data; no paid API or mandatory network request is required at runtime.
 - Every displayed Hijri date includes provenance status: Officially confirmed or Estimated.
 - Hawl is evaluated per holding against the Egyptian calendar mapping; eligible matured holdings are combined according to the selected test method.
 - Missing rates/prices produce explicit provisional results and never block the calculation.
+
+## Egyptian calendar source policy
+- Primary authority: [Egyptian Dar al-Ifta lunar-month sighting service](https://www.dar-alifta.org/en/service/lunar-months-moon-sighting) and its dated month-start announcements.
+- Supporting astronomical reference: [National Research Institute of Astronomy and Geophysics (NRIAG)](https://www.nriag.sci.eg/), including its annual astronomical Hijri guides. These are estimates unless a corresponding Egyptian official announcement confirms the month start.
+- A third-party compilation may help discover announcements, but each date must be checked against an Egyptian official announcement before entering the confirmed table.
 
 ## UI direction
 Use Design 4's layout/composition with Design 3's blue palette: white and pale-blue surfaces, royal-blue primary actions, restrained violet accents and gold asset accents. Prioritize a compact wallet overview, unified transaction list, clear account/card tiles and a simple Add Account flow.
