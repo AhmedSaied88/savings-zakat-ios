@@ -2,16 +2,27 @@ import XCTest
 @testable import SavingsZakat
 
 final class HawlCalculatorTests: XCTestCase {
-    func testDueDateIsOneIslamicCalendarYearAfterStart() throws {
-        var calendar = Calendar(identifier: .islamicUmmAlQura)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        let start = date("2025-01-01")
-        let expected = try XCTUnwrap(calendar.date(byAdding: .year, value: 1, to: start))
-        XCTAssertEqual(HawlCalculator.dueDate(startDate: start, calendar: calendar), calendar.startOfDay(for: expected))
+    func testDueDateUsesEgyptianOfficialAnniversaryWhenNextYearBoundariesExist() throws {
+        let records = [
+            EgyptianHijriMonthStart(hijriYear: 1448, hijriMonth: 4, gregorianStart: date("2026-10-01"), sourceURL: "https://example.org/1448-4", announcementDate: date("2026-09-30")),
+            EgyptianHijriMonthStart(hijriYear: 1448, hijriMonth: 5, gregorianStart: date("2026-10-31"), sourceURL: "https://example.org/1448-5", announcementDate: date("2026-10-30")),
+            EgyptianHijriMonthStart(hijriYear: 1449, hijriMonth: 4, gregorianStart: date("2027-09-21"), sourceURL: "https://example.org/1449-4", announcementDate: date("2027-09-20")),
+            EgyptianHijriMonthStart(hijriYear: 1449, hijriMonth: 5, gregorianStart: date("2027-10-20"), sourceURL: "https://example.org/1449-5", announcementDate: date("2027-10-19"))
+        ]
+        let egyptianCalendar = EgyptianHijriCalendar(officialMonthStarts: records, timeZone: TimeZone(secondsFromGMT: 0)!)
+        let due = try XCTUnwrap(HawlCalculator.dueDateResult(startDate: date("2026-10-12"), egyptianCalendar: egyptianCalendar))
+
+        XCTAssertEqual(due.date, date("2027-10-02"))
+        XCTAssertEqual(due.status, .officiallyConfirmed)
+    }
+
+    func testHawlFallsBackToEstimatedWhenEgyptianNextYearIsNotPublished() throws {
+        let due = try XCTUnwrap(HawlCalculator.dueDateResult(startDate: date("2026-07-15")))
+        XCTAssertEqual(due.status, .estimated)
     }
 
     func testHawlIsNotCompleteBeforeDueDateAndCompleteOnDueDate() {
-        let start = date("2025-01-01")
+        let start = date("2026-07-15")
         let due = try! XCTUnwrap(HawlCalculator.dueDate(startDate: start))
         XCTAssertFalse(HawlCalculator.hasCompletedHawl(startDate: start, asOf: due.addingTimeInterval(-86_400)))
         XCTAssertTrue(HawlCalculator.hasCompletedHawl(startDate: start, asOf: due))
