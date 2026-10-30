@@ -152,10 +152,12 @@
 **Task 12 implementation note (2026-10-30):** Added optional, backward-compatible `FinancePreferences` to the local finance snapshot. Rates, metal prices, Nisab, personal-use gold setting and custom parser rules now persist and are included in encrypted backups. Custom bank rules are passed into the Shortcuts import parser; one match is medium-confidence and multiple matches are rejected for manual review. Added monthly income/expense summaries and charts grouped by currency, using confirmed transactions only (no transfers or pending imports). Settings are reachable from Wallet without adding a sixth tab; the screen includes parser rules, calendar data coverage, privacy notes, Hawl reminders and backup/restore. Added unit and UI tests including accessibility text-size navigation; none have been Xcode-verified yet.
 
 ### Task 13: Final verification and iPhone testing
-**Files:** Modify `README.md` and `.github/workflows/ios-test.yml`; create `Documentation/Device-Test-Checklist.md`.
-- [ ] Run complete macOS/Xcode build and XCTest/UI test workflow.
-- [ ] Verify no paid dependencies or services are required.
-- [ ] Verify existing PWA repository/deployment/data are untouched.
-- [ ] Test Shortcuts handoff on a physical iPhone and document iOS version/settings/limitations.
+**Files:** Update `README.md` and `.github/workflows/ios-test.yml`; create `Documentation/Device-Test-Checklist.md`.
+- [ ] Run complete macOS/Xcode build and XCTest/UI test workflow; recent jobs fail before runner assignment (runner ID 0, no steps).
+- [x] Inspect project configuration: only Apple platform frameworks are used; no paid APIs, subscriptions, backend or package dependencies are required.
+- [x] Keep the native implementation isolated to `savings-zakat-ios`; no PWA repository, deployment or data actions were taken.
+- [ ] Test Shortcuts handoff on a physical iPhone and record iOS version/settings/limitations.
 - [ ] Test local notifications, offline calculation, backup/restore, Dark Mode and accessibility on device.
-- [ ] Report remaining gaps; do not claim App Store-ready or production-ready without evidence and explicit release approval.
+- [x] Add `Documentation/Device-Test-Checklist.md`; do not claim App Store-ready or production-ready without evidence and explicit release approval.
+
+**Task 13 status:** Blocked on two external gates: a working macOS/Xcode GitHub Actions runner, and access to the user's physical iPhone for Shortcuts, notification permission, signing/install, Dark Mode and accessibility validation. No merge or release is authorized.
