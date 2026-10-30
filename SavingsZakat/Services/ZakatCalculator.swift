@@ -48,6 +48,9 @@ enum ZakatCalculator {
                 if !grams.isFinite || grams <= 0 {
                     value = nil
                     warnings.append("Invalid gold weight for \(label).")
+                } else if ![14, 18, 21, 22, 24].contains(carat) {
+                    value = nil
+                    warnings.append("Unsupported gold carat for \\(label).")
                 } else if let price = goldPricesPerGramEGP[String(carat)], price > 0, price.isFinite {
                     value = grams * price
                 } else {
