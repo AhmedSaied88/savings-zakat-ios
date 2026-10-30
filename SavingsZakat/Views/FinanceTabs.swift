@@ -641,7 +641,8 @@ struct AssetsZakatTab: View {
                         valueRow("Completed-Hawl wealth", result.maturedEligibleWealthEGP)
                         valueRow("Excluded personal-use gold", result.excludedWealthEGP)
                         valueRow("Estimated Zakat", result.zakatDueEGP)
-                        Section("Asset calculation breakdown") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Asset calculation breakdown").font(.headline)
                             ForEach(result.breakdown) { item in
                                 VStack(alignment: .leading, spacing: 3) {
                                     HStack {
