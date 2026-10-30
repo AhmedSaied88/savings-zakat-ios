@@ -5,7 +5,17 @@ struct ContentView: View {
     @State private var rates: [String: Double] = ["EGP": 1]
     @State private var storageError: String?
 
-    private let store = FinanceStore()
+    private let store: FinanceStore
+    private let uiTestDirectory: URL?
+
+    init() {
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
+        let directory = isUITesting
+            ? FileManager.default.temporaryDirectory.appendingPathComponent("SavingsZakatUITests", isDirectory: true)
+            : nil
+        self.uiTestDirectory = directory
+        self.store = FinanceStore(directoryURL: directory)
+    }
 
     var body: some View {
         TabView {
@@ -33,6 +43,10 @@ struct ContentView: View {
     }
 
     private func load() {
+        if ProcessInfo.processInfo.arguments.contains("-ui-testing-reset"),
+           let uiTestDirectory {
+            try? FileManager.default.removeItem(at: uiTestDirectory.appendingPathComponent("finance-data.json"))
+        }
         do {
             snapshot = try store.load()
             storageError = nil
