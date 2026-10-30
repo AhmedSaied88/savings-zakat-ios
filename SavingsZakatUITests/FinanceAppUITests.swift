@@ -46,7 +46,8 @@ final class FinanceAppUITests: XCTestCase {
         let categorizedTransaction = app.staticTexts.matching(
             NSPredicate(format: "label CONTAINS %@", "Shopping")
         ).firstMatch
-        XCTAssertTrue(categorizedTransaction.waitForExistence(timeout: 5))
+        XCTAssertTrue(scrollTo(categorizedTransaction, in: app),
+                      "The saved transaction should show its Shopping category in Activity")
     }
 
     func testCardEntryMasksDigitsToLastFour() throws {
@@ -97,6 +98,12 @@ final class FinanceAppUITests: XCTestCase {
         let minimum = app.textFields["Minimum payment (optional)"]
         minimum.tap()
         minimum.typeText("1500")
+
+        let dueDateToggle = app.switches["Set payment due date"]
+        XCTAssertTrue(dueDateToggle.waitForExistence(timeout: 3))
+        if dueDateToggle.value as? String != "1" {
+            dueDateToggle.tap()
+        }
 
         app.buttons["Save"].tap()
 
@@ -288,7 +295,7 @@ final class FinanceAppUITests: XCTestCase {
         linkedAccount.tap()
         app.buttons["UI Test Bank"].tap()
 
-        let openingCardBalance = app.textFields["Opening outstanding balance (optional)"]
+        let openingCardBalance = app.textFields["Current outstanding balance"]
         XCTAssertTrue(openingCardBalance.waitForExistence(timeout: 3))
         openingCardBalance.tap()
         openingCardBalance.typeText("200")
