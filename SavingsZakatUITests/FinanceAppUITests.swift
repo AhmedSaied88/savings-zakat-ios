@@ -257,6 +257,81 @@ final class FinanceAppUITests: XCTestCase {
         ).firstMatch.exists)
     }
 
+
+    func testCreditCardPurchaseAndRepaymentReconcileBalances() throws {
+        let app = launchCleanApp()
+        app.tabBars.buttons["Accounts"].tap()
+        app.buttons["Add account"].tap()
+
+        let accountName = app.textFields["Account name"]
+        XCTAssertTrue(accountName.waitForExistence(timeout: 3))
+        accountName.tap()
+        accountName.typeText("UI Test Bank")
+        let openingBalance = app.textFields["Opening balance"]
+        openingBalance.tap()
+        openingBalance.typeText("1000")
+        app.buttons["Save"].tap()
+
+        let addCard = app.buttons["Add card"]
+        XCTAssertTrue(scrollTo(addCard, in: app))
+        addCard.tap()
+        let cardName = app.textFields["Card label"]
+        XCTAssertTrue(cardName.waitForExistence(timeout: 3))
+        cardName.tap()
+        cardName.typeText("UI Test Credit")
+        let cardKind = app.descendants(matching: .any)["card-kind-picker"]
+        cardKind.tap()
+        app.buttons["Credit"].tap()
+
+        let linkedAccount = app.descendants(matching: .any)["Linked account"]
+        XCTAssertTrue(linkedAccount.waitForExistence(timeout: 3))
+        linkedAccount.tap()
+        app.buttons["UI Test Bank"].tap()
+
+        let openingCardBalance = app.textFields["Opening outstanding balance (optional)"]
+        XCTAssertTrue(openingCardBalance.waitForExistence(timeout: 3))
+        openingCardBalance.tap()
+        openingCardBalance.typeText("200")
+        app.buttons["Save"].tap()
+
+        app.tabBars.buttons["Activity"].tap()
+        app.buttons["Add transaction"].tap()
+        let entryType = app.descendants(matching: .any)["Entry type"]
+        XCTAssertTrue(entryType.waitForExistence(timeout: 3))
+        entryType.tap()
+        app.buttons["Credit-card purchase"].tap()
+
+        let description = app.textFields["Description"]
+        description.tap()
+        description.typeText("Card groceries")
+        let amount = app.textFields["Amount"]
+        amount.tap()
+        amount.typeText("100")
+        app.buttons["Save"].tap()
+
+        app.buttons["Add transaction"].tap()
+        let secondEntryType = app.descendants(matching: .any)["Entry type"]
+        secondEntryType.tap()
+        app.buttons["Credit-card repayment"].tap()
+        let repaymentDescription = app.textFields["Description"]
+        repaymentDescription.tap()
+        repaymentDescription.typeText("Card repayment")
+        let repaymentAmount = app.textFields["Amount"]
+        repaymentAmount.tap()
+        repaymentAmount.typeText("50")
+        app.buttons["Save"].tap()
+
+        app.tabBars.buttons["Accounts"].tap()
+        let bankBalance = app.staticTexts["account-balance-UI Test Bank"]
+        XCTAssertTrue(scrollTo(bankBalance, in: app))
+        XCTAssertTrue(bankBalance.label.contains("950"), "Repayment should reduce the bank account by 50")
+
+        app.tabBars.buttons["Debts"].tap()
+        let cardBalance = app.staticTexts["debt-card-outstanding-UI Test Credit"]
+        XCTAssertTrue(cardBalance.waitForExistence(timeout: 5))
+        XCTAssertTrue(cardBalance.label.contains("250"), "Card balance should be opening 200 + purchase 100 - repayment 50")
+    }
+
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
         let scrollView = app.scrollViews.firstMatch
