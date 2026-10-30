@@ -7,8 +7,7 @@ struct SettingsHomeView: View {
     let onRestore: (FinanceSnapshot) -> Bool
 
     var body: some View {
-        NavigationStack {
-            List {
+        List {
                 Section("Finance settings") {
                     NavigationLink {
                         FinancePreferencesView(
@@ -32,9 +31,8 @@ struct SettingsHomeView: View {
                     Label("Bank messages are received through user-configured Shortcuts, not inbox scanning.", systemImage: "message")
                     Label("Imported messages are redacted and require review before posting.", systemImage: "hand.raised")
                 }
-            }
-            .navigationTitle("Settings")
         }
+        .navigationTitle("Settings")
     }
 }
 
