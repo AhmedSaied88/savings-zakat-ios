@@ -147,20 +147,23 @@
 - [x] Add tests for preference persistence, custom parser rules, monthly summaries and settings/backup navigation (Xcode execution pending).
 - [x] Implement persisted exchange rates, metal prices, Nisab/personal-gold settings, editable parser rules, calendar coverage status, privacy notes and reminder navigation.
 - [x] Implement monthly summaries from confirmed income/expense transactions only; exclude transfers and pending imports and keep currencies separate.
-- [ ] Complete accessibility, Dynamic Type and Dark Mode review; run all unit/UI tests on Xcode.
+- [x] Run the full unit/UI suite on Xcode CI; latest successful run #374 passed 130 unit tests and 12 UI tests.
+- [ ] Complete the remaining accessibility, full Dynamic Type and Dark Mode review, including physical-device validation.
 
 **Task 12 implementation note (2026-10-30):** Added optional, backward-compatible `FinancePreferences` to the local finance snapshot. Rates, metal prices, Nisab, personal-use gold setting and custom parser rules now persist and are included in encrypted backups. Custom bank rules are passed into the Shortcuts import parser; one match is medium-confidence and multiple matches are rejected for manual review. Added monthly income/expense summaries and charts grouped by currency, using confirmed transactions only (no transfers or pending imports). Settings are reachable from Wallet without adding a sixth tab; the screen includes parser rules, calendar data coverage, privacy notes, Hawl reminders and backup/restore. Added unit and UI tests including accessibility text-size navigation; none have been Xcode-verified yet.
 
 ### Task 13: Final verification and iPhone testing
 **Files:** Update `README.md` and `.github/workflows/ios-test.yml`; create `Documentation/Device-Test-Checklist.md`.
-- [ ] Run the complete macOS/Xcode build and XCTest/UI workflow on the current branch head. Previously verified run #238 passed 119 unit tests and 10 UI tests on commit c677f05; the current credit-card reconciliation changes postdate that run.
+- [x] Run the complete macOS/Xcode build and XCTest/UI workflow on the current branch head. Run #374 passed on commit 985b5e95832bca4c687301bb9c85f2369344e2f0: build succeeded, 130 unit tests and 12 UI tests passed.
+- [ ] Test Shortcuts handoff on a physical iPhone and record iOS version/settings/limitations.
+- [ ] Test local notifications, offline calculation, backup/restore, Dark Mode and accessibility on device.
 - [x] Inspect project configuration: only Apple platform frameworks are used; no paid APIs, subscriptions, backend or package dependencies are required.
 - [x] Keep the native implementation isolated to `savings-zakat-ios`; no PWA repository, deployment or data actions were taken.
 - [ ] Test Shortcuts handoff on a physical iPhone and record iOS version/settings/limitations.
 - [ ] Test local notifications, offline calculation, backup/restore, Dark Mode and accessibility on device.
 - [x] Add `Documentation/Device-Test-Checklist.md`; do not claim App Store-ready or production-ready without evidence and explicit release approval.
 
-**Task 13 status:** The macOS/Xcode runner is available and run #238 passed, but the latest branch head has not yet completed a fresh native CI run. Physical-iPhone access is still required for Shortcuts, notification permission, signing/install, Dark Mode and accessibility validation. No merge or release is authorized.
+**Task 13 status (2026-10-31):** Fresh native CI completed successfully on the current branch head in run #374 (commit 985b5e9): build succeeded, 130 unit tests and 12 UI tests passed. This verifies the simulator workflow, not physical-device behavior. Physical-iPhone access is still required for Shortcuts, notification permission, signing/install, Dark Mode and accessibility validation. No merge or release is authorized.
 
 
 ## Workstream E — Recurring Transactions and Credit-Card Reconciliation
@@ -172,7 +175,7 @@
 - [x] Store rule ID and occurrence date on generated transactions; reject duplicate occurrence generation.
 - [x] Keep automatic/background posting disabled; due entries affect balances only after the user explicitly taps Create due entries.
 - [x] Add ledger and UI tests for schedule generation, idempotency and rule validation.
-- [ ] Re-run the complete native CI workflow on the latest branch head.
+- [x] Re-run the complete native CI workflow on the latest branch head. Run #374 passed: 130 unit tests and 12 UI tests.
 
 ### Task 15: Credit-card purchases, repayments and opening balances
 **Files:** FinanceModels.swift, FinanceLedger.swift, FinanceTabs.swift, FinanceEntrySheets.swift, FinanceLedgerTests.swift, FinanceAppUITests.swift.
@@ -185,4 +188,4 @@
 - [x] Add unit and UI coverage for purchase/repayment accounting, duplicate imports, liability linking and deletion safeguards.
 - [ ] Re-run the complete native CI workflow on the latest branch head; do not treat these new tests as passed until the run succeeds.
 
-**Workstream E status (2026-10-30):** The current branch defines 129 unit-test methods and 12 UI tests. The last verified native run (#238, commit c677f05) passed 119 unit tests and 10 UI tests before the credit-card reconciliation implementation. A fresh run on the current branch head is still required. The existing PWA remains untouched; PR #1 remains a draft and is not approved for merge or release.
+**Workstream E status (2026-10-31):** The latest native CI run #374 passed on commit 985b5e9: 130 unit tests and 12 UI tests, including credit-card reconciliation and Zakat-screen navigation. The existing PWA remains untouched; PR #1 remains a draft and is not approved for merge or release.
