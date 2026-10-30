@@ -115,6 +115,43 @@ final class FinanceLedgerTests: XCTestCase {
         XCTAssertThrowsError(try ledger.transfer(amount: 10, from: egp.id, to: usd.id, date: today))
     }
 
+
+    func testImportedMessageCannotBePostedTwiceWithDifferentTransactionIDs() throws {
+        let account = FinanceAccount(name: "Main", kind: .bank, currency: "EGP", openingBalance: 100)
+        let importedMessageID = UUID()
+        var ledger = FinanceLedger(snapshot: FinanceSnapshot(accounts: [account]))
+        let first = FinanceTransaction(
+            title: "Purchase",
+            amount: 25,
+            currency: "EGP",
+            direction: .expense,
+            date: today,
+            accountID: account.id,
+            source: .shortcut,
+            reviewStatus: .confirmed,
+            category: "Purchase",
+            importedMessageID: importedMessageID
+        )
+        let second = FinanceTransaction(
+            title: "Purchase",
+            amount: 25,
+            currency: "EGP",
+            direction: .expense,
+            date: today,
+            accountID: account.id,
+            source: .shortcut,
+            reviewStatus: .confirmed,
+            category: "Purchase",
+            importedMessageID: importedMessageID
+        )
+
+        try ledger.post(first)
+        XCTAssertThrowsError(try ledger.post(second)) { error in
+            XCTAssertEqual(error as? FinanceLedger.LedgerError, .duplicateImportedMessage(importedMessageID))
+        }
+        XCTAssertEqual(try ledger.balance(for: account.id), 75)
+    }
+
     private func transaction(_ title: String, _ amount: Decimal, _ direction: TransactionDirection, account: UUID) -> FinanceTransaction {
         FinanceTransaction(title: title, amount: amount, currency: "EGP", direction: direction,
                            date: today, accountID: account)
