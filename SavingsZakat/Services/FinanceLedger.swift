@@ -168,9 +168,10 @@ struct FinanceLedger {
         }
         let linkedOpeningLiability = snapshot.liabilities.first(where: { $0.linkedCardID == cardID })?.outstandingAmount
         let opening = linkedOpeningLiability ?? card.openingOutstandingBalance ?? 0
+        let reconciledOpening = opening + (card.balanceAdjustment ?? 0)
         return snapshot.transactions
             .filter { $0.reviewStatus == .confirmed }
-            .reduce(opening) { balance, transaction in
+            .reduce(reconciledOpening) { balance, transaction in
                 if transaction.direction == .expense && transaction.cardID == cardID {
                     return balance + transaction.amount
                 }
