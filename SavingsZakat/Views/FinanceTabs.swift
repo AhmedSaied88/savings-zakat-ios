@@ -1839,7 +1839,8 @@ private struct WalletSummaryContent: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Net worth · accounts and debts").font(.subheadline).foregroundStyle(.secondary)
             Text(summary.netWorth, format: .currency(code: "EGP"))
-                .font(.largeTitle.bold()).monospacedDigit()
+                 .font(.largeTitle.bold()).monospacedDigit()
+                .foregroundStyle(FinancePalette.royalBlue)
                 .accessibilityLabel("Net worth \(summary.netWorth) Egyptian pounds")
             HStack(spacing: 18) {
                 metric("Assets", summary.totalAssets, color: FinancePalette.royalBlue)
@@ -1852,8 +1853,6 @@ private struct WalletSummaryContent: View {
                     .font(.caption).foregroundStyle(.orange)
             }
         }
-        .padding(.vertical, 8)
-        
         .padding(.vertical, 8)
         .padding(.horizontal, 4)
         .background(FinancePalette.paleBlue, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
