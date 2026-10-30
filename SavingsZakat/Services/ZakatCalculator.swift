@@ -34,9 +34,18 @@ enum ZakatCalculator {
 
             guard let value, value.isFinite, value >= 0 else { continue }
             total += value
-            let completed = HawlCalculator.hasCompletedHawl(startDate: holding.hawlStartDate, asOf: asOf)
-            if completed { eligible += value }
-            else if let due = HawlCalculator.dueDate(startDate: holding.hawlStartDate), due > asOf, (nextDue.map { due < $0 } ?? true) { nextDue = due }
+            if let hawl = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
+                if hawl.status == .estimated {
+                    warnings.append("Hawl date for an asset is estimated because an official Egyptian month-start record is not available.")
+                }
+                if asOf >= hawl.date {
+                    eligible += value
+                } else if nextDue.map({ hawl.date < $0 }) ?? true {
+                    nextDue = hawl.date
+                }
+            } else {
+                warnings.append("Could not determine the Hawl date for an asset.")
+            }
         }
 
         if nisabEGP <= 0 || !nisabEGP.isFinite { warnings.append("Enter a valid nisab value in EGP.") }
