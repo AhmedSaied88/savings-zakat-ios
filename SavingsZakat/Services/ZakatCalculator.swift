@@ -18,10 +18,15 @@ enum ZakatCalculator {
         for holding in holdings {
             let value: Double?
             switch holding.kind {
-            case .cash:
+            case .cash, .investment:
                 let currency = holding.currency ?? "EGP"
-                if let rate = ratesToEGP[currency], rate > 0, rate.isFinite { value = holding.amount * rate }
-                else { value = nil; warnings.append("Missing valid EGP exchange rate for \(currency).") }
+                if let rate = ratesToEGP[currency], rate > 0, rate.isFinite {
+                    value = holding.amount * rate
+                } else {
+                    value = nil
+                    let label = holding.kind == .investment ? (holding.name ?? "investment") : "cash"
+                    warnings.append("Missing valid EGP exchange rate for \(currency) (\(label)).")
+                }
             case .gold:
                 guard holding.purpose != .personalUse || includePersonalGold else { continue }
                 let carat = holding.carat ?? 24
