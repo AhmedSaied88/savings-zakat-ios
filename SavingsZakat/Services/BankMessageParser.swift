@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-enum BankParseConfidence: String, Equatable {
+enum BankParseConfidence: String, Codable, Equatable {
     case high
     case medium
 }
