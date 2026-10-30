@@ -41,6 +41,8 @@ struct ContentView: View {
                 .tabItem { Label("Debts", systemImage: "doc.text") }
             AssetsZakatTab(snapshot: $snapshot, rates: $rates, onSave: save)
                 .tabItem { Label("Zakat", systemImage: "sparkles") }
+            BackupSettingsView(snapshot: $snapshot, onRestore: restoreSnapshot)
+                .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .tint(Color(red: 0.12, green: 0.34, blue: 0.78))
         .task { load() }
@@ -78,6 +80,18 @@ struct ContentView: View {
             importedMessages = try importCoordinator.loadMessages()
         } catch {
             storageError = "Could not read imported bank messages: \(error.localizedDescription)"
+        }
+    }
+
+    private func restoreSnapshot(_ restored: FinanceSnapshot) -> Bool {
+        do {
+            try store.save(restored)
+            snapshot = restored
+            storageError = nil
+            return true
+        } catch {
+            storageError = "Could not restore finance data: \\(error.localizedDescription)"
+            return false
         }
     }
 
