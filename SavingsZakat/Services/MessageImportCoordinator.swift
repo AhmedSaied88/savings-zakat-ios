@@ -2,6 +2,8 @@ import CryptoKit
 import Foundation
 
 struct MessageImportCoordinator {
+    private static let queueLock = NSLock()
+
     enum ImportError: Error, Equatable {
         case emptyMessage
         case messageTooLong
@@ -39,6 +41,9 @@ struct MessageImportCoordinator {
         senderIdentifier: String,
         receivedAt: Date = Date()
     ) throws -> ImportOutcome {
+        Self.queueLock.lock()
+        defer { Self.queueLock.unlock() }
+
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw ImportError.emptyMessage
         }
@@ -56,7 +61,7 @@ struct MessageImportCoordinator {
         let parsed = BankMessageParser.parse(text)
         let fingerprint = parsed?.fingerprint ?? Self.fingerprint(for: redactedText)
 
-        var messages = try loadMessages()
+        var messages = try loadMessagesUnlocked()
         if let duplicate = messages.first(where: {
             $0.senderIdentifier.caseInsensitiveCompare(safeSender) == .orderedSame &&
             $0.fingerprint == fingerprint &&
@@ -73,17 +78,29 @@ struct MessageImportCoordinator {
             fingerprint: fingerprint
         )
         messages.append(imported)
-        try saveMessages(messages)
+        try saveMessagesUnlocked(messages)
         return .imported(imported)
     }
 
     func loadMessages() throws -> [ImportedMessage] {
+        Self.queueLock.lock()
+        defer { Self.queueLock.unlock() }
+        return try loadMessagesUnlocked()
+    }
+
+    func saveMessages(_ messages: [ImportedMessage]) throws {
+        Self.queueLock.lock()
+        defer { Self.queueLock.unlock() }
+        try saveMessagesUnlocked(messages)
+    }
+
+    private func loadMessagesUnlocked() throws -> [ImportedMessage] {
         guard fileManager.fileExists(atPath: queueURL.path) else { return [] }
         let data = try Data(contentsOf: queueURL)
         return try JSONDecoder().decode([ImportedMessage].self, from: data)
     }
 
-    func saveMessages(_ messages: [ImportedMessage]) throws {
+    private func saveMessagesUnlocked(_ messages: [ImportedMessage]) throws {
         try fileManager.createDirectory(
             at: queueURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
