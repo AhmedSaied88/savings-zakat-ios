@@ -4,9 +4,9 @@ enum SensitiveTextRedactor {
     static func redact(_ text: String) -> String {
         var safe = normalizeDigits(in: text)
         let patterns = [
-            #"(?i)\b(?:otp|one[- ]time password|cvv|cvc|pin|verification code|security code)\s*[:#-]?\s*\d{3,8}\b"#,
-            #"(?i)\b(?:password|passcode|banking password)\s*[:#-]?\s*[A-Z0-9!@#$%^&*_-]{4,24}\b"#,
-            #"(?i)(?:رمز التحقق|كود التحقق|رمز التأكيد|كلمة المرور لمرة واحدة|الرقم السري)\s*[:#-]?\s*\d{3,8}\b"#,
+            #"(?i)\b(?:otp|one[- ]time password|cvv|cvc|pin|verification code|security code|passcode)\s*[:#-]?\s*[A-Z0-9!@#$%^&*_-]{3,32}\b"#,
+            #"(?i)\b(?:password|banking password)\s*[:#-]?\s*[A-Z0-9!@#$%^&*_-]{4,32}\b"#,
+            #"(?:رمز التحقق|كود التحقق|رمز التأكيد|رمز الدخول|كلمة المرور لمرة واحدة|كلمة المرور|كلمة السر|الرقم السري)\s*[:#-]?\s*[\p{L}\p{N}!@#$%^&*_-]{3,32}\b"#,
             #"(?<!\d)(?:\d[ -]?){12,19}(?!\d)"#
         ]
         for pattern in patterns {
