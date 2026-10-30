@@ -118,10 +118,7 @@ struct ContentView: View {
                             Text(label(h)).font(.headline)
                             Text("Hawl start: \(h.hawlStartDate.formatted(date: .abbreviated, time: .omitted))")
                                 .font(.caption).foregroundStyle(.secondary)
-                            if let due = HawlCalculator.dueDateResult(startDate: h.hawlStartDate) {
-                                Text("\(due.status == .officiallyConfirmed ? "Egyptian Hijri anniversary" : "Estimated Hijri anniversary"): \(due.date.formatted(date: .long, time: .omitted))")
-                                    .font(.caption).foregroundStyle(due.status == .officiallyConfirmed ? .secondary : .orange)
-                            }
+                            hawlSummary(for: h)
                         }
                     }.onDelete { offsets in snapshot.holdings.remove(atOffsets: offsets); save(); calculate() }
                 }
@@ -188,6 +185,17 @@ struct ContentView: View {
                 GoldSheet { snapshot.holdings.append($0); save() }
             }
             .onAppear(perform: load)
+        }
+    }
+
+
+    @ViewBuilder
+    private func hawlSummary(for holding: Holding) -> some View {
+        if let due = HawlCalculator.dueDateResult(startDate: holding.hawlStartDate) {
+            let label = due.status == .officiallyConfirmed ? "Egyptian Hijri anniversary" : "Estimated Hijri anniversary"
+            Text(label + ": " + due.date.formatted(date: .long, time: .omitted))
+                .font(.caption)
+                .foregroundStyle(due.status == .officiallyConfirmed ? Color.secondary : Color.orange)
         }
     }
 
