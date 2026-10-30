@@ -38,7 +38,10 @@ struct FinancePreferences: Codable, Equatable {
         includePersonalGold: Bool = false,
         bankMessageRules: [BankMessageRule] = []
     ) {
-        self.exchangeRatesToEGP = exchangeRatesToEGP
+        self.exchangeRatesToEGP = Dictionary(
+            exchangeRatesToEGP.map { ($0.key.uppercased(), $0.value) },
+            uniquingKeysWith: { _, latest in latest }
+        )
         self.exchangeRatesToEGP["EGP"] = 1
         self.goldPricesPerGramEGP = goldPricesPerGramEGP
         self.silverPricePerGramEGP = silverPricePerGramEGP
