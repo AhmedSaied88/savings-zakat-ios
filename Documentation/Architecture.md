@@ -10,6 +10,15 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 - **Persistence:** Versioned local snapshot/database. All financial records remain on device.
 - **System integrations:** Apple Shortcuts/App Intents for user-authorized SMS message handoff; UserNotifications for local reminders; file importer/exporter for backup.
 
+## Current persistence implementation and migration contract
+- The current implementation stores a Codable `FinanceSnapshot` as JSON at Application Support/`SavingsZakat/finance-data.json`.
+- `FinanceSnapshot.currentSchemaVersion` is currently `1`. The store rejects a snapshot with an unsupported schema version rather than silently decoding or overwriting it.
+- Writes use Foundation's atomic file-write option. A missing file currently loads as an empty snapshot.
+- The current store has no sequential schema migration pipeline yet. Future schema changes must add explicit, ordered migrations (N → N+1), preserve IDs and financial values, and write the migrated snapshot atomically only after successful decoding and validation.
+- A failed decode, failed validation, or unsupported future version must not replace the original file. Recovery must be explicit and must never silently reset financial records.
+- The earlier prototype used `@AppStorage("testHoldingsJSON")`; automatic import of that legacy key has not been implemented or verified. Do not claim legacy records are migrated. Before a release that could contain user-created records, add a tested one-time import path or clearly require a user-controlled export/import.
+- Persistence tests currently cover snapshot save/load, first-launch empty state and last-four-only card data. Corrupt-file recovery, schema migration and write-failure behavior remain follow-up coverage.
+
 ## Data safety
 - Store only card brand/label and last four digits. Never store full PAN, CVV, PIN, OTP, bank password or authentication secret.
 - Imported SMS is redacted before persistence. Parsed transactions remain pending until the user confirms them.
