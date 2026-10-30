@@ -131,7 +131,7 @@ final class FinanceAppUITests: XCTestCase {
         let preferences = app.buttons["Valuation, parser & calendar"]
         XCTAssertTrue(scrollTo(preferences, in: app))
         preferences.tap()
-        let addRule = app.descendants(matching: .any)["add-custom-bank-rule"]
+        let addRule = app.buttons["add-custom-bank-rule"]
         XCTAssertTrue(scrollTo(addRule, in: app))
         addRule.tap()
 
@@ -201,7 +201,7 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(scrollTo(hawlCalendar, in: app), "Hawl calendar link should be reachable by scrolling the Zakat list")
         hawlCalendar.tap()
         XCTAssertTrue(app.staticTexts["No Hawl dates"].waitForExistence(timeout: 5))
-        let scheduleButton = app.descendants(matching: .any)["schedule-hawl-reminders"]
+        let scheduleButton = app.buttons["schedule-hawl-reminders"]
         XCTAssertTrue(scheduleButton.exists)
         XCTAssertFalse(scheduleButton.isEnabled, "Reminder scheduling should be disabled until an asset has a Hawl date")
         XCTAssertFalse(app.staticTexts["Notifications are not permitted."].exists)
