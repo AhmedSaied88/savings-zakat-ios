@@ -47,6 +47,18 @@ struct FinancePreferencesView: View {
 
     var body: some View {
         Form {
+            Section("Bank message parser rules") {
+                Button {
+                    editingRule = nil
+                    showRuleEditor = true
+                } label: {
+                    Label("Add custom keyword rule", systemImage: "plus.circle")
+                        .frame(minHeight: 44)
+                }
+                Text("Create a custom keyword rule for a bank-message category. Custom matches remain medium confidence and require review.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+
             Section("Exchange rates to EGP") {
                 ForEach(["SAR", "USD", "AED", "EUR", "GBP"], id: \.self) { currency in
                     HStack {
@@ -139,13 +151,6 @@ struct FinancePreferencesView: View {
                             Label("Delete", systemImage: "trash")
                         }
                     }
-                }
-                Button {
-                    editingRule = nil
-                    showRuleEditor = true
-                } label: {
-                    Label("Add custom keyword rule", systemImage: "plus.circle")
-                        .frame(minHeight: 44)
                 }
                 Text("A custom rule matches one keyword in a bank message. Custom matches are medium confidence and still require your review. If multiple custom rules match, the message stays unparsed rather than guessing.")
                     .font(.footnote).foregroundStyle(.secondary)
