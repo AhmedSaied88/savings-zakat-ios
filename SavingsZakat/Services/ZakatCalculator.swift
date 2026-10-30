@@ -35,7 +35,7 @@ enum ZakatCalculator {
             let value: Double?
             switch holding.kind {
             case .cash, .investment:
-                let currency = holding.currency ?? "EGP"
+                let currency = (holding.currency ?? "EGP").uppercased()
                 if let rate = ratesToEGP[currency], rate > 0, rate.isFinite {
                     value = holding.amount * rate
                 } else {
