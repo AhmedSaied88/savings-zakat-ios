@@ -76,6 +76,10 @@ final class FinanceAppUITests: XCTestCase {
         let maskedDigits = app.staticTexts["card-last-four"]
         XCTAssertTrue(maskedDigits.waitForExistence(timeout: 5))
         XCTAssertEqual(maskedDigits.label, "•••• 3456")
+        let cardRow = app.buttons["card-row-Test debit"]
+        XCTAssertTrue(cardRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(cardRow.label.contains("Card ending in 3456"),
+                      "VoiceOver should announce only the stored last four digits")
     }
 
     func testCreditCardEntryShowsPaymentDueDate() throws {
