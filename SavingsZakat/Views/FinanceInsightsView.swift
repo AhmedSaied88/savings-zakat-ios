@@ -54,6 +54,9 @@ struct FinanceInsightsView: View {
                     }
                     .chartLegend(position: .bottom)
                     .frame(height: 190)
+                    .accessibilityLabel("Income and expenses by month in \(group.currency)")
+                    .accessibilityHint("The monthly values are also listed below the chart.")
+                    .accessibilityIdentifier("monthly-finance-chart-\(group.currency)")
 
                     ForEach(group.values.reversed()) { item in
                         VStack(alignment: .leading, spacing: 5) {
