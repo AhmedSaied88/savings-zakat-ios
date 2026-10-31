@@ -281,3 +281,41 @@ The implementation areas below are present and covered by the current simulator 
 - Encrypted backup excludes pending SMS review items and notification schedules.
 - CI uses simulator builds with code signing disabled; no signed IPA, TestFlight build, or App Store release exists.
 - PR #1 remains open, draft, and unmerged. Do not merge, publish, or release without explicit user approval.
+
+
+---
+
+# App-wide visual and accessibility refinement — 2026-10-31
+
+This section records the next implementation pass after the documentation reconciliation. It supersedes the earlier statement that only the Wallet had received visual refinement, but it does not imply visual or accessibility sign-off.
+
+## Implemented in the current branch
+
+- Added `DESIGN.md` as the canonical visual system and `UX-CONTRACT.md` as the canonical navigation/interaction/accessibility contract.
+- Applied one shared dynamic grouped-surface modifier to all **8 List screens and 14 Form screens**. All eight Lists now use the native inset-grouped composition.
+- Preserved the selected Design 4 compact Wallet composition and Design 3 blue/violet/gold palette. Debts use violet emphasis; gold remains an asset/icon accent.
+- Added separate Light/Dark semantic colors for income, expense, warning and danger. Replaced system green/orange/red foreground colors used for financial status text.
+- Added four Zakat asset-entry tiles (cash, gold, silver, manual investment) with accessible labels, hints, stable identifiers and a tile height above the 44-point project target.
+- Added text direction to transaction rows and hid the decorative direction icon from VoiceOver.
+- Expanded credit-card row accessibility labels to include outstanding balance and optional limit/minimum/payment due details; added edit hints to account/card rows.
+- Added a readable accessibility summary/hint to monthly charts while retaining the monthly income/expense/net value list.
+- Corrected Finance Preferences wording to describe the Cairo astronomical estimate and Islamic-civil arithmetic fallback; both remain explicitly Estimated.
+- Added `Documentation/Accessibility-Visual-Review.md` to record code-level findings, contrast policy, tests and remaining physical-device checks.
+
+## Automated tests added or extended
+
+- Three new `FinancePaletteTests` verify royal-blue/violet text contrast, semantic status text contrast, and gold non-text contrast in Light and Dark appearances against resolved UIKit system/grouped/pale-blue surfaces.
+- Added a UI test for the Egyptian astronomical-estimate explanation in Finance Preferences.
+- Extended the transaction UI test to require explicit direction text (not color alone).
+- Added a UI test for the four accessible Zakat asset-entry tiles.
+- Expected suite size after these additions: **141 unit tests and 16 UI tests**, subject to confirmation by the next successful full workflow.
+
+## Verification status and remaining work
+
+- The last verified baseline remains run #426 (138 unit + 14 UI tests). It predates this visual/accessibility refinement.
+- A new full simulator workflow has been queued for the current branch, but its result has not yet been confirmed. Do not claim the new tests passed until the run completes successfully on the latest head.
+- No screenshot review or rendered contrast measurement on a physical device has been recorded.
+- VoiceOver navigation/announcements, complete Dynamic Type behavior, touch-target review across all screens, actual Dark Mode rendering, and Reduce Motion/system accessibility settings remain open.
+- All 69 physical-iPhone checklist entries remain outstanding. A signed development build is still required.
+- PR #1 remains draft and unmerged; no merge, TestFlight, App Store release, or production deployment is authorized.
+
