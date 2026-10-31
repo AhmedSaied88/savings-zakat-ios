@@ -15,9 +15,10 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 ## Current implementation and verification
 
 - Native SwiftUI app with five primary tabs: Wallet, Accounts & Cards, Activity, Debts, and Savings & Zakat.
-- Latest full simulator workflow: [GitHub Actions run #426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085), branch `chore/task-1-baseline-architecture`, head `04717a0877d7724fa68468d0369f83ce3d4f2c82`.
+- Last verified full simulator baseline before the current visual/accessibility changes: [GitHub Actions run #426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085), branch `chore/task-1-baseline-architecture`, commit `04717a0877d7724fa68468d0369f83ce3d4f2c82`.
 - Run #426 built the app and test bundles and passed **138 unit tests plus 14 UI tests, with zero failures**.
-- This is simulator-only evidence. It does not validate physical iPhone behavior, signing, notifications on device, or App Store readiness.
+- The current visual/accessibility refinement adds palette contrast unit tests and UI regression coverage. Its full simulator workflow is pending; do not treat the earlier run as verification of these latest changes.
+- Simulator CI does not validate physical iPhone behavior, signing, notifications on device, or App Store readiness.
 - PR #1 remains open, draft, and unmerged. No release is authorized.
 
 ## Persistence and migration contract
@@ -116,3 +117,17 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 ## Free and offline operation
 
 No subscriptions, paid APIs, paid backend, paid notification provider, mandatory cloud account, or runtime network dependency is required for the core app. Rates and prices are manually entered; encrypted backup is user-controlled and local.
+
+
+## Visual system and accessibility
+
+- `DESIGN.md` is the canonical visual reference. The approved direction is the Design 4 compact Wallet composition with the Design 3 royal-blue, pale-blue, violet and gold palette.
+- `UX-CONTRACT.md` is the canonical navigation, interaction and accessibility contract. Preserve native SwiftUI navigation and form controls; visual refinements must not bypass existing ledger, persistence, calendar or reminder services.
+- `FinancePalette` in `SavingsZakat/Views/FinanceTabs.swift` owns the expressive palette, dynamic Light/Dark colors, semantic income/expense/warning/danger colors, and UIKit system surfaces.
+- `financeScreenSurface()` is applied to all eight List screens and fourteen Form screens. Primary Lists use inset-grouped sections; screen backgrounds use dynamic UIKit grouped surfaces.
+- The Zakat screen uses four accessible asset-entry tiles. Debt balances use violet; gold is reserved for asset/icon accents. Transaction direction is present in row text as well as its icon.
+- Monthly charts expose an accessible summary/hint and retain a readable monthly value list beneath the chart.
+- Custom toolbar actions have accessible names and 44×44-point minimum frames. Account/card rows and asset tiles expose action hints and stable identifiers.
+- `FinancePaletteTests` calculates contrast using resolved UIKit colors in Light and Dark appearances. It enforces at least 4.5:1 for text accents/status colors and 3:1 for gold non-text accents against system, grouped and pale-blue surfaces.
+- `Documentation/Accessibility-Visual-Review.md` records the code-level findings, reference contrast calculations, automated coverage, and outstanding device checks.
+- **Not yet signed off:** the current full simulator run is pending; no screenshot review or actual-device contrast measurement has been recorded. VoiceOver, full Dynamic Type, all touch targets, physical Dark Mode, and other device accessibility settings remain open.
