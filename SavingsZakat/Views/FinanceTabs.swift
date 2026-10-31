@@ -1286,27 +1286,31 @@ struct AssetsZakatTab: View {
             editorKind = kind
             showHoldingEditor = true
         } label: {
-            VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 14) {
                 Image(systemName: addIcon(for: kind))
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(assetColor(for: kind))
-                    .frame(width: 36, height: 36)
+                    .frame(width: 40, height: 40)
                     .background(assetColor(for: kind).opacity(0.14),
                                 in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .accessibilityHidden(true)
                 Text(addTitle(for: kind))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+                Image(systemName: "plus.circle")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(FinancePalette.royalBlue)
+                    .accessibilityHidden(true)
             }
-            .frame(maxWidth: .infinity, minHeight: 92, alignment: .leading)
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
             .background(FinancePalette.whiteSurface,
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, minHeight: 64)
         .accessibilityLabel(addTitle(for: kind))
         .accessibilityHint("Create a new \(kind.rawValue) asset")
         .accessibilityIdentifier("add-asset-\(kind.rawValue)")
@@ -1369,14 +1373,9 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    assetEntryButton(for: .cash)
-                    assetEntryButton(for: .gold)
-                }
-                HStack(spacing: 12) {
-                    assetEntryButton(for: .silver)
-                    assetEntryButton(for: .investment)
+            VStack(spacing: 8) {
+                ForEach(HoldingKind.allCases, id: \.self) { kind in
+                    assetEntryButton(for: kind)
                 }
             }
             .padding(.vertical, 8)
