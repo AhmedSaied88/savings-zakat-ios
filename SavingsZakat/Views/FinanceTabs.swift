@@ -1111,7 +1111,6 @@ struct AssetsZakatTab: View {
     var body: some View {
         NavigationStack {
             List {
-                manualInvestmentSection
                 assetsSection
                 hawlCalendarSection
                 zakatCalculationSection
@@ -1374,26 +1373,22 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
-            // Keep the three common asset actions as independent List rows.
-            // The manual investment action has its own section below so SwiftUI
-            // does not omit the final lazy row from the accessibility hierarchy.
-            ForEach([HoldingKind.cash, .gold, .silver], id: \.self) { kind in
-                assetEntryButton(for: kind)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+            // Keep all four entry actions in one eagerly-created row. Separate
+            // lazy List rows were intermittently missing from XCTest/VoiceOver
+            // accessibility queries while scrolling on iPhone simulators.
+            VStack(spacing: 8) {
+                assetEntryButton(for: .cash)
+                assetEntryButton(for: .gold)
+                assetEntryButton(for: .silver)
+                assetEntryButton(for: .investment)
             }
+            .padding(.vertical, 4)
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             if let assetError {
                 Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
             }
         }
     }
-
-    private var manualInvestmentSection: some View {
-        Section("Other assets") {
-            assetEntryButton(for: .investment)
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-        }
-    }
-
 
     private var hawlCalendarSection: some View {
         Section("Hawl calendar") {
