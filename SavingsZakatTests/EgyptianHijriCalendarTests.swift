@@ -144,6 +144,20 @@ final class EgyptianHijriCalendarTests: XCTestCase {
         XCTAssertEqual(firstMuharramDay.status, .officiallyConfirmed)
     }
 
+
+    func testUncoveredDateUsesEgyptianAstronomicalEstimateAndRemainsEstimated() throws {
+        let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(identifier: "Africa/Cairo")!)
+        let result = try XCTUnwrap(calendar.convert(date("2026-10-13")))
+
+        XCTAssertEqual(result.status, .estimated)
+        XCTAssertEqual(result.hijriYear, 1448)
+        XCTAssertEqual(result.hijriMonth, 5)
+        XCTAssertGreaterThanOrEqual(result.hijriDay, 1)
+        XCTAssertLessThanOrEqual(result.hijriDay, 30)
+        XCTAssertTrue(result.calculationNote?.contains("Egyptian astronomical estimate") == true)
+        XCTAssertTrue(result.calculationNote?.contains("Cairo") == true)
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
