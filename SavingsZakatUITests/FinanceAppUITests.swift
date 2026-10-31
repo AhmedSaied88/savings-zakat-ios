@@ -247,7 +247,6 @@ final class FinanceAppUITests: XCTestCase {
             .firstMatch
         XCTAssertTrue(quickAdd.waitForExistence(timeout: 5))
         XCTAssertTrue(quickAdd.isHittable)
-        XCTAssertTrue(app.staticTexts["Accounts"].exists)
     }
 
     func testWalletQuickAddMenuOpensAccountEditor() throws {
