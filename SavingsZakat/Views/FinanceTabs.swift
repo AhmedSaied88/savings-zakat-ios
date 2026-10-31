@@ -242,6 +242,11 @@ struct AccountsCardsTab: View {
                         let paymentDueDescription = card.paymentDueDate.map {
                             "Payment due \($0.formatted(date: .abbreviated, time: .omitted))"
                         }
+                        let outstandingDescription = card.kind == .credit
+                            ? "Outstanding \(((try? ledger.creditCardOutstanding(for: card.id)) ?? (card.openingOutstandingBalance ?? 0)).formatted(.currency(code: cardCurrency)))"
+                            : nil
+                        let limitDescription = card.creditLimit.map { "Limit \($0.formatted(.currency(code: cardCurrency)))" }
+                        let minimumDescription = card.minimumDue.map { "Minimum due \($0.formatted(.currency(code: cardCurrency)))" }
                         Button { editingCard = card } label: {
                             VStack(alignment: .leading, spacing: 5) {
                                 HStack {
@@ -279,7 +284,9 @@ struct AccountsCardsTab: View {
                         .buttonStyle(.plain)
                         // Keep the card row as one clear VoiceOver target while retaining
                         // the due-date description in its accessible label.
-                        .accessibilityLabel(([card.name, card.kind.rawValue.capitalized, paymentDueDescription]
+                        .frame(minHeight: 44)
+                        .accessibilityLabel(([card.name, card.kind.rawValue.capitalized,
+                            outstandingDescription, limitDescription, minimumDescription, paymentDueDescription]
                             .compactMap { $0 }).joined(separator: ", "))
                         .accessibilityIdentifier("card-row-\(card.name)")
                     }
@@ -483,12 +490,14 @@ struct TransactionsTab: View {
                                     onSave()
                                 }
                                 .buttonStyle(.bordered)
+                                .frame(minHeight: 44)
                                 Spacer()
                                 Button("Delete", role: .destructive) {
                                     snapshot.recurringTransactions?.removeAll { $0.id == rule.id }
                                     onSave()
                                 }
                                 .buttonStyle(.bordered)
+                                .frame(minHeight: 44)
                             }
                         }
                         .padding(.vertical, 4)
@@ -1525,7 +1534,8 @@ private struct TransactionRow: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(transaction.title).font(.headline)
-                Text([transaction.category, accountName, transaction.date.formatted(date: .abbreviated, time: .omitted)]
+                Text([transaction.direction.rawValue.capitalized, transaction.category, accountName,
+                      transaction.date.formatted(date: .abbreviated, time: .omitted)]
                     .compactMap { $0 }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(.secondary)
                 if transaction.reviewStatus == .needsReview {
@@ -1537,8 +1547,6 @@ private struct TransactionRow: View {
                 .font(.subheadline.weight(.semibold)).monospacedDigit()
         }
         .padding(.vertical, 3)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(transaction.direction.rawValue.capitalized): \(transaction.title), \(transaction.amount.formatted(.currency(code: transaction.currency)))")
     }
 }
 
@@ -2068,6 +2076,7 @@ private struct WalletAccountRow: View {
                 .foregroundStyle(account.kind == .savings ? FinancePalette.violet : FinancePalette.royalBlue)
                 .frame(width: 36, height: 36)
                 .background(FinancePalette.whiteSurface.opacity(0.9), in: RoundedRectangle(cornerRadius: 10))
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(account.name).font(.headline)
                 Text(account.institution ?? account.kind.rawValue.capitalized)
