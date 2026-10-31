@@ -9,7 +9,7 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 The last verified full GitHub Actions baseline is [run #426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085) on commit `04717a0877d7724fa68468d0369f83ce3d4f2c82`:
 - App and test bundles built successfully.
 - **138 unit tests and 14 UI tests passed; zero failures.**
-- This run predates the current visual/accessibility changes. New contrast and UI regression tests have been added, and the updated branch is awaiting a full simulator run.
+- This run predates the current visual/accessibility changes. New contrast and UI regression tests have been added. Full simulator run [#492](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41214722953) is queued for source/test head `208d9b8`; its result is not yet confirmed.
 - CI runs on an iPhone simulator. It is not evidence of physical-device behavior or a signed distribution build.
 
 Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) remains **open and draft**. It is not merged and is not approved for merge or release. No changes have been made to the existing PWA.
