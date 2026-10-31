@@ -407,6 +407,27 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(cardBalance.label.contains("250"), "Card balance should be opening 200 + purchase 100 - repayment 50")
     }
 
+    func testFinancePreferencesExplainEgyptianAstronomicalEstimate() throws {
+        let app = launchCleanApp()
+        let settings = app.buttons["Settings & backup"]
+        XCTAssertTrue(scrollTo(settings, in: app))
+        settings.tap()
+
+        let preferences = app.buttons["Valuation, parser & calendar"]
+        XCTAssertTrue(preferences.waitForExistence(timeout: 5))
+        preferences.tap()
+
+        let estimateDescription = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS %@", "Cairo astronomical estimate")
+        ).firstMatch
+        XCTAssertTrue(estimateDescription.waitForExistence(timeout: 5),
+                      "Settings must explain the Egypt-calibrated astronomical estimate")
+        XCTAssertTrue(estimateDescription.label.contains("Estimated"),
+                      "Calculated Hijri dates must remain explicitly estimated")
+        XCTAssertFalse(estimateDescription.label.localizedCaseInsensitiveContains("Islamic-civil fallback only"),
+                       "Settings must not describe the superseded civil-only fallback")
+    }
+
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
         let collection = app.collectionViews.firstMatch
