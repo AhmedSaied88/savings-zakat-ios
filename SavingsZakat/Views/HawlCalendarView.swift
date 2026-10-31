@@ -68,6 +68,10 @@ struct HawlCalendarView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
+        .listStyle(.insetGrouped)
+
+        .financeScreenSurface()
+
         .navigationTitle("Hawl calendar")
         .navigationBarTitleDisplayMode(.inline)
     }
