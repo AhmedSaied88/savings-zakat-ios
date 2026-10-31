@@ -231,6 +231,25 @@ final class FinanceAppUITests: XCTestCase {
     }
 
 
+    func testWalletRendersInDarkAppearance() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ui-testing",
+            "-ui-testing-reset",
+            "-uiUserInterfaceStyle",
+            "dark"
+        ]
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars["Wallet"].waitForExistence(timeout: 5))
+        let quickAdd = app.descendants(matching: .any)
+            .matching(identifier: "wallet-quick-add")
+            .firstMatch
+        XCTAssertTrue(quickAdd.waitForExistence(timeout: 5))
+        XCTAssertTrue(quickAdd.isHittable)
+        XCTAssertTrue(app.staticTexts["Accounts"].exists)
+    }
+
     func testWalletQuickAddMenuOpensAccountEditor() throws {
         let app = launchCleanApp()
         let quickAdd = app.descendants(matching: .any)
