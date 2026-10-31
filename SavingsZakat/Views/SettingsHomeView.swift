@@ -160,7 +160,7 @@ struct FinancePreferencesView: View {
                 Text("A custom rule matches one keyword in a bank message. Custom matches are medium confidence and still require your review. If multiple custom rules match, the message stays unparsed rather than guessing.")
                     .font(.footnote).foregroundStyle(.secondary)
                 if let ruleError {
-                    Text(ruleError).font(.footnote).foregroundStyle(.red)
+                    Text(ruleError).font(.footnote).foregroundStyle(FinancePalette.danger)
                 }
             }
 
@@ -235,7 +235,7 @@ private struct BankMessageRuleEditor: View {
                 }
                 Toggle("Enabled", isOn: $isEnabled)
                 if let errorMessage {
-                    Text(errorMessage).font(.footnote).foregroundStyle(.red)
+                    Text(errorMessage).font(.footnote).foregroundStyle(FinancePalette.danger)
                 }
             }
             .financeScreenSurface()
