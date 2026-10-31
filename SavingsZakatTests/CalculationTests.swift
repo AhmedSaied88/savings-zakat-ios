@@ -215,7 +215,8 @@ final class ZakatCalculatorTests: XCTestCase {
             nisabEGP: 1, asOf: date("2026-10-29")
         )
         XCTAssertEqual(result.totalValuedWealthEGP, 0, accuracy: 0.01)
-        XCTAssertTrue(result.warnings.contains { $0.contains("Unsupported gold carat") })
+        XCTAssertEqual(result.breakdown.first?.status, .invalid)
+        XCTAssertTrue(result.warnings.contains { $0.contains("Unsupported gold carat for Gold 20K") })
     }
 
     private func date(_ value: String) -> Date {
