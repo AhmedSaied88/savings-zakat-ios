@@ -286,8 +286,9 @@ final class FinanceAppUITests: XCTestCase {
     func testHawlCalendarDisplaysEmptyStateWithoutRequestingReminders() throws {
         let app = launchCleanApp()
         app.tabBars.buttons["Zakat"].tap()
-        let hawlCalendar = app.buttons["View Hawl calendar and reminders"]
-        XCTAssertTrue(scrollTo(hawlCalendar, in: app), "Hawl calendar link should be reachable by scrolling the Zakat list")
+        let hawlCalendar = app.descendants(matching: .any)["hawl-calendar-link"]
+        XCTAssertTrue(scrollTo(hawlCalendar, in: app, maxSwipes: 20),
+                      "Hawl calendar link should be reachable by scrolling the Zakat list")
         hawlCalendar.tap()
         XCTAssertTrue(app.staticTexts["No Hawl dates"].waitForExistence(timeout: 5))
         let scheduleButton = app.buttons["schedule-hawl-reminders"]
