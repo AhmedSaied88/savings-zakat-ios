@@ -109,7 +109,7 @@
 **Interfaces:** `EgyptianHijriCalendar.convert(gregorianDate: Date) -> EgyptianHijriDate`; each result has confirmed/estimated status and provenance.
 - [x] Verify the official Egyptian authority/method and document five consecutive source-backed month starts (1448 AH, June–October 2026).
 - [x] Add tests for published month starts, month boundaries, coverage edges, source provenance and future/uncovered estimated status (Xcode execution pending).
-- [ ] Expand the bundled versioned table to broad historical coverage and implement a documented Egypt-calibrated astronomical estimate for uncovered dates.
+- [x] Expand the bundled versioned table with 11 additional Dar Al-Ifta-backed 1447 AH month starts; keep the missing Shawwal 1447 boundary unconfirmed. The Egypt-calibrated astronomical estimate remains open.
 - [x] Display Hijri equivalent immediately beside Gregorian acquisition/Hawl date pickers, with Confirmed/Estimated wording.
 - [x] Keep Saudi Umm al-Qura out of the production source of truth; conversion remains offline.
 
@@ -196,3 +196,8 @@
 This addendum supersedes older implementation notes above that describe the macOS runner allocation failures or Xcode tests as still pending. GitHub Actions run [#383](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41142040931) completed successfully for branch `chore/task-1-baseline-architecture` at commit `ffcbab5184b92e0871a09545224883287449b659` (`ffcbab5`). The job completed project generation, app and test-bundle build, and the XCTest/UI-test step successfully. Its test log explicitly reports **130 unit tests and 12 UI tests, all passing with zero failures**. Run #382 for the same SHA was cancelled as a duplicate; it is not a code failure. This supersedes run #374 as the latest-source test evidence.
 
 The latest UI work is an initial visual refinement only: pale-blue wallet summary surface, royal-blue balance/actions, violet debt accent, gold asset accent, and shared royal-blue tint. Task 4's full composition, visual review, accessibility, Dynamic Type and Dark Mode checks remain open. No simulator screenshot review or physical-iPhone verification has been recorded. All device checks in `Documentation/Device-Test-Checklist.md` remain outstanding. Do not merge or release without the user's explicit approval.
+
+
+### Task 8 calendar dataset expansion (2026-10-31)
+
+Added eleven primary-source Dar Al-Ifta month-start records for 1447 AH (Muharram through Ramadan, plus Dhu al-Qi'dah and Dhu al-Hijjah) to the existing five consecutive 1448 AH records. Dataset version is now `2026.10.2`, with 16 source-backed records. Shawwal 1447 is intentionally omitted because its primary announcement was not independently located; the engine must not bridge Ramadan to Dhu al-Qi'dah as a confirmed interval. Dhu al-Hijjah 1447 and Muharram 1448 are consecutive and can form a confirmed interval. The bundled calendar test now asserts all 16 year/month entries and provenance. Source research is recorded in `Documentation/Egyptian-Calendar-Sources.md`. CI is running for the updated calendar source and tests; do not mark test verification complete until the run succeeds. The Egypt-specific astronomical estimator is still not implemented; uncovered dates continue to use the explicitly labelled Islamic-civil estimate.
