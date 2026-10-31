@@ -1401,8 +1401,10 @@ struct AssetsZakatTab: View {
             } label: {
                 Label("View Hawl calendar and reminders", systemImage: "calendar.badge.clock")
                     .frame(minHeight: 44)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("hawl-calendar-link")
             }
-            .accessibilityIdentifier("hawl-calendar-link")
+            .accessibilityIdentifier("hawl-calendar-navigation")
         }
     }
 
