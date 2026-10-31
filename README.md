@@ -4,12 +4,13 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 ## Current status — 2026-10-31
 
-**Simulator-tested implementation; not release-ready and not yet validated on a physical iPhone.**
+**Core implementation is simulator-tested; the latest visual/accessibility refinement is awaiting its own CI verification. The app is not release-ready and has not been validated on a physical iPhone.**
 
-The current branch is `chore/task-1-baseline-architecture`, at documentation commit `04717a0877d7724fa68468d0369f83ce3d4f2c82`. The latest full GitHub Actions run [#426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085) passed on this exact branch head:
+The last verified full GitHub Actions baseline is [run #426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085) on commit `04717a0877d7724fa68468d0369f83ce3d4f2c82`:
 - App and test bundles built successfully.
 - **138 unit tests and 14 UI tests passed; zero failures.**
-- The workflow ran on an iPhone simulator. It is not evidence of physical-device behavior or a signed distribution build.
+- This run predates the current visual/accessibility changes. New contrast and UI regression tests have been added, and the updated branch is awaiting a full simulator run.
+- CI runs on an iPhone simulator. It is not evidence of physical-device behavior or a signed distribution build.
 
 Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) remains **open and draft**. It is not merged and is not approved for merge or release. No changes have been made to the existing PWA.
 
@@ -23,12 +24,12 @@ Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) rema
 - Cash, gold, silver, and manual-investment asset register; Hawl and Zakat calculations with per-asset breakdown.
 - Egyptian Hijri date provenance, 16 bundled Dar Al-Ifta month-start records across 1447–1448 AH, and an offline Cairo-reference astronomical estimator for uncovered dates. Calculated dates remain **Estimated**, never official.
 - Local Hawl reminders, encrypted user-controlled backup/restore, valuation/parser preferences, monthly insights, and manual-confirmed recurring income/expense templates.
-- Initial Wallet visual refinement using pale-blue surfaces, royal-blue actions, violet debt accents, and gold asset highlights.
+- App-wide visual consistency pass: native inset-grouped lists, shared dynamic surfaces for all List/Form screens, semantic high-contrast status colors, violet debt accents, gold asset highlights, accessible asset-entry tiles, and accessible chart summaries.
 
 ## Important limitations and remaining work
 
 - **Physical iPhone validation:** all 69 items in `Documentation/Device-Test-Checklist.md` remain unchecked. A signed development build and physical iPhone are required.
-- **Visual/accessibility sign-off:** the current Wallet work is an initial refinement, not a completed app-wide Design 4 composition or visual sign-off. No screenshot review or rendered contrast measurement is recorded. VoiceOver, full Dynamic Type, touch-target, and device Dark Mode review remain outstanding. The dark-appearance UI test verifies launch under an appearance override only.
+- **Visual/accessibility sign-off:** the app-wide code-level refinement and runtime contrast tests have been added, but the latest CI result is pending. No simulator screenshot review or physical-device visual sign-off is recorded. VoiceOver, full Dynamic Type, all custom touch targets, and device Dark Mode review remain outstanding. The existing dark-appearance UI test verifies launch under an appearance override only.
 - **Signing and release:** CI uses simulator builds with code signing disabled. No signed IPA, TestFlight build, App Store release, or production deployment has been created.
 - **Schema evolution:** schema version 1 is the only supported snapshot format. A sequential N → N+1 migration pipeline must be implemented and tested before a future schema-version bump.
 - **Egyptian calendar coverage:** the 16 official source-backed starts are a partial dataset, not a complete historical calendar. Shawwal 1447 is intentionally absent because a direct final Dar Al-Ifta announcement was not independently verified. The implementation does not bridge that gap as a confirmed interval.
@@ -45,7 +46,10 @@ Use fictional test data only until physical-device validation and explicit appro
 - `SavingsZakat/Models/` — holding, account, card, transaction, liability, imported-message, preference, and finance snapshot models.
 - `SavingsZakat/Services/` — local finance store, ledger, parser/redactor, Egyptian calendar and estimator, Hawl/Zakat calculations, reminders, and backup.
 - `SavingsZakat/Views/` — Wallet, Accounts & Cards, Activity, Debts, Savings & Zakat, Hawl, insights, settings, and backup screens.
-- `SavingsZakatTests/` — unit tests for calculations, calendar, persistence, ledger, imports, reminders, backup, preferences, and insights.
+- `DESIGN.md` — canonical native visual system and palette.
+- `UX-CONTRACT.md` — navigation, interaction and accessibility contract.
+- `Documentation/Accessibility-Visual-Review.md` — code-level review, contrast policy and remaining device checks.
+- `SavingsZakatTests/` — unit tests for calculations, calendar, persistence, ledger, imports, reminders, backup, preferences, insights, and palette contrast.
 - `SavingsZakatUITests/` — simulator UI automation.
 - `Documentation/Architecture.md` — architecture, data safety, calendar provenance, and migration contract.
 - `Documentation/Device-Test-Checklist.md` — physical-iPhone validation checklist.
