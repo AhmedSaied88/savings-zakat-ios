@@ -32,6 +32,8 @@ struct SettingsHomeView: View {
                     Label("Imported messages are redacted and require review before posting.", systemImage: "hand.raised")
                 }
         }
+        .financeScreenSurface()
+
         .navigationTitle("Settings")
     }
 }
@@ -169,7 +171,7 @@ struct FinancePreferencesView: View {
                    let last = EgyptianCalendarRepository.officialMonthStarts.last {
                     LabeledContent("Seed coverage", value: "\(first.gregorianStart.formatted(date: .abbreviated, time: .omitted)) – \(last.gregorianStart.formatted(date: .abbreviated, time: .omitted))")
                 }
-                Text("Dates outside fully bounded Dar Al-Ifta announcement intervals use an explicitly estimated Islamic-civil fallback, not an official Egyptian date.")
+                Text("For dates not covered by fully bounded Dar Al-Ifta announcements, the app uses a Cairo astronomical estimate when calculations are available; otherwise it falls back to Islamic-civil arithmetic. Both are always labelled Estimated and are not official Egyptian dates.")
                     .font(.footnote).foregroundStyle(.secondary)
                 NavigationLink {
                     HawlCalendarView(holdings: holdings)
@@ -183,6 +185,8 @@ struct FinancePreferencesView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
+        .financeScreenSurface()
+
         .navigationTitle("Finance preferences")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showRuleEditor) {
@@ -235,6 +239,8 @@ private struct BankMessageRuleEditor: View {
                     Text(errorMessage).font(.footnote).foregroundStyle(.red)
                 }
             }
+            .financeScreenSurface()
+
             .navigationTitle(rule == nil ? "Add parser rule" : "Edit parser rule")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
