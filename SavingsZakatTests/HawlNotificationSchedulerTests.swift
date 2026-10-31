@@ -136,6 +136,22 @@ final class HawlNotificationSchedulerTests: XCTestCase {
         XCTAssertEqual(center.notifications.count, 2)
     }
 
+    func testRescheduleFreesCapacityBeforeAddingNewReminderIdentifiers() async throws {
+        let center = MockHawlNotificationCenter()
+        let scheduler = HawlNotificationScheduler(notificationCenter: center)
+        for index in 0..<64 {
+            let obsolete = notification(holdingID: UUID(), offset: 7, fireDate: date("2026-02-01").addingTimeInterval(TimeInterval(index)))
+            center.notifications[obsolete.identifier] = obsolete
+        }
+        let replacement = notification(holdingID: UUID(), offset: 1, fireDate: date("2026-03-01"))
+
+        let result = try await scheduler.schedule([replacement])
+
+        XCTAssertEqual(result, .scheduled(count: 1))
+        XCTAssertEqual(center.notifications.count, 1)
+        XCTAssertEqual(center.notifications[replacement.identifier], replacement)
+    }
+
     func testPartialSchedulingReportsFailedIdentifiers() async throws {
         let center = MockHawlNotificationCenter()
         let first = notification(holdingID: UUID(), offset: 7, fireDate: date("2026-02-01"))
@@ -212,7 +228,9 @@ private final class MockHawlNotificationCenter: HawlNotificationCenterProtocol {
     }
 
     func add(_ notification: HawlLocalNotification) async throws {
-        if failedIdentifiers.contains(notification.identifier) {
+        if failedIdentifiers.contains(notification.identifier) ||
+            (notifications.count >= HawlReminderPlanner.maximumPendingNotifications &&
+             notifications[notification.identifier] == nil) {
             throw MockError.addFailed
         }
         notifications[notification.identifier] = notification
