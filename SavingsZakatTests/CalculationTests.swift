@@ -29,6 +29,30 @@ final class HawlCalculatorTests: XCTestCase {
     }
 
 
+    func testInvalidGoldWeightAndSilverPurityAreMarkedInvalid() {
+        let invalidGold = Holding(
+            id: UUID(), kind: .gold, amount: 5, currency: nil, grams: -2, carat: 21,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment
+        )
+        let invalidSilver = Holding(
+            id: UUID(), kind: .silver, amount: 20, currency: nil, grams: 20, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"),
+            purpose: .investment, name: "Silver", purity: 700
+        )
+
+        let result = ZakatCalculator.calculate(
+            holdings: [invalidGold, invalidSilver], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: ["21": 5_000], silverPricePerGramEGP: 100,
+            nisabEGP: 1, asOf: date("2026-10-29")
+        )
+
+        XCTAssertEqual(result.breakdown.map(\\.status), [.invalid, .invalid])
+        XCTAssertTrue(result.warnings.contains { $0.contains("Invalid gold weight") })
+        XCTAssertTrue(result.warnings.contains { $0.contains("Invalid silver weight or purity") })
+        XCTAssertEqual(result.totalValuedWealthEGP, 0, accuracy: 0.01)
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
