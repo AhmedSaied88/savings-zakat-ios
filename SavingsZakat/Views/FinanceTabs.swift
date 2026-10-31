@@ -1334,16 +1334,39 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
-            ForEach(HoldingKind.allCases, id: \.self) { kind in
-                Button {
-                    editingHolding = nil
-                    editorKind = kind
-                    showHoldingEditor = true
-                } label: {
-                    Label(addTitle(for: kind), systemImage: addIcon(for: kind))
-                        .frame(minHeight: 44)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                ForEach(HoldingKind.allCases, id: \.self) { kind in
+                    Button {
+                        editingHolding = nil
+                        editorKind = kind
+                        showHoldingEditor = true
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Image(systemName: addIcon(for: kind))
+                                .font(.title3.weight(.semibold))
+                                .foregroundStyle(assetColor(for: kind))
+                                .frame(width: 36, height: 36)
+                                .background(assetColor(for: kind).opacity(0.14),
+                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .accessibilityHidden(true)
+                            Text(addTitle(for: kind))
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.primary)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 92, alignment: .leading)
+                        .padding(12)
+                        .background(FinancePalette.whiteSurface,
+                                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(addTitle(for: kind))
+                    .accessibilityHint("Create a new \(kind.rawValue) asset")
+                    .accessibilityIdentifier("add-asset-\(kind.rawValue)")
                 }
             }
+            .padding(.vertical, 8)
             if let assetError {
                 Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
             }
