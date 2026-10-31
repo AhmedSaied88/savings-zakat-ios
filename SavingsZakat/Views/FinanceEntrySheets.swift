@@ -63,6 +63,8 @@ struct CardEntrySheet: View {
                 Text("Never enter the full card number, CVV, PIN or OTP.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
+            .financeScreenSurface()
+
             .navigationTitle(card == nil ? "New card" : "Edit card")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -168,6 +170,8 @@ struct LiabilityEntrySheet: View {
                 Toggle("Add due date", isOn: $hasDueDate)
                 if hasDueDate { DatePicker("Due date", selection: $dueDate, displayedComponents: .date) }
             }
+            .financeScreenSurface()
+
             .navigationTitle("New liability")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
