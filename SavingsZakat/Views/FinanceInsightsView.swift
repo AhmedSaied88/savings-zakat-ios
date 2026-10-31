@@ -66,13 +66,13 @@ struct FinanceInsightsView: View {
                                 Text("Income")
                                 Spacer()
                                 Text(item.income, format: .currency(code: group.currency))
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(FinancePalette.income)
                             }
                             HStack {
                                 Text("Expenses")
                                 Spacer()
                                 Text(item.expenses, format: .currency(code: group.currency))
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(FinancePalette.warning)
                             }
                             HStack {
                                 Text("Net")
