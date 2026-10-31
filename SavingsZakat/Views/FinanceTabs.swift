@@ -1319,8 +1319,8 @@ struct AssetsZakatTab: View {
     private var assetsSection: some View {
         Section("Savings and Zakat assets") {
             if snapshot.holdings.isEmpty {
-                ContentUnavailableView("No assets recorded", systemImage: "sparkles",
-                                       description: Text("Add cash, gold, silver or a manual investment."))
+                Text("No assets recorded yet. Add cash, gold, silver or a manual investment below.")
+                    .foregroundStyle(.secondary)
             }
             ForEach(snapshot.holdings) { holding in
                 Button {
@@ -1373,12 +1373,13 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
-            VStack(spacing: 8) {
-                ForEach(HoldingKind.allCases, id: \.self) { kind in
-                    assetEntryButton(for: kind)
-                }
+            // Keep each action as its own List row. A single VStack row taller
+            // than the viewport can make its lower buttons unreachable to scrolling
+            // and VoiceOver on iPhone.
+            ForEach(HoldingKind.allCases, id: \.self) { kind in
+                assetEntryButton(for: kind)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             }
-            .padding(.vertical, 8)
             if let assetError {
                 Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
             }
