@@ -53,6 +53,10 @@ struct FinanceInsightsView: View {
                         .position(by: .value("Type", "Expenses"))
                     }
                     .chartLegend(position: .bottom)
+                    .chartForegroundStyleScale([
+                        "Income": FinancePalette.income,
+                        "Expenses": FinancePalette.expense
+                    ])
                     .frame(height: 190)
                     .accessibilityLabel("Income and expenses by month in \(group.currency)")
                     .accessibilityHint("The monthly values are also listed below the chart.")
