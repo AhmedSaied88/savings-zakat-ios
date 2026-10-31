@@ -48,6 +48,11 @@ final class FinanceAppUITests: XCTestCase {
         ).firstMatch
         XCTAssertTrue(scrollTo(categorizedTransaction, in: app),
                       "The saved transaction should show its Shopping category in Activity")
+        let directionLabel = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Expense")
+        ).firstMatch
+        XCTAssertTrue(scrollTo(directionLabel, in: app),
+                      "Transaction direction must be visible as text, not communicated by icon color alone")
     }
 
     func testCardEntryMasksDigitsToLastFour() throws {
