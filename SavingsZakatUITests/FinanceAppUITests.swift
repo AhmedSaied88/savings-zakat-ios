@@ -231,6 +231,20 @@ final class FinanceAppUITests: XCTestCase {
     }
 
 
+    func testWalletQuickAddMenuOpensAccountEditor() throws {
+        let app = launchCleanApp()
+        let quickAdd = app.buttons["wallet-quick-add"]
+        XCTAssertTrue(quickAdd.waitForExistence(timeout: 5))
+        quickAdd.tap()
+
+        let accountAction = app.buttons["wallet-quick-add-account"]
+        XCTAssertTrue(accountAction.waitForExistence(timeout: 3))
+        accountAction.tap()
+
+        XCTAssertTrue(app.navigationBars["Add account"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["Account name"].exists)
+    }
+
     func testWalletDisplaysEmptyAccountsState() throws {
         let app = launchCleanApp()
         XCTAssertTrue(app.staticTexts["No accounts yet"].waitForExistence(timeout: 5))

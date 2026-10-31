@@ -1,12 +1,31 @@
 import SwiftUI
+import UIKit
 
-/// Shared palette for the native finance interface.
+/// Shared palette for the native finance interface. Light-mode values preserve
+/// the selected blue/violet/gold direction; dark-mode values are brighter so
+/// the same semantic roles remain legible on dark system surfaces.
 enum FinancePalette {
-    static let royalBlue = Color(red: 0.12, green: 0.34, blue: 0.78)
-    static let paleBlue = Color(red: 0.93, green: 0.96, blue: 1.00)
-    static let violet = Color(red: 0.43, green: 0.32, blue: 0.72)
-    static let gold = Color(red: 0.72, green: 0.52, blue: 0.12)
-    static let whiteSurface = Color(.systemBackground)
+    static let royalBlue = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.52, green: 0.68, blue: 1.00, alpha: 1)
+            : UIColor(red: 0.12, green: 0.34, blue: 0.78, alpha: 1)
+    })
+    static let paleBlue = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.09, green: 0.15, blue: 0.25, alpha: 1)
+            : UIColor(red: 0.93, green: 0.96, blue: 1.00, alpha: 1)
+    })
+    static let violet = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.76, green: 0.68, blue: 1.00, alpha: 1)
+            : UIColor(red: 0.43, green: 0.32, blue: 0.72, alpha: 1)
+    })
+    static let gold = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.80, blue: 0.40, alpha: 1)
+            : UIColor(red: 0.68, green: 0.46, blue: 0.08, alpha: 1)
+    })
+    static let whiteSurface = Color(uiColor: .systemBackground)
 }
 
 struct WalletDashboardTab: View {
@@ -14,6 +33,11 @@ struct WalletDashboardTab: View {
     @Binding var preferences: FinancePreferences
     let onSave: () -> Void
     let onRestore: (FinanceSnapshot) -> Bool
+
+    @State private var showAddTransaction = false
+    @State private var showAddAccount = false
+    @State private var showAddAsset = false
+    @State private var quickAddError: String?
 
     private var ledger: FinanceLedger { FinanceLedger(snapshot: snapshot) }
     private var summary: MoneySummary {
@@ -47,22 +71,78 @@ struct WalletDashboardTab: View {
                 }
             }
             .navigationTitle("Wallet")
-        }
-    }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showAddTransaction = true
+                        } label: {
+                            Label("Transaction", systemImage: "arrow.left.arrow.right")
+                        }
+                        .accessibilityIdentifier("wallet-quick-add-transaction")
 
-    private func metric(_ title: String, _ value: Decimal, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
-            Text(value, format: .currency(code: "EGP")).font(.subheadline.bold()).foregroundStyle(color)
-        }
-    }
+                        Button {
+                            showAddAccount = true
+                        } label: {
+                            Label("Account", systemImage: "building.columns")
+                        }
+                        .accessibilityIdentifier("wallet-quick-add-account")
 
-    private func icon(for kind: FinanceAccountKind) -> String {
-        switch kind {
-        case .bank: return "building.columns"
-        case .cash: return "banknote"
-        case .savings: return "safe"
-        case .wallet: return "wallet.bifold"
+                        Button {
+                            showAddAsset = true
+                        } label: {
+                            Label("Savings asset", systemImage: "sparkles")
+                        }
+                        .accessibilityIdentifier("wallet-quick-add-asset")
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                    .accessibilityLabel("Quick add")
+                    .accessibilityHint("Add a transaction, account or savings asset")
+                    .accessibilityIdentifier("wallet-quick-add")
+                }
+            }
+            .sheet(isPresented: $showAddTransaction) {
+                TransactionEditorSheet(accounts: snapshot.accounts, cards: snapshot.cards) { transaction in
+                    var updatedLedger = FinanceLedger(snapshot: snapshot)
+                    do {
+                        try updatedLedger.post(transaction)
+                        snapshot = updatedLedger.snapshot
+                        quickAddError = nil
+                        onSave()
+                    } catch {
+                        quickAddError = "Could not add transaction. Check the amount, account, currency and transfer destination."
+                    }
+                }
+            }
+            .sheet(isPresented: $showAddAccount) {
+                AccountEditorSheet { account in
+                    snapshot.accounts.append(account)
+                    quickAddError = nil
+                    onSave()
+                }
+            }
+            .sheet(isPresented: $showAddAsset) {
+                HoldingEditorSheet(holding: nil, defaultKind: .cash) { holding in
+                    var updatedLedger = AssetLedger(holdings: snapshot.holdings)
+                    do {
+                        try updatedLedger.add(holding)
+                        snapshot.holdings = updatedLedger.holdings
+                        quickAddError = nil
+                        onSave()
+                    } catch {
+                        quickAddError = "Could not add this asset. Check its amount, currency, weight and dates."
+                    }
+                }
+            }
+            .alert("Could not add item", isPresented: Binding(
+                get: { quickAddError != nil },
+                set: { if !$0 { quickAddError = nil } }
+            )) {
+                Button("OK", role: .cancel) { quickAddError = nil }
+            } message: {
+                Text(quickAddError ?? "An unknown error occurred.")
+            }
         }
     }
 
@@ -1970,24 +2050,115 @@ private struct WalletQuickOverviewContent: View {
     let onSave: () -> Void
     let onRestore: (FinanceSnapshot) -> Bool
 
+    private var columns: [GridItem] {
+        [GridItem(.flexible()), GridItem(.flexible())]
+    }
+
     var body: some View {
-        Group {
-            Label("\(snapshot.cards.count) cards", systemImage: "creditcard")
-            Label("\(snapshot.liabilities.count) loans and debts", systemImage: "doc.text")
-            Label("\(snapshot.holdings.count) savings and Zakat assets", systemImage: "sparkles")
+        LazyVGrid(columns: columns, spacing: 12) {
+            countTile(
+                title: "Cards",
+                count: snapshot.cards.count,
+                icon: "creditcard",
+                color: FinancePalette.royalBlue
+            )
+            countTile(
+                title: "Loans & debts",
+                count: snapshot.liabilities.count,
+                icon: "doc.text",
+                color: FinancePalette.violet
+            )
+            countTile(
+                title: "Savings & Zakat assets",
+                count: snapshot.holdings.count,
+                icon: "sparkles",
+                color: FinancePalette.gold
+            )
             NavigationLink {
                 FinanceInsightsView(snapshot: snapshot)
             } label: {
-                Label("Monthly income & expenses", systemImage: "chart.bar")
+                navigationTile(
+                    title: "Monthly income & expenses",
+                    icon: "chart.bar",
+                    color: FinancePalette.violet
+                )
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Monthly income & expenses")
+            .accessibilityIdentifier("wallet-insights-link")
+
             NavigationLink {
-                SettingsHomeView(snapshot: $snapshot, preferences: $preferences,
-                                 onSave: onSave, onRestore: onRestore)
+                SettingsHomeView(
+                    snapshot: $snapshot,
+                    preferences: $preferences,
+                    onSave: onSave,
+                    onRestore: onRestore
+                )
             } label: {
-                Label("Settings & backup", systemImage: "gearshape")
+                navigationTile(
+                    title: "Settings & backup",
+                    icon: "gearshape",
+                    color: FinancePalette.royalBlue
+                )
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Settings & backup")
             .accessibilityIdentifier("wallet-settings-link")
         }
+        .padding(.vertical, 8)
+    }
+
+    private func countTile(title: String, count: Int, icon: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: icon)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 36, height: 36)
+                .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .accessibilityHidden(true)
+            Text("\(count)")
+                .font(.title3.weight(.bold))
+                .monospacedDigit()
+                .foregroundStyle(.primary)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
+        .padding(12)
+        .background(FinancePalette.whiteSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(count) \(title)")
+        .accessibilityIdentifier("wallet-overview-\(icon)")
+    }
+
+    private func navigationTile(title: String, icon: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: icon)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 36, height: 36)
+                .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+            HStack {
+                Text("Open")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(color)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
+        .padding(12)
+        .background(FinancePalette.whiteSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
