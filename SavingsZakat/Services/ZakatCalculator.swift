@@ -33,6 +33,8 @@ enum ZakatCalculator {
             }
 
             let value: Double?
+            var valuationFailureStatus: ZakatHoldingStatus = .missingValuation
+            var valuationFailureExplanation = "A valid exchange rate or metal price is required."
             switch holding.kind {
             case .cash, .investment:
                 let currency = (holding.currency ?? "EGP").uppercased()
@@ -47,10 +49,14 @@ enum ZakatCalculator {
                 let carat = holding.carat ?? 24
                 if !grams.isFinite || grams <= 0 {
                     value = nil
+                    valuationFailureStatus = .invalid
+                    valuationFailureExplanation = "Gold weight must be greater than zero."
                     warnings.append("Invalid gold weight for \(label).")
                 } else if ![14, 18, 21, 22, 24].contains(carat) {
                     value = nil
-                    warnings.append("Unsupported gold carat for \\(label).")
+                    valuationFailureStatus = .invalid
+                    valuationFailureExplanation = "Gold carat must be 14K, 18K, 21K, 22K or 24K."
+                    warnings.append("Unsupported gold carat for \(label).")
                 } else if let price = goldPricesPerGramEGP[String(carat)], price > 0, price.isFinite {
                     value = grams * price
                 } else {
@@ -62,6 +68,8 @@ enum ZakatCalculator {
                 let purity = holding.purity ?? 999
                 if !grams.isFinite || grams <= 0 || !(800...999).contains(purity) {
                     value = nil
+                    valuationFailureStatus = .invalid
+                    valuationFailureExplanation = "Silver weight must be greater than zero and purity must be between 800‰ and 999‰."
                     warnings.append("Invalid silver weight or purity for \(label).")
                 } else if let price = silverPricePerGramEGP, price > 0, price.isFinite {
                     value = grams * price * Double(purity) / 1000
@@ -74,7 +82,7 @@ enum ZakatCalculator {
             guard let value, value.isFinite, value >= 0 else {
                 breakdown.append(ZakatHoldingBreakdown(
                     holdingID: holding.id, label: label, valueEGP: nil,
-                    status: .missingValuation, explanation: "A valid exchange rate or metal price is required."
+                    status: valuationFailureStatus, explanation: valuationFailureExplanation
                 ))
                 continue
             }
