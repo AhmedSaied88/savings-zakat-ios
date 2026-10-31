@@ -7,14 +7,46 @@ final class FinancePaletteTests: XCTestCase {
     func testPrimaryAndSecondaryAccentsMeetTextContrastInBothAppearances() {
         for style in [UIUserInterfaceStyle.light, .dark] {
             let traits = UITraitCollection(userInterfaceStyle: style)
-            let surface = UIColor(FinancePalette.whiteSurface).resolvedColor(with: traits)
-            let primary = UIColor(FinancePalette.royalBlue).resolvedColor(with: traits)
-            let secondary = UIColor(FinancePalette.violet).resolvedColor(with: traits)
+            let surfaces = [
+                UIColor(FinancePalette.whiteSurface).resolvedColor(with: traits),
+                UIColor(FinancePalette.canvas).resolvedColor(with: traits),
+                UIColor(FinancePalette.paleBlue).resolvedColor(with: traits)
+            ]
+            let textAccents = [
+                UIColor(FinancePalette.royalBlue).resolvedColor(with: traits),
+                UIColor(FinancePalette.violet).resolvedColor(with: traits)
+            ]
 
-            XCTAssertGreaterThanOrEqual(contrastRatio(primary, surface), 4.5,
-                                        "Royal blue must meet WCAG AA text contrast in \(style)")
-            XCTAssertGreaterThanOrEqual(contrastRatio(secondary, surface), 4.5,
-                                        "Violet must meet WCAG AA text contrast in \(style)")
+            for accent in textAccents {
+                for surface in surfaces {
+                    XCTAssertGreaterThanOrEqual(contrastRatio(accent, surface), 4.5,
+                                                "Primary and secondary text accents must meet WCAG AA in \(style)")
+                }
+            }
+        }
+    }
+
+    func testSemanticStatusColorsMeetTextContrastInBothAppearances() {
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let traits = UITraitCollection(userInterfaceStyle: style)
+            let surfaces = [
+                UIColor(FinancePalette.whiteSurface).resolvedColor(with: traits),
+                UIColor(FinancePalette.canvas).resolvedColor(with: traits),
+                UIColor(FinancePalette.paleBlue).resolvedColor(with: traits)
+            ]
+            let statusColors = [
+                UIColor(FinancePalette.income).resolvedColor(with: traits),
+                UIColor(FinancePalette.expense).resolvedColor(with: traits),
+                UIColor(FinancePalette.warning).resolvedColor(with: traits),
+                UIColor(FinancePalette.danger).resolvedColor(with: traits)
+            ]
+
+            for statusColor in statusColors {
+                for surface in surfaces {
+                    XCTAssertGreaterThanOrEqual(contrastRatio(statusColor, surface), 4.5,
+                                                "Semantic status text must meet WCAG AA in \(style)")
+                }
+            }
         }
     }
 
@@ -31,16 +63,6 @@ final class FinancePaletteTests: XCTestCase {
                 XCTAssertGreaterThanOrEqual(contrastRatio(gold, surface), 3.0,
                                             "Gold asset accent must meet WCAG non-text contrast in \(style)")
             }
-        }
-    }
-
-    func testStatusColorsMeetTextContrastOnLightSurface() {
-        let surface = UIColor(FinancePalette.whiteSurface).resolvedColor(
-            with: UITraitCollection(userInterfaceStyle: .light)
-        )
-        for statusColor in [UIColor(Color.green), UIColor(Color.orange), UIColor(Color.red)] {
-            XCTAssertGreaterThanOrEqual(contrastRatio(statusColor, surface), 4.5,
-                                        "Status text colors must meet WCAG AA contrast")
         }
     }
 
