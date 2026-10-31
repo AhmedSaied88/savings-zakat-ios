@@ -32,8 +32,8 @@ struct SettingsHomeView: View {
                     Label("Imported messages are redacted and require review before posting.", systemImage: "hand.raised")
                 }
         }
+        .listStyle(.insetGrouped)
         .financeScreenSurface()
-
         .navigationTitle("Settings")
     }
 }
@@ -186,7 +186,6 @@ struct FinancePreferencesView: View {
             }
         }
         .financeScreenSurface()
-
         .navigationTitle("Finance preferences")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showRuleEditor) {
