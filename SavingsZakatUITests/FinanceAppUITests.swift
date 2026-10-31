@@ -233,10 +233,12 @@ final class FinanceAppUITests: XCTestCase {
 
     func testWalletQuickAddMenuOpensAccountEditor() throws {
         let app = launchCleanApp()
-        let quickAdd = app.navigationBars.buttons["wallet-quick-add"]
-        XCTAssertTrue(quickAdd.waitForExistence(timeout: 5))
-        XCTAssertTrue(quickAdd.isHittable)
-        quickAdd.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let quickAdd = app.descendants(matching: .any)
+            .matching(identifier: "wallet-quick-add")
+            .firstMatch
+        XCTAssertTrue(quickAdd.waitForExistence(timeout: 5), "Quick-add control should be exposed to accessibility")
+        XCTAssertTrue(quickAdd.isHittable, "Quick-add control should be tappable")
+        quickAdd.tap()
 
         let accountAction = app.buttons["wallet-quick-add-account"]
         XCTAssertTrue(accountAction.waitForExistence(timeout: 3))
