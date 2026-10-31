@@ -34,6 +34,16 @@ final class FinancePaletteTests: XCTestCase {
         }
     }
 
+    func testStatusColorsMeetTextContrastOnLightSurface() {
+        let surface = UIColor(FinancePalette.whiteSurface).resolvedColor(
+            with: UITraitCollection(userInterfaceStyle: .light)
+        )
+        for statusColor in [UIColor(Color.green), UIColor(Color.orange), UIColor(Color.red)] {
+            XCTAssertGreaterThanOrEqual(contrastRatio(statusColor, surface), 4.5,
+                                        "Status text colors must meet WCAG AA contrast")
+        }
+    }
+
     private func contrastRatio(_ first: UIColor, _ second: UIColor) -> CGFloat {
         let firstLuminance = relativeLuminance(first)
         let secondLuminance = relativeLuminance(second)
