@@ -2,60 +2,81 @@
 
 A separate, native SwiftUI iPhone application for personal-finance tracking and Egyptian-calendar Savings & Zakat calculations. This repository is isolated from the existing PWA: https://github.com/AhmedSaied88/savings-zakat-pwa
 
-## Current status
+## Current status — 2026-10-31
 
-**Working prototype foundation — not release-ready or verified on a physical iPhone.** This isolated SwiftUI application includes a versioned local store and validated ledger; five primary tabs (Wallet, Accounts, Activity, Debts and Zakat); Shortcuts-assisted bank-message import with redaction, custom parser rules and explicit transaction confirmation; an editable cash/gold/silver/investment register; a Hawl calendar with local reminders; combined Zakat calculations with per-asset breakdown; encrypted local backup/restore; persisted valuation/parser preferences; and monthly income/expense insights.
+**Simulator-tested implementation; not release-ready and not yet validated on a physical iPhone.**
 
-The latest previously verified full GitHub Actions simulator run passed on macOS 15 / Xcode 16.4. Credit-card reconciliation and its new UI flow were added after that run and still require a fresh CI run:
-- Branch: `chore/task-1-baseline-architecture`
-- Commit: `c677f05a9a531573e1fb25c0573cb7a738874857`
-- Workflow run: [Native iOS build and tests #238](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41073908869)
-- Result: **119 unit tests and 10 UI tests passed; 0 failures.** This run predates the latest credit-card reconciliation implementation and its additional UI test.
-- Simulator: iPhone simulator selected by the workflow. This is CI evidence, not physical-device validation.
+The current branch is `chore/task-1-baseline-architecture`, at documentation commit `04717a0877d7724fa68468d0369f83ce3d4f2c82`. The latest full GitHub Actions run [#426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085) passed on this exact branch head:
+- App and test bundles built successfully.
+- **138 unit tests and 14 UI tests passed; zero failures.**
+- The workflow ran on an iPhone simulator. It is not evidence of physical-device behavior or a signed distribution build.
 
-Egyptian calendar data currently bundles five Dar Al-Ifta month starts from 1448 AH (June–October 2026). Dates outside the bounded official coverage use an explicitly estimated Islamic-civil fallback, not an Egypt-specific astronomical calculation. Use fictional test data only; do not treat outputs as authoritative religious or financial advice.
+Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) remains **open and draft**. It is not merged and is not approved for merge or release. No changes have been made to the existing PWA.
+
+## Implemented capabilities
+
+- Five primary SwiftUI tabs: Wallet, Accounts & Cards, Activity, Debts, and Savings & Zakat.
+- Local versioned Codable JSON persistence, atomic writes, legacy prototype holdings migration, and ledger validation.
+- Accounts, cards, transactions, paired own-account transfers, liabilities, and credit-card purchase/repayment reconciliation.
+- Credit-card opening balances and linking an existing card liability as the single opening-balance source.
+- Bank-message import through a user-configured Apple Shortcuts handoff; Arabic/English parsing, sensitive-text redaction, duplicate protection, and explicit review before posting.
+- Cash, gold, silver, and manual-investment asset register; Hawl and Zakat calculations with per-asset breakdown.
+- Egyptian Hijri date provenance, 16 bundled Dar Al-Ifta month-start records across 1447–1448 AH, and an offline Cairo-reference astronomical estimator for uncovered dates. Calculated dates remain **Estimated**, never official.
+- Local Hawl reminders, encrypted user-controlled backup/restore, valuation/parser preferences, monthly insights, and manual-confirmed recurring income/expense templates.
+- Initial Wallet visual refinement using pale-blue surfaces, royal-blue actions, violet debt accents, and gold asset highlights.
+
+## Important limitations and remaining work
+
+- **Physical iPhone validation:** all 69 items in `Documentation/Device-Test-Checklist.md` remain unchecked. A signed development build and physical iPhone are required.
+- **Visual/accessibility sign-off:** the current Wallet work is an initial refinement, not a completed app-wide Design 4 composition or visual sign-off. No screenshot review or rendered contrast measurement is recorded. VoiceOver, full Dynamic Type, touch-target, and device Dark Mode review remain outstanding. The dark-appearance UI test verifies launch under an appearance override only.
+- **Signing and release:** CI uses simulator builds with code signing disabled. No signed IPA, TestFlight build, App Store release, or production deployment has been created.
+- **Schema evolution:** schema version 1 is the only supported snapshot format. A sequential N → N+1 migration pipeline must be implemented and tested before a future schema-version bump.
+- **Egyptian calendar coverage:** the 16 official source-backed starts are a partial dataset, not a complete historical calendar. Shawwal 1447 is intentionally absent because a direct final Dar Al-Ifta announcement was not independently verified. The implementation does not bridge that gap as a confirmed interval.
+- **Valuation:** exchange rates and metal prices are entered manually. Missing values produce provisional results rather than blocking calculations.
+- **SMS:** iOS does not provide unrestricted inbox access to this app. User-configured Shortcuts is the bridge; trigger/unattended behavior depends on iOS settings, and manual share/paste remains the fallback.
+- **Credit cards:** balances are current-state reconciliation, not monthly statement archives.
+- **Recurring entries:** income and expense templates generate due entries only after the user explicitly requests them. No automatic/background posting or recurring transfers.
+- **Backup scope:** pending SMS review items and notification schedules are not included in the encrypted finance snapshot and must be recreated after restore.
+
+Use fictional test data only until physical-device validation and explicit approval for any production-use step. Do not treat calculated outputs as authoritative religious or financial advice.
 
 ## Repository layout
 
-- `SavingsZakat/Models/` — holding, account, card, transaction, liability, imported-message and finance snapshot models.
-- `SavingsZakat/Services/` — local finance store, finance ledger, Egyptian Hijri calendar, Hawl/Zakat calculations, bank message parser and sensitive-text redactor.
-- `SavingsZakat/Views/` — tab-based SwiftUI Wallet, Accounts & Cards, Activity, Debts and Savings & Zakat screens, plus Hawl, insights, settings and encrypted backup views.
-- `SavingsZakatTests/` — calculation, calendar, persistence, ledger, import, notification, backup, preferences and insights tests.
-- `SavingsZakatUITests/` — iPhone simulator UI automation for navigation, account/transaction entry and card masking/payment details.
-- `Documentation/Architecture.md` — architecture, data safety and migration contract.
-- `Documentation/Device-Test-Checklist.md` — physical-iPhone validation steps for Shortcuts, reminders, backup, offline behavior and accessibility.
+- `SavingsZakat/Models/` — holding, account, card, transaction, liability, imported-message, preference, and finance snapshot models.
+- `SavingsZakat/Services/` — local finance store, ledger, parser/redactor, Egyptian calendar and estimator, Hawl/Zakat calculations, reminders, and backup.
+- `SavingsZakat/Views/` — Wallet, Accounts & Cards, Activity, Debts, Savings & Zakat, Hawl, insights, settings, and backup screens.
+- `SavingsZakatTests/` — unit tests for calculations, calendar, persistence, ledger, imports, reminders, backup, preferences, and insights.
+- `SavingsZakatUITests/` — simulator UI automation.
+- `Documentation/Architecture.md` — architecture, data safety, calendar provenance, and migration contract.
+- `Documentation/Device-Test-Checklist.md` — physical-iPhone validation checklist.
+- `Documentation/Egyptian-Calendar-Sources.md` — official source records and estimate methodology.
 - `docs/superpowers/specs/` — approved product/design requirements.
-- `docs/superpowers/plans/` — phased implementation plan.
+- `docs/superpowers/plans/` — phased implementation plan and historical execution notes.
 - `project.yml` — XcodeGen project definition.
 - `.github/workflows/ios-test.yml` — macOS GitHub Actions build/test workflow.
 
 ## Build and test
 
-Requires macOS with Xcode and the iOS Simulator. Install XcodeGen, then run:
+Requires macOS with Xcode and XcodeGen:
 
 ```sh
 xcodegen generate
 xcodebuild test -project "Savings Zakat.xcodeproj" -scheme SavingsZakat -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
 ```
 
-Physical-device installation requires an Apple signing team/profile. The simulator unit-test workflow does not produce a signed IPA.
+The CI workflow uses simulator signing-disabled builds. Installing on a physical iPhone requires an Apple signing team/profile and a separate device validation pass.
 
-## Persistence and data migration
+## Persistence and migration contract
 
-- Current local storage is a versioned Codable JSON snapshot at Application Support/`SavingsZakat/finance-data.json`.
-- Schema version 1 is supported. Unsupported schema versions are rejected; a sequential migration pipeline is not yet implemented.
-- The earlier `@AppStorage("testHoldingsJSON")` prototype format is imported on first load when no finance snapshot exists. The legacy key is removed only after the new snapshot is written successfully.
-- Malformed legacy data and failed writes are surfaced without deleting the legacy value. Existing snapshots are not merged with legacy data.
-- Persistence tests cover save/reload, first launch, migration, malformed/corrupt data preservation, unsupported schema rejection, repeated atomic snapshot replacement and record create/update/delete persistence.
-- Sequential schema-version migrations remain outstanding; schema version 1 is the only supported format.
+- The app stores a Codable `FinanceSnapshot` JSON file at Application Support/`SavingsZakat/finance-data.json`.
+- Current schema version: **1**. Unsupported schema versions are rejected rather than silently decoded or overwritten.
+- The earlier `@AppStorage("testHoldingsJSON")` prototype format is imported only when no current snapshot exists. The legacy key is removed only after the new snapshot has been written successfully.
+- Failed writes, malformed legacy data, corrupt snapshots, and unsupported versions must not silently erase existing financial records.
+- Sequential future schema migrations are not implemented. Add explicit ordered migrations and tests before increasing the schema version.
 
-## Boundaries and outstanding work
+## Safety and privacy boundaries
 
-- This native iOS repository, its local data and its test deployment are separate from the PWA; do not replace, modify or migrate the PWA.
-- The initial Egyptian date seed contains five verified Dar Al-Ifta month starts (1448 AH, June–October 2026); broad historical coverage and an Egypt-calibrated astronomical estimate remain outstanding. Dates outside the bounded official intervals must remain estimated.
-- Hawl calculations, Zakat assumptions and all valuation inputs require further verification and transparent presentation.
-- The current suite defines 129 unit-test methods and 12 UI automation tests, covering navigation, account/card entry, settings, parser rules, backup, large Dynamic Type, recurring entries and credit-card reconciliation. The latest verified run executed 119 unit tests and 10 UI tests before the credit-card reconciliation changes; a fresh run is still required. Full accessibility, Dynamic Type, Dark Mode and physical-device review remain outstanding.
-- The ledger validates income, expenses, transfers, duplicate posting and liabilities. Recurring income/expense templates support manual due-entry generation. Credit-card purchases and repayments now reconcile separately: purchases increase card debt without debiting a bank account, while repayments debit the paying account and reduce card debt without being counted as another expense. Existing manually recorded card liabilities can be linked to a card as its opening balance to prevent double counting. Full import deduplication remains future work.
-- The Shortcuts App Intent, local import/review queue, unified asset register, initial Egyptian official-date seed, Hawl reminders, encrypted backup/restore, preferences and insights are implemented but not yet Xcode-verified. The Shortcut, notifications and backup/restore flows also need physical-iPhone testing. Broad historical Egyptian date coverage, an Egypt-calibrated astronomical estimate and release packaging remain incomplete.
-- Prices and exchange rates are manual; missing values must be shown as provisional.
-- Use fictional test data until physical-device validation and explicit approval for any production-use step.
+- Store card brand/label and last four digits only. Never store full PAN, CVV, PIN, OTP, bank password, or authentication secret.
+- Redact sensitive text before imported message excerpts are persisted. Imported messages start in `needsReview`; only explicit user confirmation posts a ledger transaction.
+- Financial data and calculations remain local. Backup is user-initiated, encrypted, and not automatically uploaded.
+- The app has no required backend, subscription, paid API, or cloud account.
