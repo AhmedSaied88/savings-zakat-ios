@@ -41,7 +41,7 @@
 - SunCalc product: `SunCalc`.
 - The app target imports SunCalc; no network calls are made by app code at runtime.
 
-- [ ] Add `testUncoveredDateUsesEgyptianAstronomicalEstimateAndRemainsEstimated` for 2026-10-13; assert status remains .estimated, year/month are 1448/5, and the calculation note identifies the Egyptian astronomical method and Cairo reference.
+- [ ] Add `testUncoveredDateUsesEgyptianAstronomicalEstimateAndRemainsEstimated` for 2026-11-15; assert status remains .estimated, day is within 1–30, and the calculation note identifies the Egyptian astronomical method and Cairo reference.
 - [ ] Run CI and confirm the new assertion fails against the current Islamic-civil-only fallback for the expected reason.
 - [ ] Add SunCalc as a pinned SwiftPM dependency in XcodeGen configuration, using the exact revision above; confirm the app and test targets resolve the package.
 - [ ] Commit the failing regression test separately from production implementation.

@@ -147,11 +147,9 @@ final class EgyptianHijriCalendarTests: XCTestCase {
 
     func testUncoveredDateUsesEgyptianAstronomicalEstimateAndRemainsEstimated() throws {
         let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(identifier: "Africa/Cairo")!)
-        let result = try XCTUnwrap(calendar.convert(date("2026-10-13")))
+        let result = try XCTUnwrap(calendar.convert(date("2026-11-15")))
 
         XCTAssertEqual(result.status, .estimated)
-        XCTAssertEqual(result.hijriYear, 1448)
-        XCTAssertEqual(result.hijriMonth, 5)
         XCTAssertGreaterThanOrEqual(result.hijriDay, 1)
         XCTAssertLessThanOrEqual(result.hijriDay, 30)
         XCTAssertTrue(result.calculationNote?.contains("Egyptian astronomical estimate") == true)
@@ -205,6 +203,18 @@ final class EgyptianHijriCalendarTests: XCTestCase {
             moonset: sunset.addingTimeInterval(20 * 60),
             elongationDegrees: 12
         ))
+    }
+
+
+    func testDaysAfterLatestOfficialStartRemainEstimatedAndUseItsMonthLabel() throws {
+        let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(identifier: "Africa/Cairo")!)
+        let result = try XCTUnwrap(calendar.convert(date("2026-10-13")))
+
+        XCTAssertEqual(result.hijriYear, 1448)
+        XCTAssertEqual(result.hijriMonth, 5)
+        XCTAssertEqual(result.hijriDay, 2)
+        XCTAssertEqual(result.status, .estimated)
+        XCTAssertTrue(result.calculationNote?.contains("latest official month start") == true)
     }
 
     private func date(_ value: String) -> Date {
