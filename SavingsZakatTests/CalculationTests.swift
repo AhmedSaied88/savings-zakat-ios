@@ -47,7 +47,7 @@ final class HawlCalculatorTests: XCTestCase {
             nisabEGP: 1, asOf: date("2026-10-29")
         )
 
-        XCTAssertEqual(result.breakdown.map(\\.status), [.invalid, .invalid])
+        XCTAssertEqual(result.breakdown.map(\.status), [.invalid, .invalid])
         XCTAssertTrue(result.warnings.contains { $0.contains("Invalid gold weight") })
         XCTAssertTrue(result.warnings.contains { $0.contains("Invalid silver weight or purity") })
         XCTAssertEqual(result.totalValuedWealthEGP, 0, accuracy: 0.01)
