@@ -186,6 +186,13 @@
 - [x] Include calculated credit-card balances in net-worth and Debts views; protect cards with history/opening debt from deletion.
 - [x] Extend Shortcuts imported-message review to confirm account transactions, card purchases or card repayments while preserving imported-message duplicate protection.
 - [x] Add unit and UI coverage for purchase/repayment accounting, duplicate imports, liability linking and deletion safeguards.
-- [ ] Re-run the complete native CI workflow on the latest branch head; do not treat these new tests as passed until the run succeeds.
+- [x] Re-run the complete native CI workflow on the latest branch head; run #383 passed on `ffcbab5`.
 
-**Workstream E status (2026-10-31):** The latest native CI run #374 passed on commit 985b5e9: 130 unit tests and 12 UI tests, including credit-card reconciliation and Zakat-screen navigation. The existing PWA remains untouched; PR #1 remains a draft and is not approved for merge or release.
+**Workstream E status (2026-10-31):** Latest-source native CI run #383 passed on commit `ffcbab5184b92e0871a09545224883287449b659` (`ffcbab5`), including app/test build and XCTest/UI-test steps. The detailed 130-unit/12-UI test count was reported for earlier run #374 on `985b5e9`; run #383's job summary confirms both test steps succeeded but does not expose a separate test count in the job summary. The existing PWA remains untouched; PR #1 remains a draft and is not approved for merge or release.
+
+
+## Latest-source CI and UI verification addendum (2026-10-31)
+
+This addendum supersedes older implementation notes above that describe the macOS runner allocation failures or Xcode tests as still pending. GitHub Actions run [#383](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41142040931) completed successfully for branch `chore/task-1-baseline-architecture` at commit `ffcbab5184b92e0871a09545224883287449b659` (`ffcbab5`). The job completed project generation, app and test-bundle build, and the XCTest/UI-test step successfully. Run #382 for the same SHA was cancelled as a duplicate; it is not a code failure. Run #374 remains the run with explicitly recorded totals of 130 unit tests and 12 UI tests, but it tested the earlier commit `985b5e9`, not the latest visual changes.
+
+The latest UI work is an initial visual refinement only: pale-blue wallet summary surface, royal-blue balance/actions, violet debt accent, gold asset accent, and shared royal-blue tint. Task 4's full composition, visual review, accessibility, Dynamic Type and Dark Mode checks remain open. No simulator screenshot review or physical-iPhone verification has been recorded. All device checks in `Documentation/Device-Test-Checklist.md` remain outstanding. Do not merge or release without the user's explicit approval.
