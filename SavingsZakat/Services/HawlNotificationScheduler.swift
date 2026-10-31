@@ -187,7 +187,7 @@ struct HawlNotificationScheduler {
 
         // Replace matching requests first. If an add fails, the existing request
         // with that identifier remains pending; only obsolete identifiers are removed.
-        let selectedIdentifiers = Set(selected.map(\\.identifier))
+        let selectedIdentifiers = Set(selected.map(\.identifier))
         let obsoleteIdentifiers = existing.filter { !selectedIdentifiers.contains($0) }
         await notificationCenter.removePending(withIdentifiers: obsoleteIdentifiers)
 
