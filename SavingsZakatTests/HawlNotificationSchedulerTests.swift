@@ -115,6 +115,27 @@ final class HawlNotificationSchedulerTests: XCTestCase {
         XCTAssertEqual(center.notifications[other.identifier], other)
     }
 
+    func testPartialReschedulePreservesExistingReminderWhenReplacementFails() async throws {
+        let center = MockHawlNotificationCenter()
+        let scheduler = HawlNotificationScheduler(notificationCenter: center)
+        let holdingID = UUID()
+        let oldSuccessful = notification(holdingID: holdingID, offset: 7, fireDate: date("2026-02-01"))
+        let oldFailed = notification(holdingID: holdingID, offset: 1, fireDate: date("2026-02-02"))
+        center.notifications[oldSuccessful.identifier] = oldSuccessful
+        center.notifications[oldFailed.identifier] = oldFailed
+
+        let newSuccessful = notification(holdingID: holdingID, offset: 7, fireDate: date("2026-02-03"))
+        let failedReplacement = notification(holdingID: holdingID, offset: 1, fireDate: date("2026-02-04"))
+        center.failedIdentifiers = [failedReplacement.identifier]
+
+        let result = try await scheduler.schedule([newSuccessful, failedReplacement])
+
+        XCTAssertEqual(result, .partiallyScheduled(count: 1, failedIdentifiers: [failedReplacement.identifier]))
+        XCTAssertEqual(center.notifications[newSuccessful.identifier]?.fireDate, newSuccessful.fireDate)
+        XCTAssertEqual(center.notifications[oldFailed.identifier]?.fireDate, oldFailed.fireDate)
+        XCTAssertEqual(center.notifications.count, 2)
+    }
+
     func testPartialSchedulingReportsFailedIdentifiers() async throws {
         let center = MockHawlNotificationCenter()
         let first = notification(holdingID: UUID(), offset: 7, fireDate: date("2026-02-01"))
