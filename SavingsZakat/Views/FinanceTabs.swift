@@ -25,7 +25,22 @@ enum FinancePalette {
             ? UIColor(red: 1.00, green: 0.80, blue: 0.40, alpha: 1)
             : UIColor(red: 0.68, green: 0.46, blue: 0.08, alpha: 1)
     })
+    /// Native grouped surfaces keep every tab visually aligned with iOS while
+    /// retaining the product's blue/violet/gold semantic accents.
+    static let canvas = Color(uiColor: .systemGroupedBackground)
     static let whiteSurface = Color(uiColor: .systemBackground)
+    static let groupedSurface = Color(uiColor: .secondarySystemGroupedBackground)
+    static let separator = Color(uiColor: .separator)
+}
+
+extension View {
+    /// Shared background and accent treatment for every finance list and form.
+    func financeScreenSurface() -> some View {
+        self
+            .scrollContentBackground(.hidden)
+            .background(FinancePalette.canvas)
+            .tint(FinancePalette.royalBlue)
+    }
 }
 
 struct WalletDashboardTab: View {
@@ -83,6 +98,8 @@ struct WalletDashboardTab: View {
                     .accessibilityIdentifier("wallet-settings-link")
                 }
             }
+            .listStyle(.insetGrouped)
+            .financeScreenSurface()
             .navigationTitle("Wallet")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -205,6 +222,7 @@ struct AccountsCardsTab: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityHint("Edit account details")
                         .swipeActions {
                             Button(role: .destructive) { deleteAccount(account) } label: {
                                 Label("Delete", systemImage: "trash")
@@ -287,6 +305,8 @@ struct AccountsCardsTab: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
+            .financeScreenSurface()
             .navigationTitle("Accounts & Cards")
             .sheet(isPresented: $showNewAccount) {
                 AccountEditorSheet { account in
@@ -516,10 +536,16 @@ struct TransactionsTab: View {
                 }
             }
             .refreshable { onRefreshImports() }
+            .listStyle(.insetGrouped)
+            .financeScreenSurface()
             .navigationTitle("Transactions")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { showAdd = true } label: { Image(systemName: "plus") }
+                    Button { showAdd = true } label: {
+                        Image(systemName: "plus")
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
                         .accessibilityLabel("Add transaction")
                 }
             }
@@ -646,6 +672,8 @@ private struct RecurringTransactionEditorSheet: View {
                 Text("Recurring entries are not posted automatically. Use “Create due entries” when you want them added to your ledger.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
+            .financeScreenSurface()
+
             .navigationTitle("New recurring entry")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -875,6 +903,8 @@ private struct ImportedMessageConfirmationSheet: View {
                     .buttonStyle(.borderedProminent)
                 }
             }
+            .financeScreenSurface()
+
             .navigationTitle("Confirm bank message")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -935,6 +965,8 @@ struct DebtsTab: View {
                 debtSummarySection
                 debtListSection
             }
+            .listStyle(.insetGrouped)
+            .financeScreenSurface()
             .navigationTitle("Debts")
             .sheet(isPresented: $showAdd) {
                 LiabilityEntrySheet { item in
@@ -1052,6 +1084,8 @@ struct AssetsZakatTab: View {
             .onChange(of: snapshot.holdings) { _, _ in
                 if result != nil { calculate() }
             }
+            .listStyle(.insetGrouped)
+            .financeScreenSurface()
             .navigationTitle("Savings & Zakat")
             .sheet(isPresented: $showHoldingEditor) {
                 HoldingEditorSheet(holding: editingHolding, defaultKind: editorKind) { updated in
@@ -1439,6 +1473,8 @@ private struct HoldingEditorSheet: View {
                 Text("Gregorian civil dates are used (Africa/Cairo). Hijri equivalents are Confirmed only when covered by Egyptian Dar Al-Ifta announcements; otherwise they are Estimated.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
+            .financeScreenSurface()
+
             .navigationTitle(holding == nil ? "Add asset" : "Edit asset")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1486,6 +1522,7 @@ private struct TransactionRow: View {
                 .font(.title3)
                 .foregroundStyle(transaction.direction == .income ? .green :
                                     transaction.direction == .expense ? .orange : .blue)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(transaction.title).font(.headline)
                 Text([transaction.category, accountName, transaction.date.formatted(date: .abbreviated, time: .omitted)]
@@ -1500,6 +1537,8 @@ private struct TransactionRow: View {
                 .font(.subheadline.weight(.semibold)).monospacedDigit()
         }
         .padding(.vertical, 3)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(transaction.direction.rawValue.capitalized): \(transaction.title), \(transaction.amount.formatted(.currency(code: transaction.currency)))")
     }
 }
 
@@ -1543,6 +1582,8 @@ private struct AccountEditorSheet: View {
                 }
                 TextField("Opening balance", text: $balance).keyboardType(.decimalPad)
             }
+            .financeScreenSurface()
+
             .navigationTitle(account == nil ? "Add account" : "Edit account")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -1687,6 +1728,8 @@ private struct TransactionEditorSheet: View {
                 }
                 DatePicker("Date", selection: $date, displayedComponents: .date)
             }
+            .financeScreenSurface()
+
             .navigationTitle("Add transaction")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -1773,6 +1816,8 @@ private struct CashHoldingEntry: View {
                 DatePicker("Acquired", selection: $acquired, displayedComponents: .date)
                 DatePicker("Hawl start", selection: $hawlStart, in: ...Date(), displayedComponents: .date)
             }
+            .financeScreenSurface()
+
             .navigationTitle("Add cash")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -1812,6 +1857,8 @@ private struct GoldHoldingEntry: View {
                 DatePicker("Purchase date", selection: $acquired, displayedComponents: .date)
                 DatePicker("Hawl start", selection: $hawlStart, in: ...Date(), displayedComponents: .date)
             }
+            .financeScreenSurface()
+
             .navigationTitle("Add gold")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -1842,6 +1889,8 @@ private struct SilverHoldingEntry: View {
                 DatePicker("Purchase date", selection: $acquired, displayedComponents: .date)
                 DatePicker("Hawl start", selection: $hawlStart, in: ...Date(), displayedComponents: .date)
             }
+            .financeScreenSurface()
+
             .navigationTitle("Add silver")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
