@@ -19,7 +19,7 @@ struct EgyptianAstronomicalEstimator {
 
     private let latitude = cairoLatitude
     private let longitude = cairoLongitude
-    private let conjunctionSearchDays = 65
+    private let conjunctionSearchDays = 40
     private let conjunctionScanHours = 6
     private let visibilityEveningSearch = 0...2
     private let minimumElongationDegrees = 8.0

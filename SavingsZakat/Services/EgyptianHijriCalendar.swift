@@ -82,19 +82,47 @@ struct EgyptianHijriCalendar {
             }
         }
 
+        // Until the next official month is announced, use the latest
+        // announced first day as the day-count anchor. These later days remain
+        // Estimated. Only evaluate a possible 29-day rollover on day 30.
+        if let latest = officialMonthStarts.last {
+            let latestStart = gregorian.startOfDay(for: latest.gregorianStart)
+            if target > latestStart {
+                let daysSinceLatestStart = gregorian.dateComponents(
+                    [.day],
+                    from: latestStart,
+                    to: target
+                ).day ?? Int.max
+
+                if (1...28).contains(daysSinceLatestStart) {
+                    return Self.estimatedContinuation(
+                        from: latest,
+                        dayOffset: daysSinceLatestStart
+                    )
+                }
+
+                if daysSinceLatestStart == 29 {
+                    if let astronomical = EgyptianAstronomicalEstimator().estimate(
+                        containing: target,
+                        timeZone: timeZone,
+                        officialMonthStarts: officialMonthStarts
+                    ), astronomical.monthStart > latestStart {
+                        return Self.estimatedDate(from: astronomical)
+                    }
+                    return Self.estimatedContinuation(
+                        from: latest,
+                        dayOffset: daysSinceLatestStart
+                    )
+                }
+            }
+        }
+
         if let astronomical = EgyptianAstronomicalEstimator().estimate(
             containing: target,
             timeZone: timeZone,
             officialMonthStarts: officialMonthStarts
         ) {
-            return EgyptianHijriDate(
-                hijriYear: astronomical.hijriYear,
-                hijriMonth: astronomical.hijriMonth,
-                hijriDay: astronomical.hijriDay,
-                status: .estimated,
-                sourceURL: nil,
-                calculationNote: astronomical.calculationNote
-            )
+            return Self.estimatedDate(from: astronomical)
         }
 
         // Retain a labelled arithmetic fallback if the astronomical engine
@@ -110,6 +138,31 @@ struct EgyptianHijriCalendar {
             status: .estimated,
             sourceURL: nil,
             calculationNote: "Islamic-civil arithmetic fallback because the Cairo astronomical estimate was unavailable; not an official Egyptian announcement."
+        )
+    }
+
+    private static func estimatedDate(from estimate: EgyptianAstronomicalEstimate) -> EgyptianHijriDate {
+        EgyptianHijriDate(
+            hijriYear: estimate.hijriYear,
+            hijriMonth: estimate.hijriMonth,
+            hijriDay: estimate.hijriDay,
+            status: .estimated,
+            sourceURL: nil,
+            calculationNote: estimate.calculationNote
+        )
+    }
+
+    private static func estimatedContinuation(
+        from latest: EgyptianHijriMonthStart,
+        dayOffset: Int
+    ) -> EgyptianHijriDate {
+        EgyptianHijriDate(
+            hijriYear: latest.hijriYear,
+            hijriMonth: latest.hijriMonth,
+            hijriDay: dayOffset + 1,
+            status: .estimated,
+            sourceURL: nil,
+            calculationNote: "Estimated continuation anchored to the latest official month start; the next month boundary is not yet source-backed. This is not an official Egyptian announcement."
         )
     }
 

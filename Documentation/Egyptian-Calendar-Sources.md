@@ -49,7 +49,7 @@ The dataset now also contains primary-source announcements for 1447 AH. The foll
 
 ## Coverage limits
 
-This is a partial, intentionally transparent dataset (16 source-backed starts across 1447–1448 AH). It is **not** a complete Egyptian historical calendar. The implementation marks dates as officially confirmed only inside an interval whose current and next month starts are both in the bundled source table. The first day of the latest announced month can be marked confirmed on that date alone; later days in that month remain Estimated until the next Egyptian announcement is added.
+This is a partial, intentionally transparent dataset (16 source-backed starts across 1447–1448 AH). It is **not** a complete Egyptian historical calendar. The implementation marks dates as officially confirmed only inside an interval whose current and next month starts are both in the bundled source table. The first day of the latest announced month can be marked confirmed on that date alone. Later days remain Estimated; while still within that announced month, the app uses its first day as the provisional day-count anchor. The possible 29-day rollover is checked astronomically before day 30 is assigned.
 
 Dates before the first bundled month, dates after the last covered day, and future months not yet announced use the system's Islamic-civil fallback and are labelled **Estimated**. This fallback is an approximation, not a claim that the Islamic-civil calendar is Egypt's official calendar.
 

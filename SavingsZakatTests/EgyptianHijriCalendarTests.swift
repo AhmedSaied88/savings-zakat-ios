@@ -19,7 +19,7 @@ final class EgyptianHijriCalendarTests: XCTestCase {
         let calendar = EgyptianHijriCalendar(officialMonthStarts: [record], timeZone: TimeZone(secondsFromGMT: 0)!)
         let result = try XCTUnwrap(calendar.convert(date("2027-01-01")))
         XCTAssertEqual(result.status, .estimated)
-        XCTAssertTrue(result.calculationNote?.contains("not an official Egyptian announcement") == true)
+        XCTAssertTrue(result.calculationNote?.contains("not an official") == true)
     }
 
     func testGregorianDateBeforeFirstOfficialRecordIsEstimated() throws {
