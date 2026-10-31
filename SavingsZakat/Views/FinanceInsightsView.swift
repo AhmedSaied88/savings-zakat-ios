@@ -89,6 +89,10 @@ struct FinanceInsightsView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
+        .listStyle(.insetGrouped)
+
+        .financeScreenSurface()
+
         .navigationTitle("Monthly insights")
         .navigationBarTitleDisplayMode(.inline)
     }
