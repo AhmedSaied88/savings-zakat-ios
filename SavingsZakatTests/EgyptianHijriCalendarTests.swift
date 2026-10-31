@@ -118,6 +118,32 @@ final class EgyptianHijriCalendarTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(calendar.convert(date("2026-06-17"))).status, .estimated)
     }
 
+    func testBundledRamadanToDhuAlQidahGapDoesNotCreateFalseConfirmedInterval() throws {
+        let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(secondsFromGMT: 0)!)
+        let dayAfterRamadanStart = try XCTUnwrap(calendar.convert(date("2026-02-20")))
+        let firstDhuAlQidahDay = try XCTUnwrap(calendar.convert(date("2026-04-19")))
+
+        XCTAssertEqual(dayAfterRamadanStart.status, .estimated)
+        XCTAssertEqual(firstDhuAlQidahDay.hijriYear, 1447)
+        XCTAssertEqual(firstDhuAlQidahDay.hijriMonth, 11)
+        XCTAssertEqual(firstDhuAlQidahDay.hijriDay, 1)
+        XCTAssertEqual(firstDhuAlQidahDay.status, .officiallyConfirmed)
+    }
+
+    func testBundledDhuAlHijjahToMuharramBoundaryIsConfirmed() throws {
+        let calendar = EgyptianCalendarRepository.makeCalendar(timeZone: TimeZone(secondsFromGMT: 0)!)
+        let lastDhuAlHijjahDay = try XCTUnwrap(calendar.convert(date("2026-06-15")))
+        let firstMuharramDay = try XCTUnwrap(calendar.convert(date("2026-06-16")))
+
+        XCTAssertEqual(lastDhuAlHijjahDay.hijriYear, 1447)
+        XCTAssertEqual(lastDhuAlHijjahDay.hijriMonth, 12)
+        XCTAssertEqual(lastDhuAlHijjahDay.status, .officiallyConfirmed)
+        XCTAssertEqual(firstMuharramDay.hijriYear, 1448)
+        XCTAssertEqual(firstMuharramDay.hijriMonth, 1)
+        XCTAssertEqual(firstMuharramDay.hijriDay, 1)
+        XCTAssertEqual(firstMuharramDay.status, .officiallyConfirmed)
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
