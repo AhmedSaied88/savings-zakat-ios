@@ -1111,8 +1111,8 @@ struct AssetsZakatTab: View {
     var body: some View {
         NavigationStack {
             List {
-                assetsSection
                 manualInvestmentSection
+                assetsSection
                 hawlCalendarSection
                 zakatCalculationSection
                 valuationRatesSection
