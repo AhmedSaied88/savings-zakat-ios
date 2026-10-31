@@ -89,8 +89,13 @@ final class EgyptianHijriCalendarTests: XCTestCase {
 
     func testBundledCalendarContainsOrderedConsecutiveMonthRecordsWithProvenance() {
         let records = EgyptianCalendarRepository.officialMonthStarts
-        XCTAssertEqual(records.count, 5)
-        XCTAssertEqual(records.map(\.hijriMonth), [1, 2, 3, 4, 5])
+        XCTAssertEqual(records.count, 16)
+        XCTAssertEqual(
+            records.map { "\($0.hijriYear)-\($0.hijriMonth)" },
+            ["1447-1", "1447-2", "1447-3", "1447-4", "1447-5", "1447-6",
+             "1447-7", "1447-8", "1447-9", "1447-11", "1447-12",
+             "1448-1", "1448-2", "1448-3", "1448-4", "1448-5"]
+        )
         XCTAssertTrue(records.allSatisfy { $0.sourceURL.contains("dar-alifta.org") })
         XCTAssertTrue(records.allSatisfy { $0.announcementDate <= $0.gregorianStart })
     }
