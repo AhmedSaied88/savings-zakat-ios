@@ -174,7 +174,6 @@ struct HawlNotificationScheduler {
         let selected = Array(prioritized.prefix(HawlReminderPlanner.maximumPendingNotifications))
         let omittedCount = max(0, prioritized.count - selected.count)
 
-        await notificationCenter.removePending(withIdentifiers: existing)
         var scheduledCount = 0
         var failed: [String] = []
         for notification in selected {
@@ -185,6 +184,12 @@ struct HawlNotificationScheduler {
                 failed.append(notification.identifier)
             }
         }
+
+        // Replace matching requests first. If an add fails, the existing request
+        // with that identifier remains pending; only obsolete identifiers are removed.
+        let selectedIdentifiers = Set(selected.map(\\.identifier))
+        let obsoleteIdentifiers = existing.filter { !selectedIdentifiers.contains($0) }
+        await notificationCenter.removePending(withIdentifiers: obsoleteIdentifiers)
 
         if !failed.isEmpty {
             return .partiallyScheduled(count: scheduledCount, failedIdentifiers: failed)
