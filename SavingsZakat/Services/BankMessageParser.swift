@@ -1,56 +1,135 @@
+import CryptoKit
 import Foundation
+
+enum BankParseConfidence: String, Codable, Equatable {
+    case high
+    case medium
+}
 
 struct ParsedBankMessage: Equatable {
     let title: String
     let amount: Decimal
     let currency: String
     let direction: TransactionDirection
+    let category: String
+    let confidence: BankParseConfidence
+    let fingerprint: String
     let redactedSourceText: String
     let reviewStatus: TransactionReviewStatus = .needsReview
 }
 
 enum BankMessageParser {
-    private static let amountPattern = #"(?i)\b(EGP|LE|USD|SAR|AED|EUR|GBP)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)"#
+    private static let amountRegex = try! NSRegularExpression(
+        pattern: #"(?i)(?<![\p{L}\d])(EGP|LE|USD|SAR|AED|EUR|GBP|جنيه|ج\.م)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?!\d)|(?<!\d)([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*(EGP|LE|USD|SAR|AED|EUR|GBP|جنيه|ج\.م)(?![\p{L}])"#
+    )
 
-    static func parse(_ message: String) -> ParsedBankMessage? {
-        let safeText = redactedText(message)
-        guard let range = message.range(of: amountPattern, options: .regularExpression) else { return nil }
-        let match = String(message[range])
-        let parts = match.replacingOccurrences(of: ",", with: "").split(whereSeparator: { $0.isWhitespace })
-        guard parts.count == 2,
-              let amount = Decimal(string: String(parts[1]), locale: Locale(identifier: "en_US_POSIX")),
-              amount > 0 else { return nil }
-
-        let rawCurrency = String(parts[0]).uppercased()
-        let currency = rawCurrency == "LE" ? "EGP" : rawCurrency
-        let lower = message.lowercased()
-        let direction: TransactionDirection
-        if ["received", "credited", "deposit", "تم إيداع", "تم استلام"].contains(where: { lower.contains($0) }) {
-            direction = .income
-        } else if ["purchase", "spent", "debit", "withdraw", "شراء", "خصم", "سحب"].contains(where: { lower.contains($0) }) {
-            direction = .expense
-        } else {
+    static func parse(_ message: String, customRules: [BankMessageRule] = []) -> ParsedBankMessage? {
+        let normalized = SensitiveTextRedactor.normalizeDigits(in: message)
+        guard let (amount, currency) = extractAmountAndCurrency(from: normalized),
+              amount > 0,
+              let classification = classify(normalized, customRules: customRules) else {
             return nil
         }
 
+        let safeText = SensitiveTextRedactor.redact(message)
+        let fingerprintInput = safeText
+            .lowercased()
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
+        let fingerprint = SHA256.hash(data: Data(fingerprintInput.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+
         return ParsedBankMessage(
-            title: direction == .income ? "Bank credit" : "Bank transaction",
+            title: classification.category,
             amount: amount,
             currency: currency,
-            direction: direction,
+            direction: classification.direction,
+            category: classification.category,
+            confidence: classification.confidence,
+            fingerprint: fingerprint,
             redactedSourceText: safeText
         )
     }
 
     static func redactedText(_ text: String) -> String {
-        var safe = text
-        let patterns = [
-            #"(?i)\b(?:otp|one[- ]time password|cvv|cvc|pin)\s*[:#-]?\s*\d{3,8}\b"#,
-            #"(?<!\d)\d{12,19}(?!\d)"#
-        ]
-        for pattern in patterns {
-            safe = safe.replacingOccurrences(of: pattern, with: "[REDACTED]", options: .regularExpression)
-        }
-        return safe
+        SensitiveTextRedactor.redact(text)
     }
+
+    private static func extractAmountAndCurrency(from text: String) -> (Decimal, String)? {
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        guard amountRegex.numberOfMatches(in: text, range: range) == 1,
+              let match = amountRegex.firstMatch(in: text, range: range) else { return nil }
+
+        let currencyRange = match.range(at: 1).location != NSNotFound ? match.range(at: 1) : match.range(at: 4)
+        let amountRange = match.range(at: 2).location != NSNotFound ? match.range(at: 2) : match.range(at: 3)
+        guard let currencySwiftRange = Range(currencyRange, in: text),
+              let amountSwiftRange = Range(amountRange, in: text) else { return nil }
+
+        let rawCurrency = String(text[currencySwiftRange]).uppercased()
+        let rawAmount = String(text[amountSwiftRange]).replacingOccurrences(of: ",", with: "")
+        guard let amount = Decimal(string: rawAmount, locale: Locale(identifier: "en_US_POSIX")) else {
+            return nil
+        }
+        return (amount, ["LE", "جنيه", "ج.م"].contains(rawCurrency) ? "EGP" : rawCurrency)
+    }
+
+    private static func classify(_ text: String, customRules: [BankMessageRule]) -> (direction: TransactionDirection, category: String, confidence: BankParseConfidence)? {
+        let lower = text.lowercased()
+        let matches = customRules.filter {
+            $0.isEnabled &&
+            $0.keyword.count >= 3 &&
+            lower.contains($0.keyword.lowercased())
+        }
+        if matches.count == 1, let rule = matches.first {
+            return (rule.direction, rule.category, .medium)
+        }
+        if matches.count > 1 {
+            return nil
+        }
+
+        let transfer = containsAny(["transfer", "transferred", "تحويل"], in: lower)
+        let reversal = containsAny(["reversal", "reversed", "refund", "refunded", "عكس", "استرداد"], in: lower)
+        let cardPayment = containsAny(["card payment", "credit card payment", "payment to card", "سداد البطاقة", "سداد بطاقة"], in: lower)
+        let fee = containsAny(["fee", "commission", "charge", "رسوم", "عمولة"], in: lower)
+        let atm = containsAny(["atm", "cash withdrawal", "withdrawal", "سحب نقدي", "سحب"], in: lower)
+        let purchase = containsAny(["purchase", "pos", "spent", "شراء", "نقطة بيع"], in: lower)
+        let income = containsAny(["received", "credited", "credit", "deposit", "salary", "تم إيداع", "تم استلام", "إضافة"], in: lower)
+        let debit = containsAny(["debit", "deducted", "خصم"], in: lower)
+
+        if transfer {
+            return (.transfer, "Transfer", .medium)
+        }
+        if reversal {
+            return (.income, "Reversal", .high)
+        }
+        if cardPayment {
+            return (.expense, "Card payment", .high)
+        }
+        if fee {
+            return (.expense, "Bank fee", .high)
+        }
+        if atm {
+            return (.expense, "Cash withdrawal", .high)
+        }
+        if purchase {
+            return (.expense, "Purchase", .high)
+        }
+        if income && debit {
+            return nil
+        }
+        if income {
+            return (.income, "Income", .high)
+        }
+        if debit {
+            return (.expense, "Expense", .medium)
+        }
+        return nil
+    }
+
+    private static func containsAny(_ keywords: [String], in text: String) -> Bool {
+        keywords.contains(where: { text.contains($0) })
+    }
+
+
 }
