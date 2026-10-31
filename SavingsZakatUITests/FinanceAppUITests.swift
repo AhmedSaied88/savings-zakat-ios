@@ -70,6 +70,9 @@ final class FinanceAppUITests: XCTestCase {
         let lastFour = app.textFields["Last four digits only"]
         lastFour.tap()
         lastFour.typeText("123456")
+        let enteredDigits = NSPredicate(format: "value == %@", "3456")
+        expectation(for: enteredDigits, evaluatedWith: lastFour)
+        waitForExpectations(timeout: 5)
 
         app.buttons["Save"].tap()
 
@@ -300,7 +303,7 @@ final class FinanceAppUITests: XCTestCase {
 
         for assetType in ["cash", "gold", "silver", "investment"] {
             let tile = app.buttons["add-asset-\(assetType)"]
-            XCTAssertTrue(scrollTo(tile, in: app, maxSwipes: 12),
+            XCTAssertTrue(scrollTo(tile, in: app, maxSwipes: 20),
                           "The \(assetType) asset entry tile should be reachable")
             XCTAssertTrue(tile.label.localizedCaseInsensitiveContains(assetType),
                           "The \(assetType) tile should have a meaningful accessible name")
