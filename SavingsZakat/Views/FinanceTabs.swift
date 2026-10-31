@@ -1112,7 +1112,6 @@ struct AssetsZakatTab: View {
         NavigationStack {
             List {
                 assetsSection
-                hawlCalendarSection
                 zakatCalculationSection
                 valuationRatesSection
             }
@@ -1388,14 +1387,6 @@ struct AssetsZakatTab: View {
             }
             .padding(.vertical, 4)
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-            if let assetError {
-                Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
-            }
-        }
-    }
-
-    private var hawlCalendarSection: some View {
-        Section("Hawl calendar") {
             NavigationLink {
                 HawlCalendarView(holdings: snapshot.holdings)
             } label: {
@@ -1405,9 +1396,11 @@ struct AssetsZakatTab: View {
                     .accessibilityIdentifier("hawl-calendar-link")
             }
             .accessibilityIdentifier("hawl-calendar-navigation")
+            if let assetError {
+                Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
+            }
         }
     }
-
 
     private var zakatCalculationSection: some View {
         Section("Combined Zakat calculation") {
