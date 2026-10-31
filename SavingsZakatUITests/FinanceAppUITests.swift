@@ -233,9 +233,10 @@ final class FinanceAppUITests: XCTestCase {
 
     func testWalletQuickAddMenuOpensAccountEditor() throws {
         let app = launchCleanApp()
-        let quickAdd = app.buttons["wallet-quick-add"]
+        let quickAdd = app.navigationBars.buttons["wallet-quick-add"]
         XCTAssertTrue(quickAdd.waitForExistence(timeout: 5))
-        quickAdd.tap()
+        XCTAssertTrue(quickAdd.isHittable)
+        quickAdd.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
 
         let accountAction = app.buttons["wallet-quick-add-account"]
         XCTAssertTrue(accountAction.waitForExistence(timeout: 3))
@@ -388,17 +389,17 @@ final class FinanceAppUITests: XCTestCase {
 
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
-        let scrollView = app.scrollViews.firstMatch
-        let table = app.tables.firstMatch
         let collection = app.collectionViews.firstMatch
+        let table = app.tables.firstMatch
+        let scrollView = app.scrollViews.firstMatch
         for _ in 0..<maxSwipes {
             if element.exists && element.isHittable { return true }
-            if scrollView.exists {
-                scrollView.swipeUp()
-            } else if table.exists {
-                table.swipeUp()
-            } else if collection.exists {
+            if collection.exists && collection.isHittable {
                 collection.swipeUp()
+            } else if table.exists && table.isHittable {
+                table.swipeUp()
+            } else if scrollView.exists && scrollView.isHittable {
+                scrollView.swipeUp()
             } else {
                 app.swipeUp()
             }

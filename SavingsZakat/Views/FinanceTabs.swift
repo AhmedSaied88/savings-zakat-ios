@@ -62,12 +62,25 @@ struct WalletDashboardTab: View {
                     )
                 }
                 Section("Quick overview") {
-                    WalletQuickOverviewContent(
-                        snapshot: $snapshot,
-                        preferences: $preferences,
-                        onSave: onSave,
-                        onRestore: onRestore
-                    )
+                    WalletQuickOverviewContent(snapshot: $snapshot)
+                    NavigationLink {
+                        FinanceInsightsView(snapshot: snapshot)
+                    } label: {
+                        Label("Monthly income & expenses", systemImage: "chart.bar")
+                    }
+                    .accessibilityIdentifier("wallet-insights-link")
+
+                    NavigationLink {
+                        SettingsHomeView(
+                            snapshot: $snapshot,
+                            preferences: $preferences,
+                            onSave: onSave,
+                            onRestore: onRestore
+                        )
+                    } label: {
+                        Label("Settings & backup", systemImage: "gearshape")
+                    }
+                    .accessibilityIdentifier("wallet-settings-link")
                 }
             }
             .navigationTitle("Wallet")
@@ -96,6 +109,9 @@ struct WalletDashboardTab: View {
                         .accessibilityIdentifier("wallet-quick-add-asset")
                     } label: {
                         Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .accessibilityLabel("Quick add")
                     .accessibilityHint("Add a transaction, account or savings asset")
@@ -2046,9 +2062,6 @@ private struct WalletRecentActivityContent: View {
 
 private struct WalletQuickOverviewContent: View {
     @Binding var snapshot: FinanceSnapshot
-    @Binding var preferences: FinancePreferences
-    let onSave: () -> Void
-    let onRestore: (FinanceSnapshot) -> Bool
 
     private var columns: [GridItem] {
         [GridItem(.flexible()), GridItem(.flexible())]
@@ -2074,36 +2087,6 @@ private struct WalletQuickOverviewContent: View {
                 icon: "sparkles",
                 color: FinancePalette.gold
             )
-            NavigationLink {
-                FinanceInsightsView(snapshot: snapshot)
-            } label: {
-                navigationTile(
-                    title: "Monthly income & expenses",
-                    icon: "chart.bar",
-                    color: FinancePalette.violet
-                )
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Monthly income & expenses")
-            .accessibilityIdentifier("wallet-insights-link")
-
-            NavigationLink {
-                SettingsHomeView(
-                    snapshot: $snapshot,
-                    preferences: $preferences,
-                    onSave: onSave,
-                    onRestore: onRestore
-                )
-            } label: {
-                navigationTile(
-                    title: "Settings & backup",
-                    icon: "gearshape",
-                    color: FinancePalette.royalBlue
-                )
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Settings & backup")
-            .accessibilityIdentifier("wallet-settings-link")
         }
         .padding(.vertical, 8)
     }
@@ -2131,34 +2114,6 @@ private struct WalletQuickOverviewContent: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(count) \(title)")
         .accessibilityIdentifier("wallet-overview-\(icon)")
-    }
-
-    private func navigationTile(title: String, icon: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(color)
-                .frame(width: 36, height: 36)
-                .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .accessibilityHidden(true)
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
-                .lineLimit(2)
-            HStack {
-                Text("Open")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(color)
-                Spacer(minLength: 4)
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-                    .accessibilityHidden(true)
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
-        .padding(12)
-        .background(FinancePalette.whiteSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
