@@ -267,6 +267,7 @@ struct AccountsCardsTab: View {
                         let outstandingDescription = card.kind == .credit
                             ? "Outstanding \(((try? ledger.creditCardOutstanding(for: card.id)) ?? (card.openingOutstandingBalance ?? 0)).formatted(.currency(code: cardCurrency)))"
                             : nil
+                        let maskedDigitsDescription = "Card ending in \(card.lastFour ?? "not provided")"
                         let limitDescription = card.creditLimit.map { "Limit \($0.formatted(.currency(code: cardCurrency)))" }
                         let minimumDescription = card.minimumDue.map { "Minimum due \($0.formatted(.currency(code: cardCurrency)))" }
                         Button { editingCard = card } label: {
@@ -309,7 +310,7 @@ struct AccountsCardsTab: View {
                         // Keep the card row as one clear VoiceOver target while retaining
                         // the due-date description in its accessible label.
                         .frame(minHeight: 44)
-                        .accessibilityLabel(([card.name, card.kind.rawValue.capitalized,
+                        .accessibilityLabel(([card.name, card.kind.rawValue.capitalized, maskedDigitsDescription,
                             outstandingDescription, limitDescription, minimumDescription, paymentDueDescription]
                             .compactMap { $0 }).joined(separator: ", "))
                         .accessibilityHint("Edit card details")
