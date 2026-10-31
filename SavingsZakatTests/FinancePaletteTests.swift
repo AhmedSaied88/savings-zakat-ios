@@ -21,11 +21,16 @@ final class FinancePaletteTests: XCTestCase {
     func testGoldAccentMeetsNonTextContrastInBothAppearances() {
         for style in [UIUserInterfaceStyle.light, .dark] {
             let traits = UITraitCollection(userInterfaceStyle: style)
-            let surface = UIColor(FinancePalette.paleBlue).resolvedColor(with: traits)
+            let surfaces = [
+                UIColor(FinancePalette.paleBlue).resolvedColor(with: traits),
+                UIColor(FinancePalette.whiteSurface).resolvedColor(with: traits)
+            ]
             let gold = UIColor(FinancePalette.gold).resolvedColor(with: traits)
 
-            XCTAssertGreaterThanOrEqual(contrastRatio(gold, surface), 3.0,
-                                        "Gold asset accent must meet WCAG non-text contrast in \(style)")
+            for surface in surfaces {
+                XCTAssertGreaterThanOrEqual(contrastRatio(gold, surface), 3.0,
+                                            "Gold asset accent must meet WCAG non-text contrast in \(style)")
+            }
         }
     }
 
