@@ -210,3 +210,20 @@ The 1447–1448 AH bundled calendar expansion and its gap/year-boundary regressi
 ### Shawwal 1447 source follow-up (2026-10-31)
 
 Follow-up research located the Egyptian Ministry of Awqaf's official pre-observation notice for Shawwal 1447, stating that Dar Al-Ifta would conduct the sighting on 19 March 2026 and that the astronomical forecast was 20 March 2026. Al-Ahram subsequently published the full text of Dar Al-Ifta's post-observation statement, reporting that the crescent was sighted and that 20 March 2026 was 1 Shawwal 1447. However, a direct Dar Al-Ifta article URL for that final statement was not located. Because this dataset is intentionally restricted to directly verifiable Dar Al-Ifta source records, Shawwal remains excluded from the bundled official table for now; do not infer or add the date based solely on the secondary reproduction. References: [Egyptian Ministry of Awqaf pre-observation notice](https://awkafonline.gov.eg/popular-topics/238/9839/%D8%A7%D8%B3%D8%AA%D8%B7%D9%84%D8%A7%D8%B9-%D9%87%D9%84%D8%A7%D9%84-%D8%B4%D9%87%D8%B1-%D8%B4%D9%88%D8%A7%D9%84-%D9%84%D8%B9%D8%A7%D9%85-%D9%A1%D9%A4%D9%A4%D٧%D9%87%D9%80); [Al-Ahram reproduction of the final statement](https://gate.ahram.org.eg/News/5581306.aspx).
+
+## Wallet dashboard visual refinement (2026-10-31)
+
+The latest Wallet pass applies the previously selected Design 4 composition direction with the Design 3 blue palette:
+- The shared semantic royal-blue, pale-blue, violet and gold colors now adapt to UIKit's light/dark appearance traits.
+- The Wallet overview presents compact count tiles for cards, liabilities and savings/Zakat assets.
+- Monthly insights and Settings & backup remain direct List navigation rows after the first grid-based navigation attempt failed the UI test; keep these as direct rows to preserve reliable navigation.
+- A top-right Quick add menu opens the existing transaction, account and holding editors. It uses the existing ledger posting/validation and save paths.
+- The Quick add icon has a 44×44 point minimum frame and an explicit accessibility label/hint/identifier.
+- Large Dynamic Type navigation coverage already exists. New UI coverage exercises Quick add → Account editor and launches Wallet with a dark appearance override.
+
+CI evidence:
+- Run [#421](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41171944802) passed on `982e349`: 138 unit tests and 13 UI tests, zero failures. This verified the Quick add flow and preserved insights/settings navigation.
+- Run [#423](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41172697442) added the dark-appearance launch test but failed on a brittle assertion that expected a List section header to be exposed as a `StaticText`; the Quick add flow passed. The test assertion was removed, retaining the dark-launch and Quick add accessibility checks.
+- Run #425 is validating the adjusted UI test on `0eec407`; do not claim it passed until the run completes.
+
+Limitations remain: no simulator screenshot has been reviewed visually, no contrast values have been measured on rendered screenshots, and physical-iPhone Dark Mode, VoiceOver, Dynamic Type, 44-point hit targets and Shortcuts/notifications remain outstanding. PR #1 remains draft and unmerged; no release is authorized.
