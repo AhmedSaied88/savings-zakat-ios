@@ -82,6 +82,8 @@ struct BackupSettingsView: View {
                     }
                 }
             }
+            .financeScreenSurface()
+
             .navigationTitle("Backup & Restore")
             .fileExporter(
                 isPresented: $showExporter,
