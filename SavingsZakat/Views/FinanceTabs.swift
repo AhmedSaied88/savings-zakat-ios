@@ -279,6 +279,7 @@ struct AccountsCardsTab: View {
                                 }
                             }
                             .padding(.vertical, 4)
+                            .frame(minHeight: 44)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -448,12 +449,14 @@ struct TransactionsTab: View {
                                 if item.amount != nil && item.direction != nil {
                                     Button("Review & confirm") { selectedMessage = item }
                                         .buttonStyle(.borderedProminent)
+                                        .frame(minHeight: 44)
                                 }
                                 Spacer()
                                 Button("Ignore", role: .destructive) {
                                     updateImportedMessage(item.id, state: .ignored, transactionID: nil)
                                 }
                                 .buttonStyle(.bordered)
+                                .frame(minHeight: 44)
                             }
                         }
                         .padding(.vertical, 5)
