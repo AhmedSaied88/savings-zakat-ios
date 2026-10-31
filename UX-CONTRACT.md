@@ -55,6 +55,8 @@
 - Custom interactive targets are at least 44×44 points. Native platform controls retain their system sizing.
 - Text uses Dynamic Type and may wrap; do not truncate essential amounts, dates, warnings or action labels.
 - Status is never communicated by color alone.
+- Accessibility review uses WCAG 2.2 AA as the audit benchmark: at least 4.5:1 for normal text, 3:1 for large text and meaningful non-text indicators. This is the review benchmark, not a claim of certification.
+- Semantic income, expense, warning and danger colors are dynamic in `FinancePalette`; their text contrast and the primary/violet/gold accent pairs are covered by `FinancePaletteTests` in Light and Dark appearances.
 - Validate Light/Dark appearance, VoiceOver, large text, and actual device behavior before release.
 
 ## Offline, errors and recovery
