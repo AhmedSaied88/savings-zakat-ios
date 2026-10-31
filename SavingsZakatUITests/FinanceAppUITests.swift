@@ -290,6 +290,19 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Notifications are not permitted."].exists)
     }
 
+    func testZakatAssetEntryTilesAreAccessible() throws {
+        let app = launchCleanApp()
+        app.tabBars.buttons["Zakat"].tap()
+
+        for assetType in ["cash", "gold", "silver", "investment"] {
+            let tile = app.buttons["add-asset-\(assetType)"]
+            XCTAssertTrue(scrollTo(tile, in: app, maxSwipes: 12),
+                          "The \(assetType) asset entry tile should be reachable")
+            XCTAssertTrue(tile.label.localizedCaseInsensitiveContains(assetType),
+                          "The \(assetType) tile should have a meaningful accessible name")
+        }
+    }
+
     func testZakatCalculationControlsRemainVisible() throws {
         let app = launchCleanApp()
         app.tabBars.buttons["Zakat"].tap()
