@@ -455,20 +455,12 @@ final class FinanceAppUITests: XCTestCase {
 
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
-        let collection = app.collectionViews.firstMatch
-        let table = app.tables.firstMatch
-        let scrollView = app.scrollViews.firstMatch
         for _ in 0..<maxSwipes {
             if element.exists && element.isHittable { return true }
-            if collection.exists && collection.isHittable {
-                collection.swipeUp()
-            } else if table.exists && table.isHittable {
-                table.swipeUp()
-            } else if scrollView.exists && scrollView.isHittable {
-                scrollView.swipeUp()
-            } else {
-                app.swipeUp()
-            }
+            // Swipe the app's visible content directly. Querying the first
+            // SwiftUI List collection view can return a zero-sized stale
+            // accessibility frame during tab/sheet transitions.
+            app.swipeUp()
         }
         return element.exists && element.isHittable
     }

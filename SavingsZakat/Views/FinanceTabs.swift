@@ -1373,14 +1373,18 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
-            // Keep all four entry actions in one eagerly-created row. Separate
-            // lazy List rows were intermittently missing from XCTest/VoiceOver
-            // accessibility queries while scrolling on iPhone simulators.
+            // Keep all four add actions together in two compact rows so every
+            // action is visible immediately, rather than relying on lazy List
+            // row creation while VoiceOver or UI tests scroll the page.
             VStack(spacing: 8) {
-                assetEntryButton(for: .cash)
-                assetEntryButton(for: .gold)
-                assetEntryButton(for: .silver)
-                assetEntryButton(for: .investment)
+                HStack(spacing: 8) {
+                    assetEntryButton(for: .cash)
+                    assetEntryButton(for: .gold)
+                }
+                HStack(spacing: 8) {
+                    assetEntryButton(for: .silver)
+                    assetEntryButton(for: .investment)
+                }
             }
             .padding(.vertical, 4)
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
