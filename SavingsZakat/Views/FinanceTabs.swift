@@ -1112,6 +1112,7 @@ struct AssetsZakatTab: View {
         NavigationStack {
             List {
                 assetsSection
+                manualInvestmentSection
                 hawlCalendarSection
                 zakatCalculationSection
                 valuationRatesSection
@@ -1373,16 +1374,23 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
-            // Keep each action as its own List row. A single VStack row taller
-            // than the viewport can make its lower buttons unreachable to scrolling
-            // and VoiceOver on iPhone.
-            ForEach(HoldingKind.allCases, id: \.self) { kind in
+            // Keep the three common asset actions as independent List rows.
+            // The manual investment action has its own section below so SwiftUI
+            // does not omit the final lazy row from the accessibility hierarchy.
+            ForEach([HoldingKind.cash, .gold, .silver], id: \.self) { kind in
                 assetEntryButton(for: kind)
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
             }
             if let assetError {
                 Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
             }
+        }
+    }
+
+    private var manualInvestmentSection: some View {
+        Section("Other assets") {
+            assetEntryButton(for: .investment)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
         }
     }
 
