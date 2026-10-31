@@ -3,12 +3,19 @@ options:
   bundleIdPrefix: com.ahmedsaied88
   deploymentTarget:
     iOS: '17.0'
+packages:
+  SunCalc:
+    url: https://github.com/Timac/SunCalc
+    revision: 7e8ad5cbdf2742fb68527612ba6bf78e7f55dfe0
 targets:
   SavingsZakat:
     type: application
     platform: iOS
     sources:
       - path: SavingsZakat
+    dependencies:
+      - package: SunCalc
+        product: SunCalc
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ahmedsaied88.savingszakat.test

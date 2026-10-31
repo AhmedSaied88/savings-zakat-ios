@@ -55,6 +55,22 @@ Dates before the first bundled month, dates after the last covered day, and futu
 
 No network connection is required at runtime. Adding more official dates means transcribing a dated Dar Al-Ifta announcement, checking the Hijri year/month and Gregorian date, adding its source URL and announcement date, and incrementing the dataset version. Do not import Saudi Umm al-Qura dates as Egyptian confirmed records.
 
+## Egyptian astronomical estimate for uncovered dates
+
+The offline estimate uses the criteria described in Dar Al-Ifta fatwa No. 2345, dated 10 December 2011:
+
+- The conjunction must occur before the local sunset.
+- The crescent's angular separation from the Sun must be at least 8°.
+- The Moon must set at least 10 minutes after sunset.
+
+The app calculates the conjunction from the lunar phase, then evaluates the first three possible Cairo evenings after conjunction. It checks the elongation at sunset plus ten minutes and uses the calculated moonset to test the minimum lag. The next civil Gregorian day after the first passing observation evening is used as the estimated month start.
+
+The calculation uses the open-source MIT-licensed [SunCalc Swift implementation](https://github.com/Timac/SunCalc), pinned to revision `7e8ad5cbdf2742fb68527612ba6bf78e7f55dfe0`. The package performs calculations on-device; no network request or runtime data download is used. The reference coordinate is Cairo (30.0444° N, 31.2357° E), and the app retains the Africa/Cairo civil-day convention.
+
+**Important limitations:** Dar Al-Ifta describes observation committees at multiple locations across Egypt. This implementation models one Cairo reference point and does not model all committee sites, local atmospheric conditions, observer skill, or an actual sighting. It is therefore always labelled **Estimated** and must never be used as an official Egyptian calendar declaration. A separate Dar Al-Ifta publication describes a 15-hour-40-minute condition; this implementation does not combine that separate criterion with the 8°/10-minute method above.
+
+If the astronomy engine cannot provide a valid conjunction, sunset, moonset, or month boundary, conversion falls back to the clearly labelled Islamic-civil arithmetic estimate. Official Dar Al-Ifta intervals are evaluated before this estimator and are unchanged.
+
 ## Date convention
 
 The app accepts Gregorian dates. The current conversion maps civil Gregorian calendar days in the Africa/Cairo time zone; it does not attempt to shift a date at sunset. This civil-date convention must remain explicit in the UI and documentation. Hawl anniversary confidence is Confirmed only when the corresponding Egyptian month-start boundaries for both years are available; otherwise it is Estimated.

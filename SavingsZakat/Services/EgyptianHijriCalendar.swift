@@ -82,6 +82,23 @@ struct EgyptianHijriCalendar {
             }
         }
 
+        if let astronomical = EgyptianAstronomicalEstimator().estimate(
+            containing: target,
+            timeZone: timeZone,
+            officialMonthStarts: officialMonthStarts
+        ) {
+            return EgyptianHijriDate(
+                hijriYear: astronomical.hijriYear,
+                hijriMonth: astronomical.hijriMonth,
+                hijriDay: astronomical.hijriDay,
+                status: .estimated,
+                sourceURL: nil,
+                calculationNote: astronomical.calculationNote
+            )
+        }
+
+        // Retain a labelled arithmetic fallback if the astronomical engine
+        // cannot calculate a usable sunset/moonset event for the reference date.
         var estimate = Calendar(identifier: .islamicCivil)
         estimate.timeZone = timeZone
         let components = estimate.dateComponents([.day, .month, .year], from: target)
@@ -92,9 +109,10 @@ struct EgyptianHijriCalendar {
             hijriDay: day,
             status: .estimated,
             sourceURL: nil,
-            calculationNote: "Foundation Islamic-civil arithmetic fallback; not an official Egyptian announcement or an Egypt-specific astronomical visibility calculation."
+            calculationNote: "Islamic-civil arithmetic fallback because the Cairo astronomical estimate was unavailable; not an official Egyptian announcement."
         )
     }
+
     private static func isImmediateNextMonth(after current: EgyptianHijriMonthStart, before next: EgyptianHijriMonthStart) -> Bool {
         let expectedYear = current.hijriMonth == 12 ? current.hijriYear + 1 : current.hijriYear
         let expectedMonth = current.hijriMonth == 12 ? 1 : current.hijriMonth + 1
@@ -132,5 +150,4 @@ struct EgyptianHijriCalendar {
         guard let date = estimate.date(byAdding: .year, value: 1, to: start) else { return nil }
         return HawlDueDate(date: gregorian.startOfDay(for: date), status: .estimated)
     }
-
 }

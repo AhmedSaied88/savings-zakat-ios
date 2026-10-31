@@ -158,6 +158,55 @@ final class EgyptianHijriCalendarTests: XCTestCase {
         XCTAssertTrue(result.calculationNote?.contains("Cairo") == true)
     }
 
+
+    func testEgyptianVisibilityCriteriaAcceptsInclusiveMinimums() {
+        let conjunction = date("2026-10-10T00:00:00Z")
+        let sunset = date("2026-10-10T16:00:00Z")
+        let moonset = sunset.addingTimeInterval(10 * 60)
+
+        XCTAssertTrue(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
+            conjunction: conjunction,
+            sunset: sunset,
+            moonset: moonset,
+            elongationDegrees: 8
+        ))
+    }
+
+    func testEgyptianVisibilityCriteriaRejectsElongationBelowEightDegrees() {
+        let conjunction = date("2026-10-10T00:00:00Z")
+        let sunset = date("2026-10-10T16:00:00Z")
+
+        XCTAssertFalse(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
+            conjunction: conjunction,
+            sunset: sunset,
+            moonset: sunset.addingTimeInterval(20 * 60),
+            elongationDegrees: 7.99
+        ))
+    }
+
+    func testEgyptianVisibilityCriteriaRejectsMoonsetLagBelowTenMinutes() {
+        let conjunction = date("2026-10-10T00:00:00Z")
+        let sunset = date("2026-10-10T16:00:00Z")
+
+        XCTAssertFalse(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
+            conjunction: conjunction,
+            sunset: sunset,
+            moonset: sunset.addingTimeInterval(9 * 60 + 59),
+            elongationDegrees: 12
+        ))
+    }
+
+    func testEgyptianVisibilityCriteriaRejectsConjunctionAfterSunset() {
+        let sunset = date("2026-10-10T16:00:00Z")
+
+        XCTAssertFalse(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
+            conjunction: sunset.addingTimeInterval(1),
+            sunset: sunset,
+            moonset: sunset.addingTimeInterval(20 * 60),
+            elongationDegrees: 12
+        ))
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
