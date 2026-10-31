@@ -312,6 +312,7 @@ struct AccountsCardsTab: View {
                         .accessibilityLabel(([card.name, card.kind.rawValue.capitalized,
                             outstandingDescription, limitDescription, minimumDescription, paymentDueDescription]
                             .compactMap { $0 }).joined(separator: ", "))
+                        .accessibilityHint("Edit card details")
                         .accessibilityIdentifier("card-row-\(card.name)")
                     }
                     .onDelete { offsets in
@@ -582,6 +583,7 @@ struct TransactionsTab: View {
                             .contentShape(Rectangle())
                     }
                         .accessibilityLabel("Add transaction")
+                        .accessibilityHint("Create an income, expense or transfer entry")
                 }
             }
             .sheet(isPresented: $showAddRecurring) {
