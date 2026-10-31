@@ -25,6 +25,28 @@ enum FinancePalette {
             ? UIColor(red: 1.00, green: 0.80, blue: 0.40, alpha: 1)
             : UIColor(red: 0.68, green: 0.46, blue: 0.08, alpha: 1)
     })
+    // Status colors are intentionally darker in Light Mode and brighter in
+    // Dark Mode so small labels remain readable on native grouped surfaces.
+    static let income = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.43, green: 0.86, blue: 0.63, alpha: 1)
+            : UIColor(red: 0.09, green: 0.42, blue: 0.27, alpha: 1)
+    })
+    static let expense = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.70, blue: 0.42, alpha: 1)
+            : UIColor(red: 0.60, green: 0.30, blue: 0.00, alpha: 1)
+    })
+    static let warning = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.79, blue: 0.50, alpha: 1)
+            : UIColor(red: 0.54, green: 0.29, blue: 0.00, alpha: 1)
+    })
+    static let danger = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1.00, green: 0.54, blue: 0.50, alpha: 1)
+            : UIColor(red: 0.71, green: 0.14, blue: 0.09, alpha: 1)
+    })
     /// Native grouped surfaces keep every tab visually aligned with iOS while
     /// retaining the product's blue/violet/gold semantic accents.
     static let canvas = Color(uiColor: .systemGroupedBackground)
@@ -273,7 +295,7 @@ struct AccountsCardsTab: View {
                                     if let due = card.paymentDueDate {
                                         Label("Payment due \(due.formatted(date: .abbreviated, time: .omitted))",
                                               systemImage: "calendar")
-                                            .font(.caption).foregroundStyle(.orange)
+                                            .font(.caption).foregroundStyle(FinancePalette.warning)
                                             .accessibilityIdentifier("card-payment-due-\(card.name)")
                                     }
                                 }
@@ -309,7 +331,7 @@ struct AccountsCardsTab: View {
                 }
                 if let errorMessage {
                     Section("Account action") {
-                        Text(errorMessage).font(.footnote).foregroundStyle(.red)
+                        Text(errorMessage).font(.footnote).foregroundStyle(FinancePalette.danger)
                     }
                 }
             }
@@ -443,7 +465,7 @@ struct TransactionsTab: View {
                             } else {
                                 Label("Could not safely identify the transaction. Add it manually if valid.",
                                       systemImage: "exclamationmark.triangle")
-                                    .font(.caption).foregroundStyle(.orange)
+                                    .font(.caption).foregroundStyle(FinancePalette.warning)
                             }
                             HStack {
                                 if item.amount != nil && item.direction != nil {
@@ -481,7 +503,7 @@ struct TransactionsTab: View {
                                 Text("\(rule.direction.rawValue.capitalized) · Every \(rule.interval) \(rule.frequency.rawValue)")
                                 Spacer()
                                 Text(rule.isEnabled ? "Enabled" : "Paused")
-                                    .foregroundStyle(rule.isEnabled ? Color.green : Color.secondary)
+                                    .foregroundStyle(rule.isEnabled ? FinancePalette.income : Color.secondary)
                             }
                             .font(.caption).foregroundStyle(.secondary)
                             Text("Next: \(rule.nextDueDate.formatted(date: .abbreviated, time: .omitted))")
@@ -543,7 +565,7 @@ struct TransactionsTab: View {
                 }
                 if let errorMessage {
                     Section("Could not save transaction") {
-                        Text(errorMessage).font(.footnote).foregroundStyle(.red)
+                        Text(errorMessage).font(.footnote).foregroundStyle(FinancePalette.danger)
                     }
                 }
             }
@@ -813,7 +835,7 @@ private struct ImportedMessageConfirmationSheet: View {
                     } else if entryKind == .cardPurchase {
                         if creditCards.isEmpty {
                             Text("No credit card matches this message currency. Add a matching credit card first.")
-                                .font(.footnote).foregroundStyle(.orange)
+                                .font(.footnote).foregroundStyle(FinancePalette.warning)
                         } else {
                             Picker("Credit card", selection: $cardID) {
                                 ForEach(creditCards) { card in
@@ -831,7 +853,7 @@ private struct ImportedMessageConfirmationSheet: View {
                         }
                         if eligiblePaymentCards.isEmpty {
                             Text("No matching credit card is available in this currency.")
-                                .font(.footnote).foregroundStyle(.orange)
+                                .font(.footnote).foregroundStyle(FinancePalette.warning)
                         } else {
                             Picker("Credit card", selection: $cardID) {
                                 ForEach(eligiblePaymentCards) { card in
@@ -844,7 +866,7 @@ private struct ImportedMessageConfirmationSheet: View {
                     }
                     if eligibleAccounts.isEmpty && entryKind != .cardPurchase {
                         Text("Add an account in \(message.currency ?? "the message currency") before confirming this item.")
-                            .font(.footnote).foregroundStyle(.orange)
+                            .font(.footnote).foregroundStyle(FinancePalette.warning)
                     }
                 }
                 Section {
@@ -1290,14 +1312,14 @@ struct AssetsZakatTab: View {
                                 Text(days >= 0 ? "· \(days) days left" : "· Matured")
                             }
                             .font(.caption)
-                            .foregroundStyle(due.status == .officiallyConfirmed ? Color.secondary : Color.orange)
+                            .foregroundStyle(due.status == .officiallyConfirmed ? Color.secondary : FinancePalette.warning)
                         }
                         if let value = estimatedValueEGP(for: holding) {
                             Text(value, format: .currency(code: "EGP"))
                                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                         } else {
                             Text("Valuation needed")
-                                .font(.caption).foregroundStyle(.orange)
+                                .font(.caption).foregroundStyle(FinancePalette.warning)
                         }
                     }
                     .padding(.vertical, 5)
@@ -1322,7 +1344,7 @@ struct AssetsZakatTab: View {
                 }
             }
             if let assetError {
-                Text(assetError).font(.footnote).foregroundStyle(.red)
+                Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
             }
         }
     }
@@ -1532,8 +1554,8 @@ private struct TransactionRow: View {
             Image(systemName: transaction.direction == .income ? "arrow.down.left.circle.fill" :
                     transaction.direction == .transfer ? "arrow.left.arrow.right.circle" : "arrow.up.right.circle.fill")
                 .font(.title3)
-                .foregroundStyle(transaction.direction == .income ? .green :
-                                    transaction.direction == .expense ? .orange : .blue)
+                .foregroundStyle(transaction.direction == .income ? FinancePalette.income :
+                                    transaction.direction == .expense ? FinancePalette.expense : FinancePalette.royalBlue)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(transaction.title).font(.headline)
@@ -1542,7 +1564,7 @@ private struct TransactionRow: View {
                     .compactMap { $0 }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(.secondary)
                 if transaction.reviewStatus == .needsReview {
-                    Text("Needs review").font(.caption2).foregroundStyle(.orange)
+                    Text("Needs review").font(.caption2).foregroundStyle(FinancePalette.warning)
                 }
             }
             Spacer()
@@ -1992,12 +2014,12 @@ private struct ZakatCalculationContent: View {
                             Text(value, format: .currency(code: "EGP"))
                                 .font(.subheadline.monospacedDigit())
                         } else {
-                            Text("Not valued").font(.caption).foregroundStyle(.orange)
+                            Text("Not valued").font(.caption).foregroundStyle(FinancePalette.warning)
                         }
                     }
                     Text(breakdownTitle(item.status) + " · " + item.explanation)
                         .font(.caption)
-                        .foregroundStyle(item.status == .included ? Color.secondary : Color.orange)
+                        .foregroundStyle(item.status == .included ? Color.secondary : FinancePalette.warning)
                 }
             }
         }
@@ -2007,7 +2029,7 @@ private struct ZakatCalculationContent: View {
     private func provisionalWarnings(_ result: ZakatResult) -> some View {
         if result.isProvisional {
             ForEach(result.warnings, id: \.self) { warning in
-                Text(warning).font(.footnote).foregroundStyle(.orange)
+                Text(warning).font(.footnote).foregroundStyle(FinancePalette.warning)
             }
         }
     }
@@ -2032,7 +2054,7 @@ private struct WalletSummaryContent: View {
                 .font(.caption).foregroundStyle(.secondary)
             if summary.isProvisional {
                 Label("Some currencies need exchange rates", systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.caption).foregroundStyle(FinancePalette.warning)
             }
         }
         .padding(.vertical, 8)
@@ -2196,7 +2218,7 @@ private struct CreditCardDebtRow: View {
             }
             if let due = card.paymentDueDate {
                 Label("Due \(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.caption).foregroundStyle(FinancePalette.warning)
             }
         }
         .padding(.vertical, 4)
@@ -2220,7 +2242,7 @@ private struct LiabilityDebtRow: View {
             .font(.caption)
             if let due = item.dueDate {
                 Label("Due \(due.formatted(date: .abbreviated, time: .omitted))", systemImage: "calendar")
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.caption).foregroundStyle(FinancePalette.warning)
             }
             if item.kind == .creditCard && !linkableCards.isEmpty {
                 Menu("Link to credit card") {
