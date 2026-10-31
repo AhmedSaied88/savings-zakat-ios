@@ -313,7 +313,7 @@ This section records the next implementation pass after the documentation reconc
 ## Verification status and remaining work
 
 - The last verified baseline remains run #426 (138 unit + 14 UI tests). It predates this visual/accessibility refinement.
-- A new full simulator workflow has been queued for the current branch, but its result has not yet been confirmed. Do not claim the new tests passed until the run completes successfully on the latest head.
+- Full simulator workflow [#492](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41214722953) is queued for source/test head `208d9b8`; its result has not yet been confirmed. The expected suite is 141 unit tests and 16 UI tests. Do not claim the new tests passed until the run completes successfully.
 - No screenshot review or rendered contrast measurement on a physical device has been recorded.
 - VoiceOver navigation/announcements, complete Dynamic Type behavior, touch-target review across all screens, actual Dark Mode rendering, and Reduce Motion/system accessibility settings remain open.
 - All 69 physical-iPhone checklist entries remain outstanding. A signed development build is still required.
