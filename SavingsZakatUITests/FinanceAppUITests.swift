@@ -303,10 +303,7 @@ final class FinanceAppUITests: XCTestCase {
 
         for assetType in ["cash", "gold", "silver", "investment"] {
             let tile = app.buttons["add-asset-\(assetType)"]
-            let reachable = assetType == "investment"
-                ? scrollToWithAppGestures(tile, in: app, maxSwipes: 12)
-                : scrollTo(tile, in: app, maxSwipes: 12)
-            XCTAssertTrue(reachable,
+            XCTAssertTrue(scrollTo(tile, in: app, maxSwipes: 20),
                           "The \(assetType) asset entry tile should be reachable")
             XCTAssertTrue(tile.label.localizedCaseInsensitiveContains(assetType),
                           "The \(assetType) tile should have a meaningful accessible name")
@@ -454,19 +451,6 @@ final class FinanceAppUITests: XCTestCase {
                       "Calculated Hijri dates must remain explicitly estimated")
         XCTAssertFalse(estimateDescription.label.localizedCaseInsensitiveContains("Islamic-civil fallback only"),
                        "Settings must not describe the superseded civil-only fallback")
-    }
-
-    @discardableResult
-    private func scrollToWithAppGestures(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int) -> Bool {
-        // SwiftUI List's accessibility backing can expose a nested collection that
-        // is hittable but does not own the vertical scroll gesture for the final row.
-        // Swipe the app's visible list surface instead of repeatedly swiping that
-        // nested element, then verify the actual target is hittable.
-        for _ in 0..<maxSwipes {
-            if element.exists && element.isHittable { return true }
-            app.swipeUp()
-        }
-        return element.exists && element.isHittable
     }
 
     @discardableResult
