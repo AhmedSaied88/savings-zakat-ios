@@ -9,6 +9,14 @@ colors:
   darkPrimarySurface: "#172640"
   darkSecondary: "#C2ADFF"
   darkAssetGold: "#FFCC66"
+  income: "#176B45"
+  expense: "#994D00"
+  warning: "#8A4A00"
+  danger: "#B52417"
+  darkIncome: "#6EDBA1"
+  darkExpense: "#FFB36B"
+  darkWarning: "#FFC980"
+  darkDanger: "#FF8A80"
 typography:
   display:
     fontFamily: "SF Pro Display, system-ui, sans-serif"
@@ -54,10 +62,11 @@ Anti-references: dense stacks of floating cards, gradients behind every section,
 - **Pale blue** is reserved for the Wallet summary and small supporting surfaces; it must adapt to a deep navy tint in Dark Mode.
 - **Violet** distinguishes debts and secondary financial categories; it is not an error color.
 - **Gold** identifies gold/metal assets and is an accent, not the default text color.
-- System semantic colors communicate income, expenses, warnings, destructive actions and disabled states. Always pair status color with explicit text or a symbol.
+- Income `#176B45`, expense `#994D00`, warning `#8A4A00`, and danger `#B52417` are the Light Mode semantic text colors. Their Dark Mode counterparts are `#6EDBA1`, `#FFB36B`, `#FFC980`, and `#FF8A80`.
+- Always pair status color with explicit text or a symbol. Status colors are tested against system, grouped, and pale-blue surfaces in both appearances.
 - Screen and row surfaces use UIKit's dynamic `systemGroupedBackground`, `secondarySystemGroupedBackground`, and `systemBackground`; separators use `separator`. Do not hard-code a white screen background in Dark Mode.
 
-Runtime mapping: `FinancePalette` in `SavingsZakat/Views/FinanceTabs.swift` is the canonical implementation of the expressive palette and dynamic light/dark values. `FinancePalette.canvas`, `whiteSurface`, `groupedSurface`, and `separator` map to UIKit semantic surfaces. `financeScreenSurface()` applies the shared scroll background and royal-blue tint. Do not duplicate these values in individual views.
+Runtime mapping: `FinancePalette` in `SavingsZakat/Views/FinanceTabs.swift` is the canonical implementation of expressive and semantic colors with dynamic light/dark values. `FinancePalette.canvas`, `whiteSurface`, `groupedSurface`, and `separator` map to UIKit semantic surfaces. `financeScreenSurface()` applies the shared scroll background and royal-blue tint to all List and Form screens. `FinancePaletteTests` verifies text and non-text contrast pairs in both appearances. Do not duplicate these values in individual views.
 
 # Typography
 
