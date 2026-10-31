@@ -1,6 +1,6 @@
 # Egyptian Astronomical Hijri Estimate Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace the Islamic-civil-only fallback for uncovered dates with an offline Egyptian-reference astronomical estimate while preserving official Dar Al-Ifta dates as the only confirmed source.
 
@@ -41,10 +41,10 @@
 - SunCalc product: `SunCalc`.
 - The app target imports SunCalc; no network calls are made by app code at runtime.
 
-- [ ] Add `testUncoveredDateUsesEgyptianAstronomicalEstimateAndRemainsEstimated` for 2026-11-15; assert status remains .estimated, day is within 1–30, and the calculation note identifies the Egyptian astronomical method and Cairo reference.
-- [ ] Run CI and confirm the new assertion fails against the current Islamic-civil-only fallback for the expected reason.
-- [ ] Add SunCalc as a pinned SwiftPM dependency in XcodeGen configuration, using the exact revision above; confirm the app and test targets resolve the package.
-- [ ] Commit the failing regression test separately from production implementation.
+- [x] Add `testUncoveredDateUsesEgyptianAstronomicalEstimateAndRemainsEstimated` for 2026-11-15; assert status remains .estimated, day is within 1–30, and the calculation note identifies the Egyptian astronomical method and Cairo reference.
+- [x] Run CI and confirm the new assertion fails against the current Islamic-civil-only fallback for the expected reason.
+- [x] Add SunCalc as a pinned SwiftPM dependency in XcodeGen configuration, using the exact revision above; confirm the app and test targets resolve the package.
+- [x] Commit the failing regression test separately from production implementation.
 
 ### Task 2: Implement the Egyptian visibility estimator
 
@@ -55,20 +55,20 @@
 - Modify: `Documentation/Egyptian-Calendar-Sources.md`.
 
 **Interfaces:**
-- `EgyptianAstronomicalEstimator.estimate(containing:timeZone:)` returns an optional estimate containing month start and method note.
+- `EgyptianAstronomicalEstimator.estimate(containing:timeZone:officialMonthStarts:)` returns an optional estimate containing month start and method note.
 - Default reference coordinates: Cairo, latitude 30.0444° N, longitude 31.2357° E.
 - Visibility assessment uses the Dar Al-Ifta page dated 10 December 2011: at least 8° separation from conjunction, the crescent after sunset, and moonset at least 10 minutes after sunset.
 - The implementation finds conjunction by detecting the waxing phase wrap in SunCalc, then searches the first three post-conjunction evenings for the first passing Cairo assessment.
 - The first civil date after the passing observation evening is the estimated month start.
 - Hijri year/month labels use Islamic-civil arithmetic only as a numbering framework, adjusted to the nearest estimated civil month boundary; it is not a confirmation source.
 
-- [ ] Add deterministic tests for the 8° threshold, 10-minute moonset-lag threshold, and conjunction-before-sunset condition.
-- [ ] Implement the estimator with finite-value and missing-event guards.
-- [ ] Route uncovered-date conversion through the estimator; retain the existing Islamic-civil fallback only when astronomical calculation cannot produce an estimate.
-- [ ] Keep official interval resolution ahead of the estimator.
-- [ ] Update source documentation with the exact algorithm, Cairo coordinate, source limitations, and explicit note that calculated results are not Dar Al-Ifta announcements.
-- [ ] Run all unit and UI tests in GitHub Actions and inspect the test log for counts and failures.
-- [ ] Commit implementation and documentation.
+- [x] Add deterministic tests for the 8° threshold, 10-minute moonset-lag threshold, and conjunction-before-sunset condition.
+- [x] Implement the estimator with finite-value and missing-event guards.
+- [x] Route uncovered-date conversion through the estimator; retain the existing Islamic-civil fallback only when astronomical calculation cannot produce an estimate.
+- [x] Keep official interval resolution ahead of the estimator.
+- [x] Update source documentation with the exact algorithm, Cairo coordinate, source limitations, and explicit note that calculated results are not Dar Al-Ifta announcements.
+- [x] Run all unit and UI tests in GitHub Actions and inspect the test log for counts and failures.
+- [x] Commit implementation and documentation.
 
 ## Source and method ruling
 
@@ -82,3 +82,12 @@ The Dar Al-Ifta fatwa dated 10 December 2011 (No. 2345) states that visibility m
 - No runtime network dependency is introduced.
 - Unit and UI tests pass in CI.
 - The PR remains draft and unmerged; no release is authorized by this plan.
+
+
+## Verification record (2026-10-31)
+
+GitHub Actions run [#410](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41168666668) passed on commit `847ef5a`. It completed the generic iOS Simulator build, XCTest, and XCUITest on an iPhone 16 Pro simulator. The test log reports **138 unit tests and 12 UI tests, zero failures**. The Egyptian Hijri calendar suite passed all 18 tests, including the 8°/10-minute/conjunction boundary checks, latest-official-month continuation, and the uncovered-date Cairo astronomical estimate.
+
+The implementation pins the MIT-licensed SunCalc Swift package to revision `7e8ad5cbdf2742fb68527612ba6bf78e7f55dfe0`. The app uses no runtime network calls. The estimator scans a 40-day window for the latest conjunction and uses the latest official month start as a provisional day-count anchor for the first 29 civil days after that start; it checks the possible 29-day rollover astronomically. Calculated results remain Estimated until a subsequent official announcement bounds the interval.
+
+Automated CI does not replace physical-iPhone validation. Hawl reminder behavior, Shortcuts handoff, offline persistence, encrypted backup/restore, VoiceOver, Dark Mode, Dynamic Type and touch targets remain on the device checklist. PR #1 remains draft and unmerged.
