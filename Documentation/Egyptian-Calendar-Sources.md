@@ -2,7 +2,7 @@
 
 ## Primary authority
 
-The bundled official month-start records are transcribed from Egypt's Dar Al-Ifta announcement pages. Dar Al-Ifta describes its role as determining the beginning and end of lunar months through seven committees distributed across Egypt, with scholars and astronomy specialists. The committees perform observations on the 29th day and the Grand Mufti announces the result.
+The bundled official month-start records are transcribed from Egypt's Dar Al-Ifta announcement pages. Dar Al-Ifta describes its role as determining the beginning and end of lunar months through observation committees distributed across Egypt, with scholars and astronomy specialists. The current institutional service describes seven committees; the 2011 fatwa cited below names ten observation locations. These descriptions are preserved as stated by their respective sources rather than normalized into a single count. The app's astronomical estimate does not reproduce the committee network; it uses one Cairo reference point.
 
 - English overview: https://www.dar-alifta.org/en/service/lunar-months-moon-sighting
 - Arabic Hijri date service and institutional description: https://www.dar-alifta.org/ar/services/Details/12/التاريخ-الهجري
@@ -51,7 +51,7 @@ The dataset now also contains primary-source announcements for 1447 AH. The foll
 
 This is a partial, intentionally transparent dataset (16 source-backed starts across 1447–1448 AH). It is **not** a complete Egyptian historical calendar. The implementation marks dates as officially confirmed only inside an interval whose current and next month starts are both in the bundled source table. The first day of the latest announced month can be marked confirmed on that date alone. Later days remain Estimated; while still within that announced month, the app uses its first day as the provisional day-count anchor. The possible 29-day rollover is checked astronomically before day 30 is assigned.
 
-Dates before the first bundled month, dates after the last covered day, and future months not yet announced use the system's Islamic-civil fallback and are labelled **Estimated**. This fallback is an approximation, not a claim that the Islamic-civil calendar is Egypt's official calendar.
+Dates before the first bundled month, dates in gaps between official records, and future months not yet announced use the Cairo astronomical estimate when the required conjunction, sunset, moonset, and elongation calculations are available. If those events cannot be calculated, the app uses the Islamic-civil arithmetic fallback. Both paths are labelled **Estimated**; neither is a claim that the Islamic-civil calendar or the astronomical estimate is Egypt's official calendar.
 
 No network connection is required at runtime. Adding more official dates means transcribing a dated Dar Al-Ifta announcement, checking the Hijri year/month and Gregorian date, adding its source URL and announcement date, and incrementing the dataset version. Do not import Saudi Umm al-Qura dates as Egyptian confirmed records.
 
@@ -65,7 +65,7 @@ The offline estimate uses the criteria described in Dar Al-Ifta fatwa No. 2345, 
 
 The app calculates the conjunction from the lunar phase, then evaluates the first three possible Cairo evenings after conjunction. It checks the elongation at sunset plus ten minutes and uses the calculated moonset to test the minimum lag. The next civil Gregorian day after the first passing observation evening is used as the estimated month start.
 
-The calculation uses the open-source MIT-licensed [SunCalc Swift implementation](https://github.com/Timac/SunCalc), pinned to revision `7e8ad5cbdf2742fb68527612ba6bf78e7f55dfe0`. The package performs calculations on-device; no network request or runtime data download is used. The reference coordinate is Cairo (30.0444° N, 31.2357° E), and the app retains the Africa/Cairo civil-day convention.
+The calculation uses the open-source MIT-licensed [SunCalc Swift implementation](https://github.com/Timac/SunCalc), pinned to revision `7e8ad5cbdf2742fb68527612ba6bf78e7f55dfe0`. The package performs calculations on-device; no network request or runtime data download is used. The reference coordinate is Cairo (30.0444° N, 31.2357° E), and the app retains the Africa/Cairo civil-day convention. Its required MIT attribution and license text are retained in `Documentation/Third-Party-Licenses.md`.
 
 **Important limitations:** Dar Al-Ifta describes observation committees at multiple locations across Egypt. This implementation models one Cairo reference point and does not model all committee sites, local atmospheric conditions, observer skill, or an actual sighting. It is therefore always labelled **Estimated** and must never be used as an official Egyptian calendar declaration. A separate Dar Al-Ifta publication describes a 15-hour-40-minute condition; this implementation does not combine that separate criterion with the 8°/10-minute method above.
 
