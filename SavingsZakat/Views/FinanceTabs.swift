@@ -284,6 +284,7 @@ struct AccountsCardsTab: View {
                                         Text("Outstanding")
                                         Text((try? ledger.creditCardOutstanding(for: card.id)) ?? (card.openingOutstandingBalance ?? 0),
                                              format: .currency(code: cardCurrency))
+                                            .foregroundStyle(FinancePalette.violet)
                                             .accessibilityIdentifier("card-outstanding-\(card.name)")
                                         if let limit = card.creditLimit {
                                             Text("Limit: \(limit, format: .currency(code: cardCurrency))")
@@ -2214,6 +2215,7 @@ private struct CreditCardDebtRow: View {
                 Spacer()
                 Text(outstanding, format: .currency(code: currency))
                     .font(.subheadline.bold()).monospacedDigit()
+                    .foregroundStyle(FinancePalette.violet)
                     .accessibilityIdentifier("debt-card-outstanding-\(card.name)")
             }
             if let due = card.paymentDueDate {
@@ -2238,6 +2240,7 @@ private struct LiabilityDebtRow: View {
                 Spacer()
                 Text(item.outstandingAmount, format: .currency(code: item.currency))
                     .font(.subheadline.bold()).monospacedDigit()
+                    .foregroundStyle(FinancePalette.violet)
             }
             .font(.caption)
             if let due = item.dueDate {
