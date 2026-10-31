@@ -160,8 +160,8 @@ final class EgyptianHijriCalendarTests: XCTestCase {
 
 
     func testEgyptianVisibilityCriteriaAcceptsInclusiveMinimums() {
-        let conjunction = date("2026-10-10T00:00:00Z")
-        let sunset = date("2026-10-10T16:00:00Z")
+        let conjunction = date("2026-10-10")
+        let sunset = conjunction.addingTimeInterval(16 * 60 * 60)
         let moonset = sunset.addingTimeInterval(10 * 60)
 
         XCTAssertTrue(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
@@ -173,8 +173,8 @@ final class EgyptianHijriCalendarTests: XCTestCase {
     }
 
     func testEgyptianVisibilityCriteriaRejectsElongationBelowEightDegrees() {
-        let conjunction = date("2026-10-10T00:00:00Z")
-        let sunset = date("2026-10-10T16:00:00Z")
+        let conjunction = date("2026-10-10")
+        let sunset = conjunction.addingTimeInterval(16 * 60 * 60)
 
         XCTAssertFalse(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
             conjunction: conjunction,
@@ -185,8 +185,8 @@ final class EgyptianHijriCalendarTests: XCTestCase {
     }
 
     func testEgyptianVisibilityCriteriaRejectsMoonsetLagBelowTenMinutes() {
-        let conjunction = date("2026-10-10T00:00:00Z")
-        let sunset = date("2026-10-10T16:00:00Z")
+        let conjunction = date("2026-10-10")
+        let sunset = conjunction.addingTimeInterval(16 * 60 * 60)
 
         XCTAssertFalse(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
             conjunction: conjunction,
@@ -197,7 +197,7 @@ final class EgyptianHijriCalendarTests: XCTestCase {
     }
 
     func testEgyptianVisibilityCriteriaRejectsConjunctionAfterSunset() {
-        let sunset = date("2026-10-10T16:00:00Z")
+        let sunset = date("2026-10-10").addingTimeInterval(16 * 60 * 60)
 
         XCTAssertFalse(EgyptianAstronomicalEstimator.meetsEgyptianVisibilityCriteria(
             conjunction: sunset.addingTimeInterval(1),
