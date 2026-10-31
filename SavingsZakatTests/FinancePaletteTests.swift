@@ -55,7 +55,8 @@ final class FinancePaletteTests: XCTestCase {
             let traits = UITraitCollection(userInterfaceStyle: style)
             let surfaces = [
                 UIColor(FinancePalette.paleBlue).resolvedColor(with: traits),
-                UIColor(FinancePalette.whiteSurface).resolvedColor(with: traits)
+                UIColor(FinancePalette.whiteSurface).resolvedColor(with: traits),
+                UIColor(FinancePalette.canvas).resolvedColor(with: traits)
             ]
             let gold = UIColor(FinancePalette.gold).resolvedColor(with: traits)
 
