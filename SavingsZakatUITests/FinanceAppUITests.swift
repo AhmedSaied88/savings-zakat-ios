@@ -442,7 +442,7 @@ final class FinanceAppUITests: XCTestCase {
         let estimateDescription = app.staticTexts.containing(
             NSPredicate(format: "label CONTAINS %@", "Cairo astronomical estimate")
         ).firstMatch
-        XCTAssertTrue(estimateDescription.waitForExistence(timeout: 5),
+        XCTAssertTrue(scrollTo(estimateDescription, in: app, maxSwipes: 20),
                       "Settings must explain the Egypt-calibrated astronomical estimate")
         XCTAssertTrue(estimateDescription.label.contains("Estimated"),
                       "Calculated Hijri dates must remain explicitly estimated")
