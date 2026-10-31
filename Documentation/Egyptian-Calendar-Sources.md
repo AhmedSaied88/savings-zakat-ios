@@ -15,7 +15,7 @@ The cited guidance says the month is established by crescent sighting; astronomi
 
 Dataset version: `2026.10.2`
 
-The first bundled seed contains five consecutive official announcements for 1448 AH:
+The dataset includes five consecutive official announcements for 1448 AH:
 
 | Hijri month | First Gregorian day | Announcement date | Dar Al-Ifta record |
 |---|---:|---:|---|
