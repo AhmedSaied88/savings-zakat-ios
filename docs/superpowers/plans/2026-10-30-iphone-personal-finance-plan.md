@@ -227,3 +227,57 @@ CI evidence:
 - Run #425 is validating the adjusted UI test on `0eec407`; do not claim it passed until the run completes.
 
 Limitations remain: no simulator screenshot has been reviewed visually, no contrast values have been measured on rendered screenshots, and physical-iPhone Dark Mode, VoiceOver, Dynamic Type, 44-point hit targets and Shortcuts/notifications remain outstanding. PR #1 remains draft and unmerged; no release is authorized.
+
+---
+
+# Current documentation reconciliation — 2026-10-31
+
+> **Authority note:** This section records the current verified state of the branch and supersedes conflicting earlier status notes in this historical implementation log. Earlier task notes are retained as a chronological record of what was known at the time; do not use their old CI counts, runner-failure notes, or "pending verification" statements as the current project status.
+
+## Current branch and CI evidence
+
+- Repository: `AhmedSaied88/savings-zakat-ios`
+- Branch: `chore/task-1-baseline-architecture`
+- Current branch head before this documentation reconciliation: `04717a0877d7724fa68468d0369f83ce3d4f2c82`
+- Latest full simulator workflow: [run #426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085)
+- Run #426 completed successfully at the current branch head. The app and test bundles built successfully; the XCTest log explicitly reports **138 unit tests and 14 UI tests, zero failures**.
+- The Quick Add → Account editor UI test and Wallet launch under a dark appearance override both passed. The dark test is a launch/availability check, not a visual Dark Mode or contrast audit.
+- This is simulator CI only. It does not establish signed-device installation, physical-iPhone behavior, or release readiness.
+
+## Implementation status now verified
+
+The implementation areas below are present and covered by the current simulator test workflow:
+- Versioned local JSON persistence, atomic snapshot writes, legacy holdings migration, and ledger validation.
+- Accounts, cards, transactions, paired transfers, liabilities, and credit-card purchase/repayment/opening-balance reconciliation.
+- Shortcuts/App Intent message handoff, redaction, parser rules, duplicate protection, and explicit review before posting.
+- Unified cash/gold/silver/manual-investment asset register; Hawl and Zakat calculations and per-asset breakdown.
+- Egyptian Hijri calendar with 16 source-backed Dar Al-Ifta starts across 1447–1448 AH and the Cairo-reference astronomical estimator for uncovered dates. All calculated estimates remain Estimated.
+- Local Hawl reminders; encrypted local backup/restore; valuation/parser preferences; monthly insights; and manual-confirmed recurring income/expense templates.
+- Initial Wallet visual refinement: pale-blue surfaces, royal-blue actions, violet debt accents, gold asset highlights, overview count tiles, direct Settings/Insights navigation rows, and Quick Add.
+
+## Calendar data and provenance
+
+- Dataset version: `2026.10.2`; 16 source-backed month-start records are bundled.
+- Shawwal 1447 remains intentionally omitted because the direct final Dar Al-Ifta announcement was not independently located. Do not infer it from secondary reproduction or bridge the resulting gap as officially confirmed.
+- For uncovered dates, the implementation uses a Cairo-reference astronomical estimator based on the documented 8° solar-separation and 10-minute moonset-lag criteria; if required astronomical events cannot be calculated, it falls back to Islamic-civil arithmetic.
+- Both fallback paths are always labelled Estimated and are not official Egyptian calendar declarations. See `Documentation/Egyptian-Calendar-Sources.md`.
+
+## Remaining work and release gates
+
+1. **Documentation:** this reconciliation updates the README, Architecture document, plan status, and PR description. Keep future status updates aligned with the latest branch head and CI evidence.
+2. **Visual design:** complete the app-wide Design 4 composition using the selected Design 3 palette; inspect actual simulator screenshots and measure rendered contrast. Current Wallet refinement is not a complete design sign-off.
+3. **Accessibility:** review VoiceOver, full Dynamic Type behavior, Dark Mode visuals, controls and touch targets (at least 44×44 points), and non-color communication of Confirmed/Estimated/Warning states.
+4. **Physical iPhone:** all 69 items in `Documentation/Device-Test-Checklist.md` remain unchecked. Prepare a signed development build and record device model, iOS version, settings, evidence, and failures using fictional data only.
+5. **Schema evolution:** schema version 1 is the only supported format. Add and test ordered N → N+1 migrations before any future schema-version increase.
+6. **Calendar data:** continue source verification for missing historical/official month starts. Shawwal 1447 remains a deliberate gap until a direct final primary-source announcement is independently verified.
+7. **Final review:** review the physical-device evidence, accessibility findings, and remaining limitations before any release decision.
+
+## Explicit scope boundaries
+
+- Credit-card tracking is current-state reconciliation, not a monthly statement archive.
+- Recurring templates cover income and expenses only; due entries are generated manually after user action. Recurring transfers and automatic/background posting are not implemented.
+- SMS inbox access is not direct; Shortcuts is user-configured and manual share/paste remains the fallback.
+- Missing exchange rates and metal prices produce provisional calculations; rates/prices are manually entered.
+- Encrypted backup excludes pending SMS review items and notification schedules.
+- CI uses simulator builds with code signing disabled; no signed IPA, TestFlight build, or App Store release exists.
+- PR #1 remains open, draft, and unmerged. Do not merge, publish, or release without explicit user approval.
