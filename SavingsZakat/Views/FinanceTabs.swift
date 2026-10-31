@@ -1280,6 +1280,38 @@ struct AssetsZakatTab: View {
     }
 
 
+    private func assetEntryButton(for kind: HoldingKind) -> some View {
+        Button {
+            editingHolding = nil
+            editorKind = kind
+            showHoldingEditor = true
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                Image(systemName: addIcon(for: kind))
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(assetColor(for: kind))
+                    .frame(width: 36, height: 36)
+                    .background(assetColor(for: kind).opacity(0.14),
+                                in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .accessibilityHidden(true)
+                Text(addTitle(for: kind))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxWidth: .infinity, minHeight: 92, alignment: .leading)
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 116, alignment: .leading)
+            .background(FinancePalette.whiteSurface,
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(addTitle(for: kind))
+        .accessibilityHint("Create a new \(kind.rawValue) asset")
+        .accessibilityIdentifier("add-asset-\(kind.rawValue)")
+    }
+
     private var assetsSection: some View {
         Section("Savings and Zakat assets") {
             if snapshot.holdings.isEmpty {
@@ -1337,36 +1369,14 @@ struct AssetsZakatTab: View {
                     }
                 }
             }
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                ForEach(HoldingKind.allCases, id: \.self) { kind in
-                    Button {
-                        editingHolding = nil
-                        editorKind = kind
-                        showHoldingEditor = true
-                    } label: {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Image(systemName: addIcon(for: kind))
-                                .font(.title3.weight(.semibold))
-                                .foregroundStyle(assetColor(for: kind))
-                                .frame(width: 36, height: 36)
-                                .background(assetColor(for: kind).opacity(0.14),
-                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                .accessibilityHidden(true)
-                            Text(addTitle(for: kind))
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.primary)
-                                .multilineTextAlignment(.leading)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 92, alignment: .leading)
-                        .padding(12)
-                        .background(FinancePalette.whiteSurface,
-                                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(addTitle(for: kind))
-                    .accessibilityHint("Create a new \(kind.rawValue) asset")
-                    .accessibilityIdentifier("add-asset-\(kind.rawValue)")
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    assetEntryButton(for: .cash)
+                    assetEntryButton(for: .gold)
+                }
+                HStack(spacing: 12) {
+                    assetEntryButton(for: .silver)
+                    assetEntryButton(for: .investment)
                 }
             }
             .padding(.vertical, 8)
