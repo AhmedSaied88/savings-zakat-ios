@@ -15,7 +15,7 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 ## Current implementation and verification
 
 - Native SwiftUI app with five primary tabs: Wallet, Accounts & Cards, Activity, Debts, and Savings & Zakat.
-- Latest completed full simulator verification: [GitHub Actions run #41275559071](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071), source head `358dfbb3de1e03bc1909cab952b93fa48add51b1`.
+- Latest completed full simulator verification: [GitHub Actions run #41277309339](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339), source head `8ee59a65c29e49434b047406815924b0c851099a`.
 - The workflow built the app and test bundles with Xcode 16.4 and passed **144 unit tests plus 16 UI tests, with zero failures**.
 - The CI build targets an iPhone simulator with code signing disabled. It does not validate physical-device behavior, signed installation, actual notification delivery, or App Store readiness.
 - PR #1 remains open, draft, and unmerged. No merge, release, or production deployment is authorized.
