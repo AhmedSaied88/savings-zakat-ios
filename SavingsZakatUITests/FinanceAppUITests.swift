@@ -460,20 +460,12 @@ final class FinanceAppUITests: XCTestCase {
 
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
-        let collection = app.collectionViews.firstMatch
-        let table = app.tables.firstMatch
-        let scrollView = app.scrollViews.firstMatch
         for _ in 0..<maxSwipes {
             if element.exists && element.isHittable { return true }
-            if collection.exists && collection.isHittable {
-                collection.swipeUp()
-            } else if table.exists && table.isHittable {
-                table.swipeUp()
-            } else if scrollView.exists && scrollView.isHittable {
-                scrollView.swipeUp()
-            } else {
-                app.swipeUp()
-            }
+            // SwiftUI List can be exposed as a CollectionView whose accessibility
+            // frame is invalid on some simulator states. Swipe the active app
+            // viewport instead of attempting to interact with that proxy.
+            app.swipeUp()
         }
         return element.exists && element.isHittable
     }
