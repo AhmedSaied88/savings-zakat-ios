@@ -15,11 +15,10 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 ## Current implementation and verification
 
 - Native SwiftUI app with five primary tabs: Wallet, Accounts & Cards, Activity, Debts, and Savings & Zakat.
-- Last verified full simulator baseline before the current visual/accessibility changes: [GitHub Actions run #426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085), branch `chore/task-1-baseline-architecture`, commit `04717a0877d7724fa68468d0369f83ce3d4f2c82`.
-- Run #426 built the app and test bundles and passed **138 unit tests plus 14 UI tests, with zero failures**.
-- The current visual/accessibility refinement adds palette contrast unit tests and UI regression coverage. Full simulator run [#492](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41214722953) is queued for source/test head `208d9b8`; do not treat the earlier run as verification of these latest changes until #492 completes successfully.
-- Simulator CI does not validate physical iPhone behavior, signing, notifications on device, or App Store readiness.
-- PR #1 remains open, draft, and unmerged. No release is authorized.
+- Latest completed full simulator verification: [GitHub Actions run #41275559071](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071), source head `358dfbb3de1e03bc1909cab952b93fa48add51b1`.
+- The workflow built the app and test bundles with Xcode 16.4 and passed **144 unit tests plus 16 UI tests, with zero failures**.
+- The CI build targets an iPhone simulator with code signing disabled. It does not validate physical-device behavior, signed installation, actual notification delivery, or App Store readiness.
+- PR #1 remains open, draft, and unmerged. No merge, release, or production deployment is authorized.
 
 ## Persistence and migration contract
 
@@ -108,7 +107,7 @@ This is a separate iPhone-only SwiftUI application. It does not share storage, a
 
 - Five primary tabs: Wallet, Accounts & Cards, Activity, Debts, and Savings & Zakat. Settings, monthly insights, Hawl calendar, and encrypted backup are reachable from Wallet.
 - The Wallet net-worth headline covers account balances and recorded liabilities only; it excludes gold/silver holdings until their valuations are incorporated.
-- The selected visual direction is Design 4 composition with Design 3 palette: pale-blue surfaces, royal-blue actions, violet debt accents, and gold asset highlights. Current work is an initial Wallet refinement, not a complete app-wide composition or visual sign-off.
+- The selected visual direction is Design 4 composition with Design 3 palette: pale-blue surfaces, royal-blue actions, violet debt accents, and gold asset highlights. The shared surface treatment is applied to all eight List screens and fourteen Form screens. This code-level consistency pass is not a substitute for rendered screenshot or physical-device visual sign-off.
 - Quick Add opens existing transaction, account, and holding editors using existing ledger/save paths. The icon has a 44×44-point frame and accessibility label/hint/identifier.
 - UI automation includes Quick Add → Account editor and Wallet launch under a dark appearance override. The latter proves launch under the override only; it is not a visual Dark Mode audit.
 - No simulator screenshot review or rendered contrast measurement has been recorded. Full VoiceOver, Dynamic Type, touch-target, color-independence, and physical-device accessibility review remain outstanding.
@@ -130,4 +129,4 @@ No subscriptions, paid APIs, paid backend, paid notification provider, mandatory
 - Custom toolbar actions have accessible names and 44×44-point minimum frames. Account/card rows and asset tiles expose action hints and stable identifiers.
 - `FinancePaletteTests` calculates contrast using resolved UIKit colors in Light and Dark appearances. It enforces at least 4.5:1 for text accents/status colors and 3:1 for gold non-text accents against system, grouped and pale-blue surfaces.
 - `Documentation/Accessibility-Visual-Review.md` records the code-level findings, reference contrast calculations, automated coverage, and outstanding device checks.
-- **Not yet signed off:** the current full simulator run is pending; no screenshot review or actual-device contrast measurement has been recorded. VoiceOver, full Dynamic Type, all touch targets, physical Dark Mode, and other device accessibility settings remain open.
+- **Not yet signed off:** the latest full simulator run passed, but no screenshot review or actual-device contrast measurement has been recorded. VoiceOver, full Dynamic Type, all touch targets, physical Dark Mode, Reduce Motion, and other device accessibility settings remain open.
