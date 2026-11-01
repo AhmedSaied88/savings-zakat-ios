@@ -6,12 +6,12 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 **Core implementation and current simulator regression suite pass. The app is not release-ready and has not been validated on a physical iPhone.**
 
-Latest completed GitHub Actions pull-request run: [run #41275559071](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071), testing PR head `358dfbb3de1e03bc1909cab952b93fa48add51b1`:
+Latest completed GitHub Actions pull-request run: [run #41277309339](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339), testing PR head `8ee59a65c29e49434b047406815924b0c851099a`:
 - App and test bundles built successfully with Xcode 16.4.
 - **144 unit tests and 16 UI tests passed; zero failures.**
 - The latest accessibility-size navigation test and all four individually reachable Zakat asset-entry actions pass.
 - CI runs on an iPhone simulator with code signing disabled. It is not evidence of physical-device behavior or a signed distribution build.
-- [XCTest diagnostics artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071/artifacts/13071645063).
+- [XCTest diagnostics artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339/artifacts/13072131631).
 
 Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) remains **open and draft**. It is not merged and is not approved for merge or release. No changes have been made to the existing PWA.
 
