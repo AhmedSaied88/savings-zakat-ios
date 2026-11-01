@@ -1027,6 +1027,7 @@ struct DebtsTab: View {
             if creditCards.isEmpty {
                 Text("Add a credit card in Accounts to track purchases and repayments.")
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             ForEach(creditCards) { card in
                 CreditCardDebtRow(
@@ -2102,6 +2103,7 @@ private struct WalletSummaryContent: View {
             }
             Text("This first summary excludes unvalued gold and silver holdings.")
                 .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             if summary.isProvisional {
                 Label("Some currencies need exchange rates", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption).foregroundStyle(FinancePalette.warning)
