@@ -459,7 +459,7 @@ final class FinanceAppUITests: XCTestCase {
     }
 
     func testCapturePrimaryTabsForVisualReview() throws {
-        let app = launchCleanApp()
+        let app = launchCleanApp(contentSizeCategory: "UICTContentSizeCategoryLarge")
         let tabs = ["Wallet", "Accounts", "Activity", "Debts", "Zakat"]
 
         for (index, tab) in tabs.enumerated() {
@@ -494,9 +494,12 @@ final class FinanceAppUITests: XCTestCase {
         return element.exists && element.isHittable
     }
 
-    private func launchCleanApp() -> XCUIApplication {
+    private func launchCleanApp(contentSizeCategory: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-ui-testing-reset"]
+        if let contentSizeCategory {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSizeCategory]
+        }
         app.launch()
         return app
     }
