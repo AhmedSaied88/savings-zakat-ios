@@ -60,7 +60,9 @@ extension View {
     func financeScreenSurface() -> some View {
         self
             .scrollContentBackground(.hidden)
-            .background(FinancePalette.canvas)
+            // Extend the grouped canvas behind the status bar and navigation
+            // safe areas; otherwise the simulator/device window can show black.
+            .background(FinancePalette.canvas.ignoresSafeArea())
             .tint(FinancePalette.royalBlue)
     }
 }
@@ -123,6 +125,7 @@ struct WalletDashboardTab: View {
             .listStyle(.insetGrouped)
             .financeScreenSurface()
             .navigationTitle("Wallet")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -341,6 +344,7 @@ struct AccountsCardsTab: View {
             .listStyle(.insetGrouped)
             .financeScreenSurface()
             .navigationTitle("Accounts & Cards")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showNewAccount) {
                 AccountEditorSheet { account in
                     snapshot.accounts.append(account)
@@ -444,6 +448,7 @@ struct TransactionsTab: View {
                     if pending.isEmpty {
                         Text("Bank messages imported through Shortcuts will appear here. They never change balances until you confirm them.")
                             .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     ForEach(pending) { item in
                         VStack(alignment: .leading, spacing: 8) {
@@ -576,6 +581,7 @@ struct TransactionsTab: View {
             .listStyle(.insetGrouped)
             .financeScreenSurface()
             .navigationTitle("Transactions")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showAdd = true } label: {
@@ -1006,6 +1012,7 @@ struct DebtsTab: View {
             .listStyle(.insetGrouped)
             .financeScreenSurface()
             .navigationTitle("Debts")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showAdd) {
                 LiabilityEntrySheet { item in
                     snapshot.liabilities.append(item)
@@ -1126,6 +1133,7 @@ struct AssetsZakatTab: View {
             .listStyle(.insetGrouped)
             .financeScreenSurface()
             .navigationTitle("Savings & Zakat")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(isPresented: $showHawlCalendar) {
                 HawlCalendarView(holdings: snapshot.holdings)
             }
