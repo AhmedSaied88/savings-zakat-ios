@@ -2,15 +2,16 @@
 
 A separate, native SwiftUI iPhone application for personal-finance tracking and Egyptian-calendar Savings & Zakat calculations. This repository is isolated from the existing PWA: https://github.com/AhmedSaied88/savings-zakat-pwa
 
-## Current status — 2026-10-31
+## Current status — 2026-11-01
 
-**Core implementation is simulator-tested; the latest visual/accessibility refinement is awaiting its own CI verification. The app is not release-ready and has not been validated on a physical iPhone.**
+**Core implementation and current simulator regression suite pass. The app is not release-ready and has not been validated on a physical iPhone.**
 
-The last verified full GitHub Actions baseline is [run #426](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41173677085) on commit `04717a0877d7724fa68468d0369f83ce3d4f2c82`:
-- App and test bundles built successfully.
-- **138 unit tests and 14 UI tests passed; zero failures.**
-- This run predates the current visual/accessibility changes. New contrast and UI regression tests have been added. Full simulator run [#492](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41214722953) is queued for source/test head `208d9b8`; its result is not yet confirmed.
-- CI runs on an iPhone simulator. It is not evidence of physical-device behavior or a signed distribution build.
+Latest completed GitHub Actions pull-request run: [run #41267155061](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41267155061), testing PR head `0a5b4c97c7bfe21846bca169ab7591d463654df5`:
+- App and test bundles built successfully with Xcode 16.4.
+- **144 unit tests and 16 UI tests passed; zero failures.**
+- The latest accessibility-size navigation test and all four individually reachable Zakat asset-entry actions pass.
+- CI runs on an iPhone simulator with code signing disabled. It is not evidence of physical-device behavior or a signed distribution build.
+- [XCTest diagnostics artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41267155061/artifacts/13067953108).
 
 Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) remains **open and draft**. It is not merged and is not approved for merge or release. No changes have been made to the existing PWA.
 
@@ -29,7 +30,7 @@ Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) rema
 ## Important limitations and remaining work
 
 - **Physical iPhone validation:** all 69 items in `Documentation/Device-Test-Checklist.md` remain unchecked. A signed development build and physical iPhone are required.
-- **Visual/accessibility sign-off:** the app-wide code-level refinement and runtime contrast tests have been added, but the latest CI result is pending. No simulator screenshot review or physical-device visual sign-off is recorded. VoiceOver, full Dynamic Type, all custom touch targets, and device Dark Mode review remain outstanding. The existing dark-appearance UI test verifies launch under an appearance override only.
+- **Visual/accessibility sign-off:** code-level refinements and runtime contrast tests are in place, and simulator tests pass, but no simulator screenshot review or physical-device visual sign-off is recorded. VoiceOver, full Dynamic Type across all screens, every custom touch target, actual iPhone Dark Mode, and Reduce Motion remain outstanding. The dark-appearance UI test verifies launch under an appearance override only.
 - **Signing and release:** CI uses simulator builds with code signing disabled. No signed IPA, TestFlight build, App Store release, or production deployment has been created.
 - **Schema evolution:** schema version 1 is the only supported snapshot format. A sequential N → N+1 migration pipeline must be implemented and tested before a future schema-version bump.
 - **Egyptian calendar coverage:** the 16 official source-backed starts are a partial dataset, not a complete historical calendar. Shawwal 1447 is intentionally absent because a direct final Dar Al-Ifta announcement was not independently verified. The implementation does not bridge that gap as a confirmed interval.
