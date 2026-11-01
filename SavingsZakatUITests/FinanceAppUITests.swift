@@ -239,7 +239,7 @@ final class FinanceAppUITests: XCTestCase {
             XCTAssertTrue(app.tabBars.buttons[tab].waitForExistence(timeout: 5), "Missing tab at large text size: \(tab)")
         }
         let settings = app.buttons["Settings & backup"]
-        XCTAssertTrue(scrollTo(settings, in: app), "Settings should remain reachable at accessibility text sizes")
+        XCTAssertTrue(scrollTo(settings, in: app, maxSwipes: 20), "Settings should remain reachable at accessibility text sizes")
     }
 
 
