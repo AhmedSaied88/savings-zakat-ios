@@ -1107,10 +1107,12 @@ struct AssetsZakatTab: View {
     @State private var editorKind: HoldingKind = .cash
     @State private var showHoldingEditor = false
     @State private var assetError: String?
+    @State private var showHawlCalendar = false
 
     var body: some View {
         NavigationStack {
             List {
+                hawlCalendarSection
                 assetsSection
                 zakatCalculationSection
                 valuationRatesSection
@@ -1124,6 +1126,9 @@ struct AssetsZakatTab: View {
             .listStyle(.insetGrouped)
             .financeScreenSurface()
             .navigationTitle("Savings & Zakat")
+            .navigationDestination(isPresented: $showHawlCalendar) {
+                HawlCalendarView(holdings: snapshot.holdings)
+            }
             .sheet(isPresented: $showHoldingEditor) {
                 HoldingEditorSheet(holding: editingHolding, defaultKind: editorKind) { updated in
                     var ledger = AssetLedger(holdings: snapshot.holdings)
@@ -1387,18 +1392,24 @@ struct AssetsZakatTab: View {
             }
             .padding(.vertical, 4)
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-            NavigationLink {
-                HawlCalendarView(holdings: snapshot.holdings)
-            } label: {
-                Label("View Hawl calendar and reminders", systemImage: "calendar.badge.clock")
-                    .frame(minHeight: 44)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("hawl-calendar-link")
-            }
-            .accessibilityIdentifier("hawl-calendar-navigation")
             if let assetError {
                 Text(assetError).font(.footnote).foregroundStyle(FinancePalette.danger)
             }
+        }
+    }
+
+    private var hawlCalendarSection: some View {
+        Section("Hawl calendar") {
+            Button {
+                showHawlCalendar = true
+            } label: {
+                Label("View Hawl calendar and reminders", systemImage: "calendar.badge.clock")
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("View Hawl calendar and reminders")
+            .accessibilityHint("Open Hawl dates and reminder settings")
+            .accessibilityIdentifier("hawl-calendar-link")
         }
     }
 
