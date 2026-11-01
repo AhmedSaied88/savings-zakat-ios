@@ -15,7 +15,7 @@
 7. [x] Implement encrypted backup/restore and automated recovery/validation tests.
 8. [x] Add automated coverage for lunar anniversary boundaries, time-zone handling, rates, Nisab comparisons, and combined eligible wealth. Manual valuation inputs remain a source of provisional results.
 
-Latest completed simulator verification: [GitHub Actions run #41275559071](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071), source head `358dfbb3de1e03bc1909cab952b93fa48add51b1`. Xcode 16.4 build passed; 144 unit tests and 16 UI tests passed with zero failures. Code signing was disabled.
+Latest completed simulator verification: [GitHub Actions run #41277309339](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339), source head `8ee59a65c29e49434b047406815924b0c851099a`. Xcode 16.4 build passed; 144 unit tests and 16 UI tests passed with zero failures. Code signing was disabled.
 
 ## Remaining validation and release gates
 
