@@ -11,7 +11,7 @@ Latest completed GitHub Actions pull-request run: [run #41275559071](https://git
 - **144 unit tests and 16 UI tests passed; zero failures.**
 - The latest accessibility-size navigation test and all four individually reachable Zakat asset-entry actions pass.
 - CI runs on an iPhone simulator with code signing disabled. It is not evidence of physical-device behavior or a signed distribution build.
-- [XCTest diagnostics artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071/artifacts/13070487109).
+- [XCTest diagnostics artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071/artifacts/13071645063).
 
 Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) remains **open and draft**. It is not merged and is not approved for merge or release. No changes have been made to the existing PWA.
 
