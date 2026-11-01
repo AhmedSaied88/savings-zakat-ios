@@ -2,7 +2,7 @@
 
 **Review date:** 2026-11-01  
 **Review scope:** Native SwiftUI presentation and accessibility implementation on the current feature branch.  
-**Status:** Code-level refinement and automated simulator verification completed; visual inspection and physical-device sign-off remain outstanding.
+**Status:** Code-level refinement and automated simulator verification completed; five primary-tab screenshots captured and exported; visual sign-off and physical-device sign-off remain outstanding.
 
 ## Design direction
 
@@ -58,11 +58,18 @@ These are reference calculations from the selected RGB values and representative
 - UI coverage for Quick Add → Account editor, Wallet navigation, large Dynamic Type navigation, and Wallet launch under a dark appearance override.
 - Latest completed GitHub Actions pull-request run: [#41277309339](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339), source head `8ee59a65c29e49434b047406815924b0c851099a`. Build succeeded; 144 unit tests and 16 UI tests passed with zero failures. CI used an iPhone simulator and code signing was disabled.
 
+## Simulator screenshot capture
+
+- UI test `FinanceAppUITests/testCapturePrimaryTabsForVisualReview` captures Wallet, Accounts, Activity, Debts and Savings & Zakat on an iPhone 16 Pro simulator.
+- GitHub Actions run [#41332224997](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41332224997) passed **144 unit tests and 17 UI tests**, with zero failures. The screenshot export step completed and produced five PNG files plus `manifest.json`.
+- [Download the XCTest diagnostics and screenshot artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41332224997/artifacts/13094012224). The artifact is retained for seven days from 2026-11-01.
+- The screenshots were inspected at a preliminary level to confirm capture and screen identity. This is not a complete layout, typography, color, contrast or accessibility sign-off; the captures use the simulator's default empty-data state.
+
 ## Not yet verified
 
-The following require visual or device evidence beyond the completed automated simulator suite and must remain open:
+The following require further visual or device evidence beyond the completed automated simulator suite and must remain open:
 
-- Visual inspection of actual screenshots across all five tabs and representative sheets.
+- Detailed visual inspection of all five captured tabs and representative sheets, including populated-data states and layout behavior at supported text sizes.
 - Actual iPhone Dark Mode appearance and rendered contrast.
 - VoiceOver navigation order, announcements, focus behavior and rotor usability on device.
 - Full Dynamic Type review across all lists, forms, charts, tiles and sheets. The simulator has a targeted test for primary navigation at an accessibility text size, not a full-screen audit.

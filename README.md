@@ -6,10 +6,12 @@ A separate, native SwiftUI iPhone application for personal-finance tracking and 
 
 **Core implementation and current simulator regression suite pass. The app is not release-ready and has not been validated on a physical iPhone.**
 
-Latest completed GitHub Actions pull-request run: [run #41277309339](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339), testing PR head `8ee59a65c29e49434b047406815924b0c851099a`:
+Latest completed GitHub Actions pull-request run: [run #41332224997](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41332224997), testing PR head `e220135304e9fe05381501ff7266f0c57be4c9c0`:
 - App and test bundles built successfully with Xcode 16.4.
-- **144 unit tests and 16 UI tests passed; zero failures.**
+- **144 unit tests and 17 UI tests passed; zero failures.**
 - The latest accessibility-size navigation test and all four individually reachable Zakat asset-entry actions pass.
+- A dedicated UI test captured the Wallet, Accounts, Activity, Debts and Zakat tabs. All five PNG attachments and a manifest were exported successfully.
+- [XCTest diagnostics and screenshot artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41332224997/artifacts/13094012224) (available for 7 days from 2026-11-01).
 - CI runs on an iPhone simulator with code signing disabled. It is not evidence of physical-device behavior or a signed distribution build.
 - [XCTest diagnostics artifact](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339/artifacts/13072131631).
 
@@ -30,7 +32,7 @@ Pull request [#1](https://github.com/AhmedSaied88/savings-zakat-ios/pull/1) rema
 ## Important limitations and remaining work
 
 - **Physical iPhone validation:** all 69 items in `Documentation/Device-Test-Checklist.md` remain unchecked. A signed development build and physical iPhone are required.
-- **Visual/accessibility sign-off:** code-level refinements and runtime contrast tests are in place, and simulator tests pass, but no simulator screenshot review or physical-device visual sign-off is recorded. VoiceOver, full Dynamic Type across all screens, every custom touch target, actual iPhone Dark Mode, and Reduce Motion remain outstanding. The dark-appearance UI test verifies launch under an appearance override only.
+- **Visual/accessibility sign-off:** code-level refinements and runtime contrast tests are in place, and simulator tests pass, and the five-tab simulator screenshots are now available for review, but visual sign-off and physical-device review are not recorded. VoiceOver, full Dynamic Type across all screens, every custom touch target, actual iPhone Dark Mode, and Reduce Motion remain outstanding. The dark-appearance UI test verifies launch under an appearance override only.
 - **Signing and release:** CI uses simulator builds with code signing disabled. No signed IPA, TestFlight build, App Store release, or production deployment has been created.
 - **Schema evolution:** schema version 1 is the only supported snapshot format. A sequential N → N+1 migration pipeline must be implemented and tested before a future schema-version bump.
 - **Egyptian calendar coverage:** the 16 official source-backed starts are a partial dataset, not a complete historical calendar. Shawwal 1447 is intentionally absent because a direct final Dar Al-Ifta announcement was not independently verified. The implementation does not bridge that gap as a confirmed interval.
