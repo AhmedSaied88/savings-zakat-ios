@@ -56,7 +56,7 @@ These are reference calculations from the selected RGB values and representative
 - UI test requiring transaction direction to appear as text.
 - UI test for the four accessible Zakat asset-entry tiles.
 - UI coverage for Quick Add → Account editor, Wallet navigation, large Dynamic Type navigation, and Wallet launch under a dark appearance override.
-- Latest completed GitHub Actions pull-request run: [#41275559071](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41275559071), source head `358dfbb3de1e03bc1909cab952b93fa48add51b1`. Build succeeded; 144 unit tests and 16 UI tests passed with zero failures. CI used an iPhone simulator and code signing was disabled.
+- Latest completed GitHub Actions pull-request run: [#41277309339](https://github.com/AhmedSaied88/savings-zakat-ios/actions/runs/41277309339), source head `8ee59a65c29e49434b047406815924b0c851099a`. Build succeeded; 144 unit tests and 16 UI tests passed with zero failures. CI used an iPhone simulator and code signing was disabled.
 
 ## Not yet verified
 
