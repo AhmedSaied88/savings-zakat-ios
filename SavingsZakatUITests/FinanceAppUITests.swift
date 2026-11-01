@@ -460,12 +460,14 @@ final class FinanceAppUITests: XCTestCase {
 
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.88))
+        let finish = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.28))
         for _ in 0..<maxSwipes {
             if element.exists && element.isHittable { return true }
-            // SwiftUI List can be exposed as a CollectionView whose accessibility
-            // frame is invalid on some simulator states. Swipe the active app
-            // viewport instead of attempting to interact with that proxy.
-            app.swipeUp()
+            // Start the gesture in the lower content viewport, clear of the tab
+            // bar and row controls. XCUIApplication.swipeUp() can start over a
+            // control and fail to advance a SwiftUI List to its next lazy row.
+            start.press(forDuration: 0.05, thenDragTo: finish)
         }
         return element.exists && element.isHittable
     }
