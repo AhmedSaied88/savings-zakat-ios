@@ -458,6 +458,28 @@ final class FinanceAppUITests: XCTestCase {
                        "Settings must not describe the superseded civil-only fallback")
     }
 
+    func testCapturePrimaryTabsForVisualReview() throws {
+        let app = launchCleanApp()
+        let tabs = ["Wallet", "Accounts", "Activity", "Debts", "Zakat"]
+
+        for (index, tab) in tabs.enumerated() {
+            let tabButton = app.tabBars.buttons[tab]
+            XCTAssertTrue(tabButton.waitForExistence(timeout: 5), "Missing tab for visual review: \(tab)")
+            if index > 0 {
+                tabButton.tap()
+            }
+            XCTAssertTrue(app.tabBars.buttons[tab].exists, "Tab should remain present after navigation: \(tab)")
+            attachVisualReviewScreenshot("Visual Review - \(tab)", from: app)
+        }
+    }
+
+    private func attachVisualReviewScreenshot(_ name: String, from app: XCUIApplication) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     @discardableResult
     private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 10) -> Bool {
         let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.88))

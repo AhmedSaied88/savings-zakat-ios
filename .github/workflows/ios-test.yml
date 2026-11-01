@@ -93,6 +93,28 @@ jobs:
             -resultBundlePath "$RESULT_BUNDLE" \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$TEST_LOG"
 
+      - name: Export simulator screenshot attachments
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          RESULT_BUNDLE="$RUNNER_TEMP/SavingsZakatTests.xcresult"
+          SCREENSHOT_DIR="$RUNNER_TEMP/SavingsZakat-Screenshots"
+
+          if [[ -d "$RESULT_BUNDLE" ]]; then
+            mkdir -p "$SCREENSHOT_DIR"
+            if xcrun xcresulttool export attachments \
+              --path "$RESULT_BUNDLE" \
+              --output-path "$SCREENSHOT_DIR"; then
+              echo "Exported XCTest attachments for visual review:"
+              find "$SCREENSHOT_DIR" -maxdepth 2 -type f -print
+            else
+              echo "::warning::XCTest attachment export did not complete; the result bundle will still be uploaded."
+            fi
+          else
+            echo "::warning::No XCTest result bundle was produced; no screenshots can be exported."
+          fi
+
       - name: Collect simulator diagnostics after test failure
         if: failure()
         shell: bash
@@ -110,5 +132,6 @@ jobs:
           path: |
             ${{ runner.temp }}/SavingsZakatTests.xcresult
             ${{ runner.temp }}/SavingsZakat-xcodebuild-tests.log
+            ${{ runner.temp }}/SavingsZakat-Screenshots
           if-no-files-found: ignore
           retention-days: 7
