@@ -319,9 +319,13 @@ final class FinanceAppUITests: XCTestCase {
                       "Zakat calculation should be reachable by scrolling the Zakat list")
         XCTAssertTrue(calculateButton.isHittable)
         let nisabLabel = app.staticTexts["Nisab (EGP)"]
-        XCTAssertTrue(nisabLabel.exists && nisabLabel.isHittable)
+        XCTAssertTrue(scrollTo(nisabLabel, in: app, maxSwipes: 20),
+                      "Nisab input should be reachable by scrolling the Zakat list")
+        XCTAssertTrue(nisabLabel.isHittable)
         let personalGoldToggle = app.switches["Include personal-use gold"]
-        XCTAssertTrue(personalGoldToggle.exists && personalGoldToggle.isHittable)
+        XCTAssertTrue(scrollTo(personalGoldToggle, in: app, maxSwipes: 20),
+                      "Personal-use gold setting should be reachable by scrolling the Zakat list")
+        XCTAssertTrue(personalGoldToggle.isHittable)
         calculateButton.tap()
         XCTAssertTrue(app.staticTexts["Total valued assets"].waitForExistence(timeout: 5))
     }
