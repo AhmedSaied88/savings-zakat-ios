@@ -22,6 +22,29 @@ struct BankMessageRule: Identifiable, Codable, Equatable {
     }
 }
 
+enum ZakatCalculationMethod: String, Codable, CaseIterable, Identifiable {
+    case independentCategories
+    case separateHawlCombinedNisab
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .independentCategories: return "Independent categories"
+        case .separateHawlCombinedNisab: return "Separate Hawl · combined Nisab"
+        }
+    }
+
+    var explanation: String {
+        switch self {
+        case .independentCategories:
+            return "Each category is tested against Nisab separately. Only matured holdings within that category are counted."
+        case .separateHawlCombinedNisab:
+            return "Each holding keeps its own Hawl. All matured eligible categories are combined to test Nisab."
+        }
+    }
+}
+
 struct FinancePreferences: Codable, Equatable {
     var exchangeRatesToEGP: [String: Double]
     var goldPricesPerGramEGP: [String: Double]
@@ -29,6 +52,9 @@ struct FinancePreferences: Codable, Equatable {
     var nisabEGP: Double
     var includePersonalGold: Bool
     var bankMessageRules: [BankMessageRule]
+    // Optional fields preserve decoding of earlier version-1 finance snapshots.
+    var selectedZakatMethod: ZakatCalculationMethod?
+    var savedZakatCalculation: SavedZakatCalculation?
 
     init(
         exchangeRatesToEGP: [String: Double] = ["EGP": 1],
@@ -36,7 +62,9 @@ struct FinancePreferences: Codable, Equatable {
         silverPricePerGramEGP: Double? = nil,
         nisabEGP: Double = 0,
         includePersonalGold: Bool = false,
-        bankMessageRules: [BankMessageRule] = []
+        bankMessageRules: [BankMessageRule] = [],
+        selectedZakatMethod: ZakatCalculationMethod = .separateHawlCombinedNisab,
+        savedZakatCalculation: SavedZakatCalculation? = nil
     ) {
         self.exchangeRatesToEGP = Dictionary(
             exchangeRatesToEGP.map { ($0.key.uppercased(), $0.value) },
@@ -48,6 +76,12 @@ struct FinancePreferences: Codable, Equatable {
         self.nisabEGP = nisabEGP
         self.includePersonalGold = includePersonalGold
         self.bankMessageRules = bankMessageRules
+        self.selectedZakatMethod = selectedZakatMethod
+        self.savedZakatCalculation = savedZakatCalculation
+    }
+
+    var effectiveZakatMethod: ZakatCalculationMethod {
+        selectedZakatMethod ?? .separateHawlCombinedNisab
     }
 
     var enabledBankMessageRules: [BankMessageRule] {
