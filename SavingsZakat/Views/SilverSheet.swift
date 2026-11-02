@@ -20,6 +20,8 @@ struct SilverSheet: View {
                 DatePicker("Purchase date", selection: $acquired, displayedComponents: .date)
                 DatePicker("Hawl start", selection: $hawlStart, in: ...Date(), displayedComponents: .date)
             }
+            .financeScreenSurface()
+
             .navigationTitle("Add silver")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
