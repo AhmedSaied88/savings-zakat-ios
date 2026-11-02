@@ -2130,12 +2130,18 @@ private struct ZakatCalculationContent: View {
                         Text(item.maturedEligibleWealthEGP, format: .currency(code: "EGP"))
                             .font(.subheadline.monospacedDigit())
                     }
-                    HStack {
-                        Text(item.meetsNisab ? "Category reaches Nisab" : "Below individual Nisab")
-                        Spacer()
-                        Text(item.zakatDueEGP, format: .currency(code: "EGP"))
+                    if result.method == .independentCategories {
+                        HStack {
+                            Text(item.meetsNisab ? "Category reaches Nisab" : "Below individual Nisab")
+                            Spacer()
+                            Text(item.zakatDueEGP, format: .currency(code: "EGP"))
+                        }
+                        .font(.caption)
+                        .foregroundStyle(item.meetsNisab ? FinancePalette.income : Color.secondary)
+                    } else {
+                        Text("Included in the combined matured-wealth test")
+                            .font(.caption).foregroundStyle(Color.secondary)
                     }
-                    .font(.caption).foregroundStyle(item.meetsNisab ? FinancePalette.income : Color.secondary)
                 }
             }
         }
