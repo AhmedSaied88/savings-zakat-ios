@@ -66,6 +66,10 @@ struct ContentView: View {
             UserDefaults.standard.removeObject(forKey: "testHoldingsJSON")
         }
         do {
+            if ProcessInfo.processInfo.arguments.contains("-ui-testing-populated"),
+               uiTestDirectory != nil {
+                try store.save(makeVisualReviewSnapshot())
+            }
             snapshot = try store.load()
             preferences = snapshot.preferences ?? FinancePreferences()
             storageError = nil
@@ -73,6 +77,99 @@ struct ContentView: View {
         } catch {
             storageError = "Could not read saved finance data: \(error.localizedDescription)"
         }
+    }
+
+    /// Fictional, isolated data used only by the simulator screenshot review.
+    /// The UI-test store lives in the temporary directory and never touches app data.
+    private func makeVisualReviewSnapshot() -> FinanceSnapshot {
+        let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.startOfDay(for: Date())
+        let twoYearsAgo = calendar.date(byAdding: .year, value: -2, to: today) ?? today
+        let oneYearAgo = calendar.date(byAdding: .year, value: -1, to: today) ?? today
+        let dueDate = calendar.date(byAdding: .day, value: 12, to: today) ?? today
+
+        let bank = FinanceAccount(
+            name: "Main Bank",
+            institution: "Example Bank",
+            kind: .bank,
+            currency: "EGP",
+            openingBalance: Decimal(string: "42500")!
+        )
+        let wallet = FinanceAccount(
+            name: "Daily Wallet",
+            kind: .wallet,
+            currency: "EGP",
+            openingBalance: Decimal(string: "2800")!
+        )
+        let creditCard = FinanceCard(
+            name: "Everyday Credit",
+            issuer: "Example Bank",
+            kind: .credit,
+            lastFour: "4821",
+            linkedAccountID: bank.id,
+            creditLimit: Decimal(string: "60000"),
+            paymentDueDate: dueDate,
+            minimumDue: Decimal(string: "2400"),
+            currency: "EGP",
+            openingOutstandingBalance: Decimal(string: "8750")
+        )
+        let income = FinanceTransaction(
+            title: "Monthly salary",
+            amount: Decimal(string: "32000")!,
+            currency: "EGP",
+            direction: .income,
+            date: today,
+            accountID: bank.id,
+            category: "Salary"
+        )
+        let expense = FinanceTransaction(
+            title: "Groceries",
+            amount: Decimal(string: "1850")!,
+            currency: "EGP",
+            direction: .expense,
+            date: today,
+            accountID: bank.id,
+            category: "Food"
+        )
+        let loan = FinanceLiability(
+            name: "Personal loan",
+            kind: .loan,
+            outstandingAmount: Decimal(string: "45000")!,
+            currency: "EGP",
+            dueDate: dueDate
+        )
+        let cashHolding = Holding(
+            id: UUID(), kind: .cash, amount: 18_000, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: twoYearsAgo, hawlStartDate: twoYearsAgo, purpose: .investment
+        )
+        let goldHolding = Holding(
+            id: UUID(), kind: .gold, amount: 12, currency: nil, grams: 12, carat: 21,
+            acquiredDate: twoYearsAgo, hawlStartDate: twoYearsAgo, purpose: .investment
+        )
+        let silverHolding = Holding(
+            id: UUID(), kind: .silver, amount: 150, currency: nil, grams: 150, carat: nil,
+            acquiredDate: oneYearAgo, hawlStartDate: oneYearAgo, purpose: .investment,
+            name: "Silver bars", purity: 999
+        )
+        let investmentHolding = Holding(
+            id: UUID(), kind: .investment, amount: 8_000, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: twoYearsAgo, hawlStartDate: twoYearsAgo, purpose: .investment,
+            name: "Long-term investment"
+        )
+        let samplePreferences = FinancePreferences(
+            exchangeRatesToEGP: ["EGP": 1, "USD": 50],
+            goldPricesPerGramEGP: ["24": 5_900, "22": 5_400, "21": 5_150, "18": 4_420, "14": 3_450],
+            silverPricePerGramEGP: 82,
+            nisabEGP: 30_000
+        )
+        return FinanceSnapshot(
+            accounts: [bank, wallet],
+            cards: [creditCard],
+            transactions: [income, expense],
+            liabilities: [loan],
+            holdings: [cashHolding, goldHolding, silverHolding, investmentHolding],
+            preferences: samplePreferences
+        )
     }
 
     private func loadImportedMessages() {
