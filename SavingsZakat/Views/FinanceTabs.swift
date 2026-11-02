@@ -60,9 +60,11 @@ extension View {
     func financeScreenSurface() -> some View {
         self
             .scrollContentBackground(.hidden)
-            // Extend the grouped canvas behind the status bar and navigation
-            // safe areas; otherwise the simulator/device window can show black.
+            // Keep the grouped canvas visible behind both the navigation bar
+            // and the status-bar safe area on every primary and form screen.
             .background(FinancePalette.canvas.ignoresSafeArea())
+            .toolbarBackground(FinancePalette.canvas, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .tint(FinancePalette.royalBlue)
     }
 }
@@ -2109,6 +2111,7 @@ private struct WalletSummaryContent: View {
                     .font(.caption).foregroundStyle(FinancePalette.warning)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 8)
         .padding(.horizontal, 4)
         .background(FinancePalette.paleBlue, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
