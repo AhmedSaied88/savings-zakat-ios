@@ -474,9 +474,9 @@ final class FinanceAppUITests: XCTestCase {
         XCTAssertTrue(scrollTo(saveSelected, in: app, maxSwipes: 20))
         saveSelected.tap()
 
-        let savedSnapshot = app.descendants(matching: .any)["zakat-saved-calculation"]
-        XCTAssertTrue(scrollTo(savedSnapshot, in: app, maxSwipes: 20))
-        XCTAssertTrue(savedSnapshot.label.localizedCaseInsensitiveContains("saved calculation"))
+        let savedHeading = app.staticTexts["Saved calculation snapshot"]
+        XCTAssertTrue(scrollTo(savedHeading, in: app, maxSwipes: 20))
+        XCTAssertTrue(savedHeading.exists)
     }
 
     func testCapturePrimaryTabsForVisualReview() throws {
