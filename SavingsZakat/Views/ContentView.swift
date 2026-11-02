@@ -43,6 +43,7 @@ struct ContentView: View {
                 .tabItem { Label("Zakat", systemImage: "sparkles") }
         }
         .tint(FinancePalette.royalBlue)
+        .background(FinancePalette.canvas.ignoresSafeArea())
         .task { load() }
         .onReceive(NotificationCenter.default.publisher(for: .bankMessageImportDidChange)) { _ in
             loadImportedMessages()
