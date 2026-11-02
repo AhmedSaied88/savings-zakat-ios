@@ -491,6 +491,12 @@ final class FinanceAppUITests: XCTestCase {
             }
             XCTAssertTrue(app.tabBars.buttons[tab].exists, "Tab should remain present after navigation: \(tab)")
             attachVisualReviewScreenshot("Visual Review - \(tab)", from: app)
+            if tab == "Zakat" {
+                let calculate = app.buttons["zakat-calculate-button"]
+                XCTAssertTrue(scrollTo(calculate, in: app, maxSwipes: 20))
+                calculate.tap()
+                attachVisualReviewScreenshot("Visual Review - Zakat Calculation", from: app)
+            }
         }
     }
 
