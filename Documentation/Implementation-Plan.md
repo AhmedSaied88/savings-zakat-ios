@@ -27,3 +27,16 @@ Latest completed simulator verification: [GitHub Actions run #41277309339](https
 - The local snapshot format is currently schema version 1. A sequential N → N+1 migration pipeline is not implemented. Do not increment the schema version until ordered migrations and regression tests are added.
 
 Use fictional test data only. CI simulator success does not establish physical-device installability, signed-build readiness, or production readiness. Do not change the existing PWA or its production deployment.
+
+
+## Zakat method comparison implementation — 2026-11-02
+
+The native app now contains both user-requested calculation conventions:
+- **Independent categories:** cash/currencies, gold, silver and investments are each tested separately against the configured EGP Nisab; 2.5% is applied only to a category that individually reaches Nisab.
+- **Separate Hawl with combined Nisab:** each holding retains its own Hawl start; only matured holdings are combined to test Nisab and calculate 2.5%.
+
+Both results are displayed together. The user can select the preferred method, and **Save selected result** stores an immutable local snapshot with the method, calculation date, asset/category breakdown, holdings and valuation inputs. Subsequent asset/rate/price changes do not overwrite that saved result automatically. New optional preference fields preserve decoding of earlier version-1 snapshots.
+
+Implementation files: `FinancePreferences.swift`, `Holding.swift`, `ZakatCalculator.swift`, `FinanceTabs.swift`. Regression coverage has been added to `CalculationTests.swift`, `FinancePreferencesTests.swift` and `FinanceAppUITests.swift`. See `Documentation/Zakat-Calculation-Methods.md` for the category grouping and assumptions.
+
+**Verification status:** The latest branch-head simulator workflow must pass before this work is marked verified. The saved snapshot and selected method have not yet been validated on a physical iPhone. No merge or release is authorized.
