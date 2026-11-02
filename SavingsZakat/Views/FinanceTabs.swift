@@ -2078,9 +2078,9 @@ private struct ZakatCalculationContent: View {
                 onSave()
             }
             .font(.caption.weight(.semibold))
-            .buttonStyle(isSelected ? .borderedProminent : .bordered)
+            .buttonStyle(.bordered)
             .disabled(isSelected)
-            .accessibilityIdentifier("zakat-method-\\(method.rawValue)")
+            .accessibilityIdentifier("zakat-method-\(method.rawValue)")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
@@ -2100,7 +2100,7 @@ private struct ZakatCalculationContent: View {
                 Text(saved.method.title).font(.subheadline.weight(.semibold))
                 Text(saved.zakatDueEGP, format: .currency(code: "EGP"))
                     .font(.title3.bold()).monospacedDigit()
-                Text("Calculated \\(saved.calculatedAt.formatted(date: .abbreviated, time: .shortened))")
+                Text("Calculated \(saved.calculatedAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption).foregroundStyle(.secondary)
                 Text(saved.isProvisional ? "Saved as provisional" : "Saved calculation")
                     .font(.caption.weight(.semibold))
@@ -2133,7 +2133,7 @@ private struct ZakatCalculationContent: View {
                         Spacer()
                         Text(item.zakatDueEGP, format: .currency(code: "EGP"))
                     }
-                    .font(.caption).foregroundStyle(item.meetsNisab ? FinancePalette.income : .secondary)
+                    .font(.caption).foregroundStyle(item.meetsNisab ? FinancePalette.income : Color.secondary)
                 }
             }
         }
