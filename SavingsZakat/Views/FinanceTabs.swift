@@ -2039,7 +2039,9 @@ private struct ZakatCalculationContent: View {
                 }
             }
             savedCalculationSummary
-            Text("Confirm all prices, rates and religious calculation settings before relying on the result.")
+            Text("These are two calculation conventions for comparison, not a religious ruling. Scholarly views can differ; confirm the method and Nisab basis with a trusted scholar.")
+                .font(.footnote).foregroundStyle(.secondary)
+            Text("Confirm all prices, rates and asset dates before relying on either result.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
     }
