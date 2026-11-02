@@ -219,6 +219,79 @@ final class ZakatCalculatorTests: XCTestCase {
         XCTAssertTrue(result.warnings.contains { $0.contains("Unsupported gold carat for Gold 20K") })
     }
 
+    func testIndependentCategoriesAndCombinedMethodCanProduceDifferentZakatAmounts() {
+        let cash = Holding(
+            id: UUID(), kind: .cash, amount: 3_000, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"), purpose: .investment
+        )
+        let gold = Holding(
+            id: UUID(), kind: .gold, amount: 1, currency: nil, grams: 1, carat: 21,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"), purpose: .investment
+        )
+        let comparison = ZakatCalculator.calculateComparison(
+            holdings: [cash, gold], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: ["21": 3_000], silverPricePerGramEGP: nil,
+            nisabEGP: 5_000, asOf: date("2026-10-29")
+        )
+
+        XCTAssertEqual(comparison.independentCategories.zakatDueEGP, 0, accuracy: 0.01)
+        XCTAssertEqual(comparison.separateHawlCombinedNisab.zakatDueEGP, 150, accuracy: 0.01)
+        XCTAssertEqual(comparison.independentCategories.categoryBreakdown.count, HoldingKind.allCases.count)
+        XCTAssertEqual(comparison.separateHawlCombinedNisab.maturedEligibleWealthEGP, 6_000, accuracy: 0.01)
+    }
+
+    func testIndependentMethodChargesOnlyCategoriesThatIndividuallyReachNisab() {
+        let cash = Holding(
+            id: UUID(), kind: .cash, amount: 6_000, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"), purpose: .investment
+        )
+        let gold = Holding(
+            id: UUID(), kind: .gold, amount: 1, currency: nil, grams: 1, carat: 21,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"), purpose: .investment
+        )
+        let comparison = ZakatCalculator.calculateComparison(
+            holdings: [cash, gold], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: ["21": 4_000], silverPricePerGramEGP: nil,
+            nisabEGP: 5_000, asOf: date("2026-10-29")
+        )
+
+        XCTAssertEqual(comparison.independentCategories.zakatDueEGP, 150, accuracy: 0.01)
+        XCTAssertEqual(comparison.separateHawlCombinedNisab.zakatDueEGP, 250, accuracy: 0.01)
+        let goldCategory = try! XCTUnwrap(comparison.independentCategories.categoryBreakdown.first { $0.category == .gold })
+        XCTAssertFalse(goldCategory.meetsNisab)
+        XCTAssertEqual(goldCategory.zakatDueEGP, 0, accuracy: 0.01)
+    }
+
+    func testSeparateHawlMethodExcludesAnUnmaturedHoldingFromCombinedNisab() throws {
+        let maturedCash = Holding(
+            id: UUID(), kind: .cash, amount: 4_000, currency: "EGP", grams: nil, carat: nil,
+            acquiredDate: date("2024-01-01"), hawlStartDate: date("2024-01-01"), purpose: .investment
+        )
+        let recentGold = Holding(
+            id: UUID(), kind: .gold, amount: 1, currency: nil, grams: 1, carat: 21,
+            acquiredDate: date("2026-07-15"), hawlStartDate: date("2026-07-15"), purpose: .investment
+        )
+        let beforeMaturity = ZakatCalculator.calculate(
+            holdings: [maturedCash, recentGold], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: ["21": 3_000], silverPricePerGramEGP: nil,
+            nisabEGP: 5_000, asOf: date("2026-10-29"),
+            method: .separateHawlCombinedNisab
+        )
+        XCTAssertEqual(beforeMaturity.maturedEligibleWealthEGP, 4_000, accuracy: 0.01)
+        XCTAssertEqual(beforeMaturity.zakatDueEGP, 0, accuracy: 0.01)
+        XCTAssertEqual(beforeMaturity.breakdown.first { $0.holdingID == recentGold.id }?.status, .waitingForHawl)
+
+        let goldDue = try XCTUnwrap(HawlCalculator.dueDate(startDate: recentGold.hawlStartDate))
+        let afterMaturity = ZakatCalculator.calculate(
+            holdings: [maturedCash, recentGold], ratesToEGP: ["EGP": 1],
+            goldPricesPerGramEGP: ["21": 3_000], silverPricePerGramEGP: nil,
+            nisabEGP: 5_000, asOf: goldDue,
+            method: .separateHawlCombinedNisab
+        )
+        XCTAssertEqual(afterMaturity.maturedEligibleWealthEGP, 7_000, accuracy: 0.01)
+        XCTAssertEqual(afterMaturity.zakatDueEGP, 175, accuracy: 0.01)
+    }
+
     private func date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
