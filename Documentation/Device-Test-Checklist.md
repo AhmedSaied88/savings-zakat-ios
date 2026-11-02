@@ -72,6 +72,11 @@
 - [ ] Confirm different currencies are not added together in insights without conversion.
 - [ ] Confirm personal-use gold exclusion is clearly shown and the setting changes the eligible total.
 - [ ] Confirm only completed-Hawl eligible assets enter the Zakat base.
+- [ ] Compare Independent categories against Separate Hawl · combined Nisab using fictional holdings; verify the category assumptions and each holding's Hawl are shown.
+- [ ] Confirm independent-category mode tests cash/currencies, gold, silver and investments separately against the configured Nisab.
+- [ ] Confirm combined mode tests the combined matured eligible wealth while keeping each holding's Hawl separate.
+- [ ] Select each method and verify the selection persists after closing and reopening the app.
+- [ ] Save a selected result, change a price or holding, and confirm the saved snapshot does not change until explicitly saved again.
 - [ ] Confirm the displayed per-asset breakdown explains included, waiting, excluded, missing and invalid items.
 - [ ] Confirm the app continues to calculate while offline.
 
