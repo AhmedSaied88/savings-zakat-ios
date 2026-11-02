@@ -458,6 +458,27 @@ final class FinanceAppUITests: XCTestCase {
                        "Settings must not describe the superseded civil-only fallback")
     }
 
+    func testZakatShowsBothMethodsAndSavesTheSelectedSnapshot() throws {
+        let app = launchCleanApp()
+        app.tabBars.buttons["Zakat"].tap()
+
+        let calculate = app.buttons["zakat-calculate-button"]
+        XCTAssertTrue(scrollTo(calculate, in: app, maxSwipes: 20))
+        calculate.tap()
+
+        let independentMethod = app.buttons["zakat-method-independentCategories"]
+        XCTAssertTrue(scrollTo(independentMethod, in: app, maxSwipes: 20))
+        independentMethod.tap()
+
+        let saveSelected = app.buttons["zakat-save-selected-result"]
+        XCTAssertTrue(scrollTo(saveSelected, in: app, maxSwipes: 20))
+        saveSelected.tap()
+
+        let savedSnapshot = app.descendants(matching: .any)["zakat-saved-calculation"]
+        XCTAssertTrue(scrollTo(savedSnapshot, in: app, maxSwipes: 20))
+        XCTAssertTrue(savedSnapshot.label.localizedCaseInsensitiveContains("saved calculation"))
+    }
+
     func testCapturePrimaryTabsForVisualReview() throws {
         let app = launchCleanApp(contentSizeCategory: "UICTContentSizeCategoryLarge")
         let tabs = ["Wallet", "Accounts", "Activity", "Debts", "Zakat"]
