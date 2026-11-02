@@ -26,7 +26,7 @@ struct Holding: Identifiable, Codable, Equatable {
     var purity: Int? = nil
 }
 
-enum ZakatHoldingStatus: String, Equatable {
+enum ZakatHoldingStatus: String, Codable, Equatable {
     case included
     case waitingForHawl
     case excludedPersonalUse
@@ -34,7 +34,7 @@ enum ZakatHoldingStatus: String, Equatable {
     case invalid
 }
 
-struct ZakatHoldingBreakdown: Identifiable, Equatable {
+struct ZakatHoldingBreakdown: Identifiable, Codable, Equatable {
     var holdingID: UUID
     var label: String
     var valueEGP: Double?
@@ -44,7 +44,19 @@ struct ZakatHoldingBreakdown: Identifiable, Equatable {
     var id: UUID { holdingID }
 }
 
+struct ZakatCategoryBreakdown: Identifiable, Codable, Equatable {
+    var category: HoldingKind
+    var label: String
+    var maturedEligibleWealthEGP: Double
+    var meetsNisab: Bool
+    var zakatDueEGP: Double
+
+    var id: String { category.rawValue }
+}
+
 struct ZakatResult {
+    var method: ZakatCalculationMethod
+    var calculatedAt: Date
     var totalValuedWealthEGP: Double
     var maturedEligibleWealthEGP: Double
     var excludedWealthEGP: Double
@@ -54,4 +66,56 @@ struct ZakatResult {
     var warnings: [String]
     var nextDueDate: Date?
     var breakdown: [ZakatHoldingBreakdown]
+    var categoryBreakdown: [ZakatCategoryBreakdown]
+}
+
+struct ZakatCalculationComparison {
+    var independentCategories: ZakatResult
+    var separateHawlCombinedNisab: ZakatResult
+
+    func result(for method: ZakatCalculationMethod) -> ZakatResult {
+        switch method {
+        case .independentCategories: return independentCategories
+        case .separateHawlCombinedNisab: return separateHawlCombinedNisab
+        }
+    }
+}
+
+/// An immutable result snapshot. Later price, rate or asset edits do not change it.
+struct SavedZakatCalculation: Codable, Equatable {
+    var method: ZakatCalculationMethod
+    var calculatedAt: Date
+    var totalValuedWealthEGP: Double
+    var maturedEligibleWealthEGP: Double
+    var excludedWealthEGP: Double
+    var nisabEGP: Double
+    var zakatDueEGP: Double
+    var isProvisional: Bool
+    var warnings: [String]
+    var holdingBreakdown: [ZakatHoldingBreakdown]
+    var categoryBreakdown: [ZakatCategoryBreakdown]
+    var holdings: [Holding]
+    var exchangeRatesToEGP: [String: Double]
+    var goldPricesPerGramEGP: [String: Double]
+    var silverPricePerGramEGP: Double?
+    var includePersonalGold: Bool
+
+    init(result: ZakatResult, holdings: [Holding], preferences: FinancePreferences) {
+        method = result.method
+        calculatedAt = result.calculatedAt
+        totalValuedWealthEGP = result.totalValuedWealthEGP
+        maturedEligibleWealthEGP = result.maturedEligibleWealthEGP
+        excludedWealthEGP = result.excludedWealthEGP
+        nisabEGP = result.nisabEGP
+        zakatDueEGP = result.zakatDueEGP
+        isProvisional = result.isProvisional
+        warnings = result.warnings
+        holdingBreakdown = result.breakdown
+        categoryBreakdown = result.categoryBreakdown
+        self.holdings = holdings
+        exchangeRatesToEGP = preferences.exchangeRatesToEGP
+        goldPricesPerGramEGP = preferences.goldPricesPerGramEGP
+        silverPricePerGramEGP = preferences.silverPricePerGramEGP
+        includePersonalGold = preferences.includePersonalGold
+    }
 }
