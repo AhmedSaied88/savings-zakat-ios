@@ -8,7 +8,8 @@ enum ZakatCalculator {
         silverPricePerGramEGP: Double?,
         nisabEGP: Double,
         asOf: Date,
-        includePersonalGold: Bool = false
+        includePersonalGold: Bool = false,
+        method: ZakatCalculationMethod = .separateHawlCombinedNisab
     ) -> ZakatResult {
         var warnings: [String] = []
         var total = 0.0
@@ -16,6 +17,9 @@ enum ZakatCalculator {
         var excluded = 0.0
         var nextDue: Date?
         var breakdown: [ZakatHoldingBreakdown] = []
+        var eligibleByCategory = Dictionary(
+            uniqueKeysWithValues: HoldingKind.allCases.map { ($0, 0.0) }
+        )
 
         var cairo = Calendar(identifier: .gregorian)
         cairo.timeZone = TimeZone(identifier: "Africa/Cairo") ?? .current
@@ -115,9 +119,10 @@ enum ZakatCalculator {
             let dueDay = cairo.startOfDay(for: hawl.date)
             if calculationDay >= dueDay {
                 eligible += value
+                eligibleByCategory[holding.kind, default: 0] += value
                 breakdown.append(ZakatHoldingBreakdown(
                     holdingID: holding.id, label: label, valueEGP: value,
-                    status: .included, explanation: "Valued and Hawl completed; included in combined eligible wealth."
+                    status: .included, explanation: "Valued and this holding's Hawl is complete; included in eligible wealth."
                 ))
             } else {
                 if nextDue.map({ dueDay < cairo.startOfDay(for: $0) }) ?? true {
@@ -125,7 +130,7 @@ enum ZakatCalculator {
                 }
                 breakdown.append(ZakatHoldingBreakdown(
                     holdingID: holding.id, label: label, valueEGP: value,
-                    status: .waitingForHawl, explanation: "Hawl has not completed; not included yet."
+                    status: .waitingForHawl, explanation: "This holding's Hawl has not completed; it is not included yet."
                 ))
             }
         }
@@ -134,8 +139,25 @@ enum ZakatCalculator {
             warnings.append("Enter a valid nisab value in EGP.")
         }
         let canCalculate = nisabEGP > 0 && nisabEGP.isFinite
-        let zakat = canCalculate && eligible >= nisabEGP ? eligible * 0.025 : 0
+        let categories = HoldingKind.allCases.map { category -> ZakatCategoryBreakdown in
+            let categoryValue = eligibleByCategory[category, default: 0]
+            let meetsNisab = canCalculate && categoryValue >= nisabEGP
+            return ZakatCategoryBreakdown(
+                category: category,
+                label: categoryLabel(category),
+                maturedEligibleWealthEGP: categoryValue,
+                meetsNisab: meetsNisab,
+                zakatDueEGP: meetsNisab ? categoryValue * 0.025 : 0
+            )
+        }
+
+        let independentCategoriesZakat = categories.reduce(0) { $0 + $1.zakatDueEGP }
+        let combinedZakat = canCalculate && eligible >= nisabEGP ? eligible * 0.025 : 0
+        let zakat = method == .independentCategories ? independentCategoriesZakat : combinedZakat
+
         return ZakatResult(
+            method: method,
+            calculatedAt: asOf,
             totalValuedWealthEGP: total,
             maturedEligibleWealthEGP: eligible,
             excludedWealthEGP: excluded,
@@ -144,7 +166,50 @@ enum ZakatCalculator {
             isProvisional: !warnings.isEmpty,
             warnings: warnings,
             nextDueDate: nextDue,
-            breakdown: breakdown
+            breakdown: breakdown,
+            categoryBreakdown: categories
+        )
+    }
+
+    static func calculateComparison(
+        holdings: [Holding],
+        ratesToEGP: [String: Double],
+        goldPricesPerGramEGP: [String: Double],
+        silverPricePerGramEGP: Double?,
+        nisabEGP: Double,
+        asOf: Date,
+        includePersonalGold: Bool = false
+    ) -> ZakatCalculationComparison {
+        let shared = (
+            holdings: holdings,
+            ratesToEGP: ratesToEGP,
+            goldPricesPerGramEGP: goldPricesPerGramEGP,
+            silverPricePerGramEGP: silverPricePerGramEGP,
+            nisabEGP: nisabEGP,
+            asOf: asOf,
+            includePersonalGold: includePersonalGold
+        )
+        return ZakatCalculationComparison(
+            independentCategories: calculate(
+                holdings: shared.holdings,
+                ratesToEGP: shared.ratesToEGP,
+                goldPricesPerGramEGP: shared.goldPricesPerGramEGP,
+                silverPricePerGramEGP: shared.silverPricePerGramEGP,
+                nisabEGP: shared.nisabEGP,
+                asOf: shared.asOf,
+                includePersonalGold: shared.includePersonalGold,
+                method: .independentCategories
+            ),
+            separateHawlCombinedNisab: calculate(
+                holdings: shared.holdings,
+                ratesToEGP: shared.ratesToEGP,
+                goldPricesPerGramEGP: shared.goldPricesPerGramEGP,
+                silverPricePerGramEGP: shared.silverPricePerGramEGP,
+                nisabEGP: shared.nisabEGP,
+                asOf: shared.asOf,
+                includePersonalGold: shared.includePersonalGold,
+                method: .separateHawlCombinedNisab
+            )
         )
     }
 
@@ -154,6 +219,15 @@ enum ZakatCalculator {
         case .gold: return "Gold \(holding.carat ?? 24)K"
         case .silver: return "Silver \(holding.purity ?? 999)‰"
         case .investment: return holding.name ?? "Investment"
+        }
+    }
+
+    private static func categoryLabel(_ category: HoldingKind) -> String {
+        switch category {
+        case .cash: return "Cash & currencies"
+        case .gold: return "Gold"
+        case .silver: return "Silver"
+        case .investment: return "Investments"
         }
     }
 }
