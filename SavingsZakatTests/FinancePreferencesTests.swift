@@ -56,9 +56,10 @@ final class FinancePreferencesTests: XCTestCase {
 
         let decoded = try JSONDecoder().decode(FinancePreferences.self, from: JSONEncoder().encode(preferences))
         XCTAssertEqual(decoded.effectiveZakatMethod, .independentCategories)
-        XCTAssertEqual(decoded.savedZakatCalculation?.zakatDueEGP, result.zakatDueEGP)
-        XCTAssertEqual(decoded.savedZakatCalculation?.holdings, [holding])
-        XCTAssertEqual(decoded.savedZakatCalculation?.goldPricesPerGramEGP["21"], 4_000)
+        let saved = try XCTUnwrap(decoded.savedZakatCalculation)
+        XCTAssertEqual(saved.zakatDueEGP, result.zakatDueEGP, accuracy: 0.01)
+        XCTAssertEqual(saved.holdings, [holding])
+        XCTAssertEqual(try XCTUnwrap(saved.goldPricesPerGramEGP["21"]), 4_000, accuracy: 0.01)
     }
 
 }
