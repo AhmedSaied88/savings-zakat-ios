@@ -1112,7 +1112,7 @@ struct AssetsZakatTab: View {
     @Binding var snapshot: FinanceSnapshot
     let onSave: () -> Void
     @Binding var preferences: FinancePreferences
-    @State private var result: ZakatResult?
+    @State private var comparison: ZakatCalculationComparison?
     @State private var editingHolding: Holding?
     @State private var editorKind: HoldingKind = .cash
     @State private var showHoldingEditor = false
@@ -1128,10 +1128,10 @@ struct AssetsZakatTab: View {
                 valuationRatesSection
             }
             .onChange(of: preferences) { _, _ in
-                if result != nil { calculate() }
+                if comparison != nil { calculate() }
             }
             .onChange(of: snapshot.holdings) { _, _ in
-                if result != nil { calculate() }
+                if comparison != nil { calculate() }
             }
             .listStyle(.insetGrouped)
             .financeScreenSurface()
@@ -1420,8 +1420,9 @@ struct AssetsZakatTab: View {
             ZakatCalculationContent(
                 preferences: $preferences,
                 onSave: onSave,
-                result: result,
+                comparison: comparison,
                 onCalculate: calculate,
+                onSaveSelectedResult: saveSelectedResult,
                 breakdownTitle: breakdownTitle
             )
         }
@@ -1461,10 +1462,24 @@ struct AssetsZakatTab: View {
     }
 
     private func calculate() {
-        result = ZakatCalculator.calculate(holdings: snapshot.holdings, ratesToEGP: preferences.exchangeRatesToEGP,
-                                           goldPricesPerGramEGP: preferences.goldPricesPerGramEGP, silverPricePerGramEGP: preferences.silverPricePerGramEGP,
-                                           nisabEGP: preferences.nisabEGP, asOf: Date(),
-                                           includePersonalGold: preferences.includePersonalGold)
+        comparison = ZakatCalculator.calculateComparison(
+            holdings: snapshot.holdings,
+            ratesToEGP: preferences.exchangeRatesToEGP,
+            goldPricesPerGramEGP: preferences.goldPricesPerGramEGP,
+            silverPricePerGramEGP: preferences.silverPricePerGramEGP,
+            nisabEGP: preferences.nisabEGP,
+            asOf: Date(),
+            includePersonalGold: preferences.includePersonalGold
+        )
+    }
+
+    private func saveSelectedResult(_ selected: ZakatResult) {
+        preferences.savedZakatCalculation = SavedZakatCalculation(
+            result: selected,
+            holdings: snapshot.holdings,
+            preferences: preferences
+        )
+        onSave()
     }
 }
 
@@ -1997,8 +2012,9 @@ private struct SilverHoldingEntry: View {
 private struct ZakatCalculationContent: View {
     @Binding var preferences: FinancePreferences
     let onSave: () -> Void
-    let result: ZakatResult?
+    let comparison: ZakatCalculationComparison?
     let onCalculate: () -> Void
+    let onSaveSelectedResult: (ZakatResult) -> Void
     let breakdownTitle: (ZakatHoldingStatus) -> String
 
     var body: some View {
@@ -2008,13 +2024,118 @@ private struct ZakatCalculationContent: View {
             Button("Calculate Zakat", action: onCalculate)
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("zakat-calculate-button")
-            if let result {
-                resultTotals(result)
-                breakdownRows(result)
-                provisionalWarnings(result)
+            if let comparison {
+                methodComparison(comparison)
+                if let selectedResult {
+                    resultTotals(selectedResult)
+                    categoryRows(selectedResult)
+                    breakdownRows(selectedResult)
+                    provisionalWarnings(selectedResult)
+                    Button("Save selected result") {
+                        onSaveSelectedResult(selectedResult)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("zakat-save-selected-result")
+                }
             }
+            savedCalculationSummary
             Text("Confirm all prices, rates and religious calculation settings before relying on the result.")
                 .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+
+    private var selectedResult: ZakatResult? {
+        comparison?.result(for: preferences.effectiveZakatMethod)
+    }
+
+    private func methodComparison(_ comparison: ZakatCalculationComparison) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            methodCard(.independentCategories, result: comparison.independentCategories)
+            methodCard(.separateHawlCombinedNisab, result: comparison.separateHawlCombinedNisab)
+        }
+    }
+
+    private func methodCard(_ method: ZakatCalculationMethod, result: ZakatResult) -> some View {
+        let isSelected = preferences.effectiveZakatMethod == method
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(method.title)
+                .font(.subheadline.weight(.semibold))
+                .fixedSize(horizontal: false, vertical: true)
+            Text(result.zakatDueEGP, format: .currency(code: "EGP"))
+                .font(.title3.bold())
+                .monospacedDigit()
+                .foregroundStyle(FinancePalette.royalBlue)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(method.explanation)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(result.isProvisional ? "Provisional" : "Calculated")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(result.isProvisional ? FinancePalette.warning : FinancePalette.income)
+            Button(isSelected ? "Selected" : "Use this method") {
+                preferences.selectedZakatMethod = method
+                onSave()
+            }
+            .font(.caption.weight(.semibold))
+            .buttonStyle(isSelected ? .borderedProminent : .bordered)
+            .disabled(isSelected)
+            .accessibilityIdentifier("zakat-method-\\(method.rawValue)")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(isSelected ? FinancePalette.paleBlue : FinancePalette.whiteSurface,
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isSelected ? FinancePalette.royalBlue : FinancePalette.separator, lineWidth: isSelected ? 1.5 : 0.5)
+        }
+    }
+
+    @ViewBuilder
+    private var savedCalculationSummary: some View {
+        if let saved = preferences.savedZakatCalculation {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Saved calculation snapshot").font(.headline)
+                Text(saved.method.title).font(.subheadline.weight(.semibold))
+                Text(saved.zakatDueEGP, format: .currency(code: "EGP"))
+                    .font(.title3.bold()).monospacedDigit()
+                Text("Calculated \\(saved.calculatedAt.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption).foregroundStyle(.secondary)
+                Text(saved.isProvisional ? "Saved as provisional" : "Saved calculation")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(saved.isProvisional ? FinancePalette.warning : FinancePalette.income)
+                Text("This snapshot does not change when assets, rates or prices are edited. Save again to replace it.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 8)
+            .accessibilityIdentifier("zakat-saved-calculation")
+        }
+    }
+
+    private func categoryRows(_ result: ZakatResult) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Eligible wealth by category").font(.headline)
+            Text(result.method == .independentCategories
+                 ? "Each category is compared with the full Nisab independently."
+                 : "Category totals are shown for transparency; Nisab is tested against their combined matured total.")
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(result.categoryBreakdown) { item in
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack {
+                        Text(item.label).font(.subheadline)
+                        Spacer()
+                        Text(item.maturedEligibleWealthEGP, format: .currency(code: "EGP"))
+                            .font(.subheadline.monospacedDigit())
+                    }
+                    HStack {
+                        Text(item.meetsNisab ? "Category reaches Nisab" : "Below individual Nisab")
+                        Spacer()
+                        Text(item.zakatDueEGP, format: .currency(code: "EGP"))
+                    }
+                    .font(.caption).foregroundStyle(item.meetsNisab ? FinancePalette.income : .secondary)
+                }
+            }
         }
     }
 
