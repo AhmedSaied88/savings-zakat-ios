@@ -32,7 +32,7 @@ Restore replaces the current finance snapshot; it does not merge records. If aut
 
 ## Scope of this first version
 
-Included: accounts, cards, transactions, liabilities, cash/gold/silver/manual-investment holdings, manual exchange rates, gold/silver prices, Nisab input, personal-use gold setting and custom bank-message parser rules in the finance snapshot.
+Included: accounts, cards, transactions, liabilities, cash/gold/silver/manual-investment holdings, manual exchange rates, gold/silver prices, Nisab input, personal-use gold setting, custom bank-message parser rules, the selected Zakat calculation method and the saved immutable Zakat result snapshot in the finance snapshot.
 
 Not included: pending bank-message review queue and notification schedules. The imported-message queue is stored separately and is not overwritten by restore. Recreate local Hawl reminders after restoring or correcting asset dates.
 
